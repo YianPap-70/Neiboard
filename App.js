@@ -1,0 +1,1016 @@
+// =========================================================================
+// ARCHITECTURAL SOURCE OF TRUTH: APPLICATION CONTROLLER
+// This component manages core business data, state modifications, and logic flows.
+// ALL styling tokens, configurations, and Tailwind strings are abstracted to DesignConfig.js.
+// =========================================================================
+
+const { useState, useCallback, useMemo, useRef, useEffect } = React;
+
+const systemDate = new Date();
+
+// Continuous linear alignment timeline for calendar translation calculations
+const TIMELINE_YEARS = Array.from({ length: 31 }, (_, i) => 2015 + i); // 2015 to 2045 continuous list
+
+function formatAmount(amount) {
+  return (+parseFloat(amount).toFixed(2)).toString();
+}
+
+function Icon({ name, className = '' }) {
+  const iconConfig = window.DESIGN?.icons?.[name];
+  if (!iconConfig) return null;
+
+  return (
+    <img
+      src={`./SVG/${iconConfig.src}`}
+      className={`keep-raw-colors ${iconConfig.className} ${className}`}
+      alt={iconConfig.alt}
+    />
+  );
+}
+
+// Rewritten component to react natively to app state currency modifications
+function CurrencySymbol({ activeSymbol, className = '' }) {
+  if (activeSymbol === '') return null;
+  return <span className={className}>{activeSymbol}</span>;
+}
+
+function Drawer({ isOpen, children }) {
+  const [height, setHeight] = useState(0);
+  const contentRef = useRef(null);
+  const A = window.DESIGN.animation;
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const el = contentRef.current;
+    const update = () => setHeight(isOpen ? el.scrollHeight : 0);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, children]);
+
+  return (
+    <div style={{ height: height + 'px', overflow: 'hidden', transition: `height ${A.drawerDuration} ${A.drawerCurve}` }}>
+      <div ref={contentRef}>{children}</div>
+    </div>
+  );
+}
+
+// ─── AUTO-EXPANDING TEXTAREA ──────────────────────────────────────────────────
+// Grows vertically as user types, up to 5 lines, then stops.
+function AutoTextarea({ value, onChange, placeholder, className, style }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 21;
+    const maxHeight = lineHeight * 5 + 28; // 5 lines + vertical padding
+    el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
+    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={className}
+      style={{ ...style, transition: 'height 0.2s cubic-bezier(0.25, 1, 0.5, 1)', minHeight: '50px' }}
+      rows={1}
+    />
+  );
+}
+
+// ─── CARD PROFILE MODAL (ADD / EDIT) ─────────────────────────────────────────
+function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onDeleteRequest, animStyle }) {
+  const CM = window.DESIGN.cardModal;
+  const A = window.DESIGN.animation;
+
+  const [name, setName] = useState(residentData?.name || '');
+  const [apartment, setApartment] = useState(residentData?.apartment || '');
+  const [notes, setNotes] = useState(residentData?.notes || '');
+
+  const placeholderStyle = {
+    // Placeholder colour & size set via CSS injection below — textareas & inputs share same approach
+  };
+
+  const fieldGap = CM.fieldGap;
+  const headerToFieldGap = CM.headerToFieldGap;
+  const fieldToButtonGap = CM.fieldToButtonGap;
+
+  const handleConfirm = () => {
+    onConfirm({ name: name.trim(), apartment: apartment.trim(), notes: notes.trim() });
+  };
+
+  const handleNext = () => {
+    onNext({ name: name.trim(), apartment: apartment.trim(), notes: notes.trim() });
+    setName('');
+    setApartment('');
+    setNotes('');
+  };
+
+  const isAdd = mode === 'add';
+
+  return (
+    <div
+      style={{ ...CM.boxContainerStyle, ...animStyle }}
+      className={CM.boxContainer}
+    >
+      {/* Inline style block for placeholder styling — cannot be done via Tailwind on mobile WebView */}
+      <style>{`
+        .card-modal-input::placeholder { color: rgba(225,227,248,0.5); font-size: 12px; }
+        .card-modal-input { color: #E1E3F8; font-size: 14px; }
+      `}</style>
+
+      {/* HEADER ROW */}
+      <div className={CM.headerRow}>
+        <img
+          src={isAdd ? `./SVG/Button-Add-User.svg` : `./SVG/Icon-Edit.svg`}
+          className={`keep-raw-colors ${CM.headerIcon}`}
+          alt={isAdd ? 'Add Card' : 'Edit Card'}
+        />
+        <span className={CM.headerLabel}>{isAdd ? 'Add Card' : 'Edit Card'}</span>
+      </div>
+
+      {/* NAME / TITLE FIELD */}
+      <div className={CM.fieldWrapper} style={{ marginBottom: fieldGap }}>
+        <input
+          type="text"
+          placeholder="Name / Title"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className={`card-modal-input ${CM.singleLineField}`}
+        />
+      </div>
+
+      {/* APARTMENT OR TAG FIELD */}
+      <div className={CM.fieldWrapper} style={{ marginBottom: fieldGap }}>
+        <input
+          type="text"
+          placeholder="Apartment or Tag"
+          value={apartment}
+          onChange={(e) => setApartment(e.target.value)}
+          className={`card-modal-input ${CM.singleLineField}`}
+        />
+      </div>
+
+      {/* NOTES FIELD — auto-expanding up to 5 lines */}
+      <div className={CM.fieldWrapper} style={{ marginBottom: fieldToButtonGap }}>
+        <AutoTextarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Notes"
+          className={`card-modal-input ${CM.notesField}`}
+        />
+      </div>
+
+      {/* BUTTON ROW */}
+      <div className={CM.buttonRow}>
+        {isAdd ? (
+          <>
+            {/* OK — finish and add */}
+            <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
+            {/* + Next — add and clear for another */}
+            <button className={CM.okBtn} onClick={handleNext}>+ Next</button>
+            {/* Cancel X icon */}
+            <button className={CM.cancelIconBtn} onClick={onCancel}>
+              <img src="./SVG/Icon-Ex.svg" className={`keep-raw-colors ${CM.cancelIconImg}`} alt="Cancel" />
+            </button>
+          </>
+        ) : (
+          <>
+            {/* OK — save edits */}
+            <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
+            {/* Cancel — discard */}
+            <button className={CM.cancelTextBtn} onClick={onCancel}>Cancel</button>
+            {/* Trash — delete resident */}
+            <button className={CM.trashBtn} onClick={onDeleteRequest}>
+              <img src="./SVG/Icon-Trash.svg" className={`keep-raw-colors ${CM.trashIcon}`} alt="Delete Card" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── DELETE CARD CONFIRMATION MODAL ──────────────────────────────────────────
+function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle }) {
+  const CM = window.DESIGN.cardModal;
+  return (
+    <div
+      style={{ ...CM.deleteConfirmBoxStyle, ...animStyle }}
+      className={`${window.DESIGN.modal.boxContainer}`}
+    >
+      <p className={CM.deleteConfirmTitle}>Are you sure you want to delete this Card?</p>
+      <div className={CM.deleteConfirmRow}>
+        <button className={CM.deleteConfirmYesBtn} onClick={onConfirm}>Yes</button>
+        <button className={CM.deleteConfirmNoBtn} onClick={onCancel}>No</button>
+      </div>
+    </div>
+  );
+}
+
+window.App = function App() {
+  const D = window.DESIGN;
+  const LAYOUT = D.layout;
+  const HDR = D.header;
+  const CARD = D.residentCard;
+  const DRW = D.historyDrawer;
+  const MDL = D.modal;
+  const CAL = D.modal.calendar;
+  const MNU = D.mainMenu;
+  const A = D.animation;
+  const CM = D.cardModal;
+
+  useEffect(() => {
+    if (LAYOUT && LAYOUT.appBackgroundHex) {
+      document.body.style.backgroundColor = LAYOUT.appBackgroundHex;
+    }
+  }, []);
+
+  // Menu Open/Close State Controller
+  const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
+
+  // Sorting and Option Controls States
+  const [currentLanguage, setCurrentLanguage] = useState('EN'); // EN or GR
+  const [currentSortBy, setCurrentSortBy] = useState('Tag'); // Tag or Debt
+  const [currencyIndex, setCurrencyIndex] = useState(0); // Index for options tracking
+
+  // Active currency symbol computed state
+  const activeCurrencySymbol = useMemo(() => {
+    return D.currencyOptions[currencyIndex]?.symbol ?? '€';
+  }, [currencyIndex, D.currencyOptions]);
+
+  // Date Range Picker States
+  const [fromMonth, setFromMonth] = useState('');
+  const [toMonth, setToMonth] = useState('');
+  const [calendarTargetField, setCalendarTargetField] = useState(null); // 'appCurrent', 'rangeFrom', 'rangeTo'
+
+  const [currentMonthIdx, setCurrentMonthIdx] = useState(systemDate.getMonth());
+  const [currentYear, setCurrentYear] = useState(systemDate.getFullYear());
+  const currentMonthString = `${D.monthNames[currentMonthIdx]} ${currentYear}`;
+
+  // Stable top-level state counters for the interactive selection overlay
+  const [tempYear, setTempYear] = useState(systemDate.getFullYear());
+  const [tempMonthIdx, setTempMonthIdx] = useState(systemDate.getMonth());
+
+  const [residents, setResidents] = useState(window.initialResidents);
+  const [expandedResident, setExpandedResident] = useState(null);
+  const [openPreviousDrawer, setOpenPreviousDrawer] = useState({});
+
+  // ─── EXPENSE MODAL STATE ────────────────────────────────────────────────────
+  const [modal, setModal] = useState({
+    type: null, residentId: null, expenseId: null, amount: '', description: '', paid: false
+  });
+
+  // ─── CARD PROFILE MODAL STATE ───────────────────────────────────────────────
+  // cardModal.type: null | 'addCard' | 'editCard' | 'deleteCard'
+  const [cardModal, setCardModal] = useState({
+    type: null,
+    residentId: null,
+  });
+
+  const handlePrevMonth = () => {
+    if (currentMonthIdx === 0) { setCurrentMonthIdx(11); setCurrentYear(p => p - 1); }
+    else setCurrentMonthIdx(p => p - 1);
+  };
+  const handleNextMonth = () => {
+    if (currentMonthIdx === 11) { setCurrentMonthIdx(0); setCurrentYear(p => p + 1); }
+    else setCurrentMonthIdx(p => p + 1);
+  };
+
+  const handleGoToCurrentMonth = () => {
+    if (isFilteredAwayFromToday) {
+      setCurrentMonthIdx(systemDate.getMonth());
+      setCurrentYear(systemDate.getFullYear());
+    }
+  };
+
+  const isFilteredAwayFromToday = currentMonthIdx !== systemDate.getMonth() || currentYear !== systemDate.getFullYear();
+
+  const isPastExpense = useCallback((expenseMonthStr) => {
+    const [expMonthName, expYearStr] = expenseMonthStr.split(' ');
+    const expYear = parseInt(expYearStr) || 0;
+    const expMonthIdx = D.monthNames.indexOf(expMonthName);
+    if (expYear < currentYear) return true;
+    if (expYear === currentYear && expMonthIdx < currentMonthIdx) return true;
+    return false;
+  }, [currentMonthIdx, currentYear]);
+
+  // Combined compute loop that returns the total ledger debt across cards
+  const totalAllDebts = useMemo(() => {
+    return residents.reduce((total, resident) => {
+      return total + resident.expenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+    }, 0);
+  }, [residents]);
+
+  // Recalculates resident card positioning dynamically on render depending on menu choices
+  const processedResidents = useMemo(() => {
+    const listCopy = [...residents];
+
+    if (currentSortBy === 'Tag') {
+      return listCopy.sort((a, b) => a.apartment.localeCompare(b.apartment, undefined, { numeric: true, sensitivity: 'base' }));
+    } else if (currentSortBy === 'Debt') {
+      return listCopy.sort((a, b) => {
+        const debtA = a.expenses.reduce((sum, exp) => sum + (!exp.paid ? exp.amount : 0), 0);
+        const debtB = b.expenses.reduce((sum, exp) => sum + (!exp.paid ? exp.amount : 0), 0);
+        return debtB - debtA;
+      });
+    }
+    return listCopy;
+  }, [residents, currentSortBy]);
+
+  const togglePreviousDrawer = (residentId) => {
+    const isCurrentlyExpanded = expandedResident === residentId;
+
+    if (!isCurrentlyExpanded) {
+      setExpandedResident(residentId);
+      setOpenPreviousDrawer({ [residentId]: true });
+    } else {
+      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: !prev[residentId] }));
+    }
+  };
+
+  const handleResidentHeaderClick = (residentId) => {
+    const isCurrentlyExpanded = expandedResident === residentId;
+
+    if (isCurrentlyExpanded) {
+      setExpandedResident(null);
+      setOpenPreviousDrawer({});
+    } else {
+      setExpandedResident(residentId);
+      setOpenPreviousDrawer({});
+    }
+  };
+
+  // ─── EXPENSE MODAL HANDLERS ─────────────────────────────────────────────────
+  const openModal = (type, residentId, expenseId = null, amount = '', description = '', paid = false) => {
+    if (type === 'calendar') {
+      setCalendarTargetField('appCurrent');
+      setTempYear(currentYear);
+      setTempMonthIdx(currentMonthIdx);
+    }
+    setModal({ type, residentId, expenseId, amount, description, paid });
+  };
+
+  const closeModal = () => setModal(m => ({ ...m, type: null }));
+
+  const closePastDrawerIfEmpty = (updatedResidents, residentId) => {
+    const resident = updatedResidents.find(r => r.id === residentId);
+    if (!resident) return;
+    const hasPast = resident.expenses.some(exp => isPastExpense(exp.month) && !exp.paid);
+    if (!hasPast) {
+      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: false }));
+    }
+  };
+
+  const handleConfirmModal = () => {
+    if (!modal.residentId) return;
+    const parsedAmount = parseFloat(modal.amount) || 0;
+    const desc = modal.description.trim() || 'Monthly Fee';
+
+    setResidents(prev => {
+      const updated = prev.map(res => {
+        if (res.id !== modal.residentId) return res;
+        let expenses = [...res.expenses];
+        if (modal.type === 'add') {
+          expenses.push({ id: 'exp-' + Date.now(), description: desc, amount: parsedAmount, paid: modal.paid, month: currentMonthString });
+        } else if (modal.type === 'edit' && modal.expenseId) {
+          expenses = expenses.map(exp => exp.id === modal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid: modal.paid } : exp);
+        }
+        return { ...res, expenses };
+      });
+      closePastDrawerIfEmpty(updated, modal.residentId);
+      return updated;
+    });
+    closeModal();
+  };
+
+  const handleDeleteExpense = () => {
+    if (!modal.residentId || !modal.expenseId) return;
+    setResidents(prev => {
+      const updated = prev.map(res =>
+        res.id === modal.residentId
+          ? { ...res, expenses: res.expenses.filter(exp => exp.id !== modal.expenseId) }
+          : res
+      );
+      closePastDrawerIfEmpty(updated, modal.residentId);
+      return updated;
+    });
+    closeModal();
+  };
+
+  const handleConfirmCalendar = () => {
+    const formattedString = `${D.monthNames[tempMonthIdx].substring(0, 3)} ${tempYear}`;
+    if (calendarTargetField === 'appCurrent') {
+      setCurrentYear(tempYear);
+      setCurrentMonthIdx(tempMonthIdx);
+    } else if (calendarTargetField === 'rangeFrom') {
+      setFromMonth(formattedString);
+    } else if (calendarTargetField === 'rangeTo') {
+      setToMonth(formattedString);
+    }
+    closeModal();
+  };
+
+  const handleOpenRangePicker = (target) => {
+    setCalendarTargetField(target);
+    setTempYear(systemDate.getFullYear());
+    setTempMonthIdx(systemDate.getMonth());
+    setModal({ type: 'calendar', residentId: null, expenseId: null, amount: '', description: '', paid: false });
+  };
+
+  const currentTimelineIndex = useMemo(() => {
+    const foundIdx = TIMELINE_YEARS.indexOf(tempYear);
+    return foundIdx !== -1 ? foundIdx : 11;
+  }, [tempYear]);
+
+  const cycleCurrency = (direction) => {
+    setCurrencyIndex(prev => {
+      let next = prev + direction;
+      if (next < 0) next = D.currencyOptions.length - 1;
+      if (next >= D.currencyOptions.length) next = 0;
+      return next;
+    });
+  };
+
+  const isDeleteRangeActive = useMemo(() => {
+    return fromMonth !== '' && toMonth !== '';
+  }, [fromMonth, toMonth]);
+
+  const handleDeleteSelectedRangeData = () => {
+    if (!isDeleteRangeActive) return;
+
+    const parseMonthString = (str) => {
+      if (!str) return { year: 0, monthIdx: 0 };
+      const [mStr, yStr] = str.split(' ');
+      const year = parseInt(yStr) || 0;
+      const shortNames = D.monthNames.map(n => n.substring(0, 3).toUpperCase());
+      const monthIdx = shortNames.indexOf(mStr.toUpperCase());
+      return { year, monthIdx };
+    };
+
+    const fromVal = parseMonthString(fromMonth);
+    const toVal = parseMonthString(toMonth);
+
+    setResidents(prev => {
+      return prev.map(res => {
+        const filteredExpenses = res.expenses.filter(exp => {
+          const [expMonthName, expYearStr] = exp.month.split(' ');
+          const expYear = parseInt(expYearStr) || 0;
+          const expMonthIdx = D.monthNames.indexOf(expMonthName);
+
+          const itemTime = expYear * 12 + expMonthIdx;
+          const startTime = fromVal.year * 12 + fromVal.monthIdx;
+          const endTime = toVal.year * 12 + toVal.monthIdx;
+
+          const isInRange = itemTime >= startTime && itemTime <= endTime;
+          return !isInRange;
+        });
+        return { ...res, expenses: filteredExpenses };
+      });
+    });
+
+    setFromMonth('');
+    setToMonth('');
+  };
+
+  // ─── CARD PROFILE MODAL HANDLERS ────────────────────────────────────────────
+
+  // Opens Add Card modal (from header Add User button)
+  const handleOpenAddCard = () => {
+    setCardModal({ type: 'addCard', residentId: null });
+  };
+
+  // Opens Edit Card modal (from avatar tap on a resident card)
+  const handleOpenEditCard = (residentId, e) => {
+    e.stopPropagation(); // Prevent card expand/collapse
+    setCardModal({ type: 'editCard', residentId });
+  };
+
+  const closeCardModal = () => {
+    setCardModal({ type: null, residentId: null });
+  };
+
+  // Confirm Add Card — creates a new resident and closes modal
+  const handleConfirmAddCard = ({ name, apartment, notes }) => {
+    const newResident = {
+      id: 'R-' + Date.now(),
+      name: name || 'New Resident',
+      apartment: apartment || '—',
+      avatar: 'Avatar-Resident.svg',
+      notes: notes || '',
+      expenses: [],
+    };
+    setResidents(prev => [...prev, newResident]);
+    closeCardModal();
+  };
+
+  // + Next — adds the card and clears fields for the next entry (modal stays open)
+  const handleNextAddCard = ({ name, apartment, notes }) => {
+    const newResident = {
+      id: 'R-' + Date.now(),
+      name: name || 'New Resident',
+      apartment: apartment || '—',
+      avatar: 'Avatar-Resident.svg',
+      notes: notes || '',
+      expenses: [],
+    };
+    setResidents(prev => [...prev, newResident]);
+    // Modal stays open — CardProfileModal clears its own fields internally
+  };
+
+  // Confirm Edit Card — updates name, apartment, notes on the resident
+  const handleConfirmEditCard = ({ name, apartment, notes }) => {
+    setResidents(prev => prev.map(res =>
+      res.id === cardModal.residentId
+        ? { ...res, name: name || res.name, apartment: apartment || res.apartment, notes }
+        : res
+    ));
+    closeCardModal();
+  };
+
+  // Trash pressed in Edit Card — transition to delete confirmation
+  const handleDeleteCardRequest = () => {
+    setCardModal(prev => ({ ...prev, type: 'deleteCard' }));
+  };
+
+  // Confirmed deletion of resident card
+  const handleConfirmDeleteCard = () => {
+    setResidents(prev => prev.filter(res => res.id !== cardModal.residentId));
+    // Collapse if was expanded
+    if (expandedResident === cardModal.residentId) {
+      setExpandedResident(null);
+      setOpenPreviousDrawer({});
+    }
+    closeCardModal();
+  };
+
+  // "No" on delete confirmation — go back to Edit Card
+  const handleCancelDeleteCard = () => {
+    setCardModal(prev => ({ ...prev, type: 'editCard' }));
+  };
+
+  // Derive resident data for Edit Card modal
+  const editingResident = useMemo(() => {
+    if (!cardModal.residentId) return null;
+    return residents.find(r => r.id === cardModal.residentId) || null;
+  }, [cardModal.residentId, residents]);
+
+  // Shared animation style for card modal content
+  const cardModalContentAnim = MDL.contentAnimation(A);
+  const cardModalBackdropAnim = MDL.backdropAnimation(A);
+
+  return (
+    <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
+      <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
+
+        {/* TOP COMPONENT STICKY HEADER BOX */}
+        <header style={HDR.stickyContainerStyle} className={HDR.stickyContainer}>
+
+          {/* FIRST ROW */}
+          <div className={HDR.topRow}>
+            <div className={HDR.leftActionGroup}>
+              <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
+                <Icon name="hamburger" />
+              </button>
+              {/* Add User button now opens Add Card modal */}
+              <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
+                <Icon name="addUser" />
+              </button>
+              <button className={HDR.touchTargetBtn} onClick={() => console.log('Wallet Menu')}>
+                <Icon name="wallet" />
+              </button>
+            </div>
+
+            <div className={HDR.debtSection}>
+              <span className={HDR.totalDebtLabel}>Total Debt</span>
+              <span className={HDR.totalDebtAmount}>
+                <CurrencySymbol activeSymbol={activeCurrencySymbol} className={HDR.currencySizeMod} />{formatAmount(totalAllDebts)}
+              </span>
+            </div>
+
+            <div className={HDR.syncIconWrapper}>
+              <button className={HDR.touchTargetBtn} onClick={() => console.log('Syncing status indicator')}>
+                <Icon name="synced" />
+              </button>
+            </div>
+          </div>
+
+          {/* SECOND ROW */}
+          <div className={HDR.bottomRow}>
+            <button className={HDR.monthTextBtn} onClick={() => openModal('calendar', null)}>
+              {currentMonthString}
+            </button>
+
+            {/* Unified Month Navigation Pill */}
+            <div className={HDR.navPillContainer}>
+              <div className={HDR.navPillIconArea}>
+                <Icon name="calendarLeft" />
+              </div>
+              <div className={HDR.navPillIconArea}>
+                <Icon name="calendarRight" />
+              </div>
+
+              {/* Invisible High-Accessibility Touch Slices */}
+              <div className={HDR.navPillLeftTapZone} onClick={handlePrevMonth} />
+              <div className={HDR.navPillRightTapZone} onClick={handleNextMonth} />
+            </div>
+
+            {/* "Go Today" Action Pin Snap button */}
+            <button
+              onClick={handleGoToCurrentMonth}
+              className={HDR.goTodayFloatBtn}
+              style={{ opacity: isFilteredAwayFromToday ? 1.0 : 0.3 }}
+            >
+              <Icon name="goToday" />
+            </button>
+          </div>
+        </header>
+
+        <div style={{ height: '12px' }} />
+
+        {/* RENDER DYNAMIC CARDS CONTAINER */}
+        <div className={CARD.cardListContainer}>
+          {processedResidents.map((resident) => {
+            const isExpanded = expandedResident === resident.id;
+            const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
+
+            const currentMonthExpenses = resident.expenses.filter(exp => exp.month === currentMonthString);
+            const pastUnpaidExpenses = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
+
+            const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+            const pastUnpaidTotal = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+            const totalResidentDebt = currentUnpaidTotal + pastUnpaidTotal;
+
+            const combinedCurrentExpenses = [...currentMonthExpenses].sort((a, b) => a.paid - b.paid);
+            const hasPastUnpaidItems = pastUnpaidExpenses.length > 0;
+
+            return (
+              <div key={resident.id} style={DRW.cardRoundingContainerStyle(hasPastUnpaidItems)} className={CARD.cardWrapper}>
+                <div style={{ backgroundColor: totalResidentDebt > 0 ? CARD.topIndicatorHasDebtColor : CARD.topIndicatorNoDebtColor }} className={CARD.topIndicatorLine} />
+
+                <div className={CARD.cardBody}>
+                  <div className={CARD.cardInnerPadding}>
+
+                    {/* CARD HEADER — split into avatar button + expandable right area */}
+                    <div className="flex items-center justify-between gap-3">
+
+                      {/* AVATAR — isolated tap target → opens Edit Card modal */}
+                      <button
+                        className={CARD.avatarBtn}
+                        onClick={(e) => handleOpenEditCard(resident.id, e)}
+                      >
+                        <img
+                          src={`./SVG/${resident.avatar}`}
+                          alt="Avatar"
+                          className={CARD.avatarImg}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = D.avatarFallback;
+                          }}
+                        />
+                      </button>
+
+                      {/* RIGHT AREA — name + balance + caret → expands/collapses card */}
+                      <div
+                        className="flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3"
+                        onClick={() => handleResidentHeaderClick(resident.id)}
+                      >
+                        <div className={CARD.textMetaArea}>
+                          <h2 className={CARD.residentName}>{resident.name}</h2>
+                          <p className={CARD.apartmentNumber}>{resident.apartment}</p>
+                        </div>
+                        <div className={CARD.balanceArea}>
+                          <span className={CARD.totalDebtText}>
+                            <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
+                          </span>
+                          <span style={CARD.caretRotationStyle(isExpanded, A)}>
+                            <Icon name="caret" />
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <Drawer isOpen={isExpanded}>
+                    <div>
+                      <div className={CARD.monthActionRow}>
+                        <span className={CARD.monthActionLabel}>
+                          Debts for {currentMonthString}
+                        </span>
+                        <button onClick={() => openModal('add', resident.id)} className={CARD.addExpenseBtn}>
+                          + Add
+                        </button>
+                      </div>
+
+                      <div className={CARD.itemContainer}>
+                        {combinedCurrentExpenses.length === 0 ? (
+                          <p className={CARD.noExpensesFallback}>No expenses logged for this month.</p>
+                        ) : (
+                          <div>
+                            {combinedCurrentExpenses.map((expense, idx) => (
+                              <div
+                                key={expense.id}
+                                className={`${idx === 0 ? '' : CARD.itemRowDividerStyle} ${CARD.itemRowWrapper}`}
+                                onClick={() => openModal('edit', resident.id, expense.id, expense.amount.toString(), expense.description, expense.paid)}
+                              >
+                                <div className={CARD.interactiveIconArea}>
+                                  <div className={CARD.iconStateBtn}>
+                                    {expense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                                  </div>
+                                  <span className={CARD.expenseDescription(expense.paid)}>
+                                    {expense.description}
+                                  </span>
+                                </div>
+                                <span className={CARD.expenseValueAmount(expense.paid)}>
+                                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(expense.amount)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Drawer>
+                </div>
+
+                {hasPastUnpaidItems && (
+                  <div>
+                    <Drawer isOpen={isDrawerOpen}>
+                      <div className={DRW.drawerWrapper}>
+                        {pastUnpaidExpenses.map((pastExpense, idx) => (
+                          <div
+                            key={pastExpense.id}
+                            className={`${idx === 0 ? DRW.rowItemFirst : DRW.rowItemDividerStyle} ${DRW.rowItemWrapper}`}
+                            onClick={() => openModal('edit', resident.id, pastExpense.id, pastExpense.amount.toString(), pastExpense.description, pastExpense.paid)}
+                          >
+                            <div className={CARD.interactiveIconArea}>
+                              <div className={CARD.iconStateBtn}>
+                                {pastExpense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                              </div>
+                              <div className={DRW.metaSubTextGroup}>
+                                <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
+                                <span className={DRW.pastMonthLabel}>{pastExpense.month}</span>
+                              </div>
+                            </div>
+                            <div className={CARD.expenseValueAmount(pastExpense.paid)}>
+                              <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(pastExpense.amount)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Drawer>
+
+                    <div onClick={() => togglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
+                      <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
+                        <Icon name="caret" />
+                      </span>
+                      <div className={DRW.toggleBarLabelArea}>
+                        <span className={DRW.toggleBarText}>
+                          previous months total
+                        </span>
+                        <span className={DRW.toggleBarAmount}>
+                          <CurrencySymbol activeSymbol={activeCurrencySymbol} className={DRW.toggleBarCurrencyMod} />{formatAmount(pastUnpaidTotal)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* MAIN OVERLAY MENU */}
+        {isMainMenuOpen && (
+          <div style={MNU.backdropAnimation(A)} className={MNU.backdropOverlay} onClick={() => setIsMainMenuOpen(false)}>
+            <div style={{ ...MNU.boxContainerStyle, ...MNU.contentAnimation(A) }} className={MNU.boxContainer} onClick={(e) => e.stopPropagation()}>
+
+              {/* LANGUAGE SECTION */}
+              <div className={MNU.sectionRow}>
+                <span className={MNU.sectionLabelLeft}>Language</span>
+                <div className={MNU.optionsRightGroup}>
+                  <button onClick={() => setCurrentLanguage('EN')} className={`${MNU.pillButton} ${currentLanguage === 'EN' ? MNU.activeRingClass : ''}`}>EN</button>
+                  <button onClick={() => setCurrentLanguage('GR')} className={`${MNU.pillButton} ${currentLanguage === 'GR' ? MNU.activeRingClass : ''}`}>GR</button>
+                </div>
+              </div>
+
+              {/* SORT BY SECTION */}
+              <div className={MNU.sectionRow}>
+                <span className={MNU.sectionLabelLeft}>Sort by</span>
+                <div className={MNU.optionsRightGroup}>
+                  <button onClick={() => setCurrentSortBy('Tag')} className={`${MNU.pillButton} ${currentSortBy === 'Tag' ? MNU.activeRingClass : ''}`}>Tag</button>
+                  <button onClick={() => setCurrentSortBy('Debt')} className={`${MNU.pillButton} ${currentSortBy === 'Debt' ? MNU.activeRingClass : ''}`}>Debt</button>
+                </div>
+              </div>
+
+              {/* SLOT MACHINE SYMBOL SELECTOR SECTION */}
+              <div className={MNU.sectionRow}>
+                <span className={MNU.sectionLabelLeft}>Symbol</span>
+                <div className={MNU.optionsRightGroup}>
+                  <div className={MNU.symbolPill}>
+                    <div className={MNU.symbolIconArea}><Icon name="calendarLeft" /></div>
+                    <div className={MNU.symbolRollWrapper}>
+                      <div
+                        className={MNU.symbolRollContainer}
+                        style={{
+                          transform: `translateY(-${currencyIndex * 28}px)`,
+                          height: `${D.currencyOptions.length * 28}px`,
+                          transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                          top: '0px'
+                        }}
+                      >
+                        {D.currencyOptions.map(option => (
+                          <div key={option.label} className={MNU.symbolText}>{option.label}</div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={MNU.symbolIconArea}><Icon name="calendarRight" /></div>
+                    <div className={MNU.symbolLeftTapZone} onClick={() => cycleCurrency(-1)} />
+                    <div className={MNU.symbolRightTapZone} onClick={() => cycleCurrency(1)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* RANGE SELECTOR AND DATA DELETE BLOCK */}
+              <div className={MNU.dateRangeSection}>
+                <div className={MNU.dateRangeButtonsRow}>
+                  <button onClick={() => handleOpenRangePicker('rangeFrom')} className={MNU.dateRangeBtn}>
+                    {fromMonth || 'From month'}
+                  </button>
+                  <button onClick={() => handleOpenRangePicker('rangeTo')} className={MNU.dateRangeBtn}>
+                    {toMonth || 'To month'}
+                  </button>
+                </div>
+                <button
+                  onClick={handleDeleteSelectedRangeData}
+                  disabled={!isDeleteRangeActive}
+                  className={`${MNU.deleteBtn} ${isDeleteRangeActive ? MNU.deleteActiveRingClass : ''}`}
+                >
+                  <Icon name="trash" className={MNU.deleteIconClass(isDeleteRangeActive)} />
+                  <span className={MNU.deleteText(isDeleteRangeActive)}>Delete data</span>
+                </button>
+              </div>
+
+              {/* ACTION FOOTER ROW */}
+              <div className={MNU.footerRow}>
+                <button className={MNU.actionBtn} onClick={() => console.log('Export PDF...')}>
+                  <Icon name="download" /> PDF
+                </button>
+                <button className={MNU.actionBtn} onClick={() => setIsMainMenuOpen(false)}>
+                  Exit
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* INPUT INTERFACE MODALS — EXPENSE */}
+        {modal.type && (
+          <div style={MDL.backdropAnimation(A)} className={MDL.backdropOverlay} onClick={closeModal}>
+
+            {/* CALENDAR SELECTION MODAL */}
+            {modal.type === 'calendar' && (
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+                <div className={CAL.yearPill}>
+                  <div className={CAL.yearIconArea}><Icon name="calendarLeft" /></div>
+                  <div className={CAL.yearRollWrapper}>
+                    <div
+                      className={CAL.yearRollContainer}
+                      style={{
+                        transform: `translateY(-${currentTimelineIndex * 28}px)`,
+                        height: `${TIMELINE_YEARS.length * 28}px`,
+                        transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                        top: '0px'
+                      }}
+                    >
+                      {TIMELINE_YEARS.map(year => (
+                        <div key={year} className={CAL.yearText}>{year}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={CAL.yearIconArea}><Icon name="calendarRight" /></div>
+                  <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
+                  <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
+                </div>
+
+                <div className={CAL.gridContainer}>
+                  {D.monthNames.map((monthName, idx) => {
+                    const isSelected = tempMonthIdx === idx;
+                    return (
+                      <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
+                        {monthName.substring(0, 3).toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className={CAL.footerRow}>
+                  <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>OK</button>
+                  <button className={CAL.actionBtn} onClick={closeModal}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {(modal.type === 'add' || modal.type === 'edit') && (
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+                <h3 className={MDL.titleHeader}>{modal.type === 'add' ? 'Add Expense' : 'Edit Expense'}</h3>
+                <div className={MDL.inputRowGroup}>
+                  <div className={MDL.numericInputBox}>
+                    <input
+                      type="number" placeholder="0.00" value={modal.amount} onChange={(e) => setModal(m => ({ ...m, amount: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
+                      className={MDL.numericInputField} autoFocus
+                    />
+                  </div>
+                  <button onClick={() => setModal(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
+                    {modal.paid ? <Icon name="buttonPaid" /> : <Icon name="buttonUnpaid" />}
+                  </button>
+                </div>
+                <div className={MDL.descriptionInputBox}>
+                  <input
+                    type="text" placeholder="Description (leave empty for default)" value={modal.description} onChange={(e) => setModal(m => ({ ...m, description: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
+                    className={MDL.descriptionInputField}
+                  />
+                </div>
+                <div className={MDL.actionsFlexRow}>
+                  <button onClick={handleConfirmModal} className={MDL.confirmBtn}>Confirm</button>
+                  <button onClick={closeModal} className={MDL.cancelBtn}>Cancel</button>
+                  {modal.type === 'edit' && (
+                    <button onClick={() => setModal(m => ({ ...m, type: 'delete' }))} style={MDL.deleteActionBtnStyle} className={MDL.deleteActionBtn}>
+                      <Icon name="trash" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {modal.type === 'delete' && (
+              <div style={{ ...MDL.deleteContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+                <h4 className={MDL.deletePromptTitle}>Are you sure you want to delete this amount?</h4>
+                <div className={MDL.actionsFlexRow}>
+                  <button onClick={handleDeleteExpense} style={MDL.deleteYesBtnStyle} className={MDL.deleteYesBtn}>Yes</button>
+                  <button onClick={() => setModal(m => ({ ...m, type: 'edit' }))} className={MDL.deleteNoBtn}>No</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CARD PROFILE MODALS — ADD CARD / EDIT CARD / DELETE CARD CONFIRM */}
+        {cardModal.type && (
+          <div
+            style={cardModalBackdropAnim}
+            className={CM.backdropOverlay}
+            onClick={closeCardModal}
+          >
+            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '340px' }}>
+
+              {/* ADD CARD MODAL */}
+              {cardModal.type === 'addCard' && (
+                <CardProfileModal
+                  mode="add"
+                  residentData={null}
+                  onConfirm={handleConfirmAddCard}
+                  onNext={handleNextAddCard}
+                  onCancel={closeCardModal}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
+
+              {/* EDIT CARD MODAL */}
+              {cardModal.type === 'editCard' && editingResident && (
+                <CardProfileModal
+                  mode="edit"
+                  residentData={editingResident}
+                  onConfirm={handleConfirmEditCard}
+                  onNext={null}
+                  onCancel={closeCardModal}
+                  onDeleteRequest={handleDeleteCardRequest}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
+
+              {/* DELETE CARD CONFIRMATION MODAL */}
+              {cardModal.type === 'deleteCard' && (
+                <DeleteCardConfirmModal
+                  onConfirm={handleConfirmDeleteCard}
+                  onCancel={handleCancelDeleteCard}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
+
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
