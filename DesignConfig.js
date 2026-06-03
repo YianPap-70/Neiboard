@@ -25,6 +25,24 @@ window.DESIGN = {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ],
+  monthAbbreviationLength: 3, // For calendar and range picker displays
+  
+  // ─── TEXTAREA CONFIGURATION ──────────────────────────────────────────────
+  textarea: {
+    maxVisibleLines: 5,
+    verticalPadding: 28, // Total vertical padding (top+bottom) in pixels
+    transitionDuration: '0.2s',
+    transitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    minHeight: '50px'
+  },
+
+  // ─── INPUT PLACEHOLDER STYLES ────────────────────────────────────────────
+  inputStyles: {
+    placeholderColor: 'rgba(225,227,248,0.5)',
+    textColor: '#E1E3F8',
+    placeholderFontSize: '12px',
+    textFontSize: '14px'
+  },
 
   // ─── GLOBAL LAYOUT & APP CONTAINER ────────────────────────────────────────
   layout: {
@@ -243,15 +261,13 @@ window.DESIGN = {
     // Text field shared styles
     fieldWrapper: "bg-[#49496A] rounded-[12px] px-4 flex items-start w-full",
     // Single-line fields (name, apartment)
-    singleLineField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] h-[50px] leading-[50px]",
+    singleLineField: "w-full bg-transparent focus:outline-none h-[50px] leading-[50px]",
     // Notes field (multiline, auto-expand)
-    notesField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] resize-none leading-[1.5] py-[14px] overflow-hidden",
-    // Placeholder style applied via inline style (12px, 50% opacity) — see App.js
-    fieldGap: "12px", // gap between fields, used as marginBottom in inline style
-
-    // Gap from header to first field
+    notesField: "w-full bg-transparent focus:outline-none resize-none leading-[1.5] py-[14px] overflow-hidden",
+    
+    // Field gaps
+    fieldGap: "12px",
     headerToFieldGap: "16px",
-    // Gap from last field to buttons
     fieldToButtonGap: "16px",
 
     // Button row
@@ -275,6 +291,18 @@ window.DESIGN = {
     deleteConfirmYesBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     // No: green ring
     deleteConfirmNoBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
+    
+    // Injected style block content (moved from App.js)
+    inputStyles: `
+      .card-modal-input::placeholder {
+        color: rgba(225,227,248,0.5);
+        font-size: 12px;
+      }
+      .card-modal-input {
+        color: #E1E3F8;
+        font-size: 14px;
+      }
+    `
   },
 
   // ─── REUSABLE ASSETS ──────────────────────────────────────────────────────
