@@ -57,20 +57,19 @@ function Drawer({ isOpen, children }) {
 }
 
 // ─── AUTO-EXPANDING TEXTAREA ──────────────────────────────────────────────────
-// Grows vertically as user types, up to configured max lines, then stops.
+// Grows vertically as user types, up to 5 lines, then stops.
 function AutoTextarea({ value, onChange, placeholder, className, style }) {
   const ref = useRef(null);
-  const TA = window.DESIGN.textarea;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.style.height = 'auto';
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 21;
-    const maxHeight = lineHeight * TA.maxVisibleLines + TA.verticalPadding;
+    const maxHeight = lineHeight * 5 + 28; // 5 lines + vertical padding
     el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
     el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
-  }, [value, TA.maxVisibleLines, TA.verticalPadding]);
+  }, [value]);
 
   return (
     <textarea
@@ -79,11 +78,7 @@ function AutoTextarea({ value, onChange, placeholder, className, style }) {
       onChange={onChange}
       placeholder={placeholder}
       className={className}
-      style={{ 
-        ...style, 
-        transition: `height ${TA.transitionDuration} ${TA.transitionCurve}`,
-        minHeight: TA.minHeight 
-      }}
+      style={{ ...style, transition: 'height 0.2s cubic-bezier(0.25, 1, 0.5, 1)', minHeight: '50px' }}
       rows={1}
     />
   );
@@ -93,13 +88,17 @@ function AutoTextarea({ value, onChange, placeholder, className, style }) {
 function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onDeleteRequest, animStyle }) {
   const CM = window.DESIGN.cardModal;
   const A = window.DESIGN.animation;
-  const inputStyles = window.DESIGN.inputStyles;
 
   const [name, setName] = useState(residentData?.name || '');
   const [apartment, setApartment] = useState(residentData?.apartment || '');
   const [notes, setNotes] = useState(residentData?.notes || '');
 
+  const placeholderStyle = {
+    // Placeholder colour & size set via CSS injection below — textareas & inputs share same approach
+  };
+
   const fieldGap = CM.fieldGap;
+  const headerToFieldGap = CM.headerToFieldGap;
   const fieldToButtonGap = CM.fieldToButtonGap;
 
   const handleConfirm = () => {
@@ -115,22 +114,17 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
 
   const isAdd = mode === 'add';
 
-  // Apply text and placeholder colors dynamically
-  const inputTextStyle = {
-    color: inputStyles.textColor,
-    fontSize: inputStyles.textFontSize
-  };
-  
-  const placeholderStyle = {
-    color: inputStyles.placeholderColor,
-    fontSize: inputStyles.placeholderFontSize
-  };
-
   return (
     <div
       style={{ ...CM.boxContainerStyle, ...animStyle }}
       className={CM.boxContainer}
     >
+      {/* Inline style block for placeholder styling — cannot be done via Tailwind on mobile WebView */}
+      <style>{`
+        .card-modal-input::placeholder { color: rgba(225,227,248,0.5); font-size: 12px; }
+        .card-modal-input { color: #E1E3F8; font-size: 14px; }
+      `}</style>
+
       {/* HEADER ROW */}
       <div className={CM.headerRow}>
         <img
@@ -149,7 +143,6 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
           value={name}
           onChange={(e) => setName(e.target.value)}
           className={`card-modal-input ${CM.singleLineField}`}
-          style={inputTextStyle}
         />
       </div>
 
@@ -161,7 +154,6 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
           value={apartment}
           onChange={(e) => setApartment(e.target.value)}
           className={`card-modal-input ${CM.singleLineField}`}
-          style={inputTextStyle}
         />
       </div>
 
@@ -172,21 +164,8 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes"
           className={`card-modal-input ${CM.notesField}`}
-          style={inputTextStyle}
         />
       </div>
-
-      {/* Inline style for placeholder — applied via className and style injection */}
-      <style>{`
-        .card-modal-input::placeholder {
-          color: ${inputStyles.placeholderColor};
-          font-size: ${inputStyles.placeholderFontSize};
-        }
-        .card-modal-input {
-          color: ${inputStyles.textColor};
-          font-size: ${inputStyles.textFontSize};
-        }
-      `}</style>
 
       {/* BUTTON ROW */}
       <div className={CM.buttonRow}>
@@ -426,8 +405,7 @@ window.App = function App() {
   };
 
   const handleConfirmCalendar = () => {
-    const abbrevLength = D.monthAbbreviationLength || 3;
-    const formattedString = `${D.monthNames[tempMonthIdx].substring(0, abbrevLength)} ${tempYear}`;
+    const formattedString = `${D.monthNames[tempMonthIdx].substring(0, 3)} ${tempYear}`;
     if (calendarTargetField === 'appCurrent') {
       setCurrentYear(tempYear);
       setCurrentMonthIdx(tempMonthIdx);
@@ -471,7 +449,7 @@ window.App = function App() {
       if (!str) return { year: 0, monthIdx: 0 };
       const [mStr, yStr] = str.split(' ');
       const year = parseInt(yStr) || 0;
-      const shortNames = D.monthNames.map(n => n.substring(0, D.monthAbbreviationLength || 3).toUpperCase());
+      const shortNames = D.monthNames.map(n => n.substring(0, 3).toUpperCase());
       const monthIdx = shortNames.indexOf(mStr.toUpperCase());
       return { year, monthIdx };
     };
@@ -844,7 +822,7 @@ window.App = function App() {
                         style={{
                           transform: `translateY(-${currencyIndex * 28}px)`,
                           height: `${D.currencyOptions.length * 28}px`,
-                          transition: `transform ${A.modalDuration} ${A.modalCurve}`,
+                          transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
                           top: '0px'
                         }}
                       >
@@ -909,7 +887,7 @@ window.App = function App() {
                       style={{
                         transform: `translateY(-${currentTimelineIndex * 28}px)`,
                         height: `${TIMELINE_YEARS.length * 28}px`,
-                        transition: `transform ${A.modalDuration} ${A.modalCurve}`,
+                        transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
                         top: '0px'
                       }}
                     >
@@ -928,7 +906,7 @@ window.App = function App() {
                     const isSelected = tempMonthIdx === idx;
                     return (
                       <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
-                        {monthName.substring(0, D.monthAbbreviationLength || 3).toUpperCase()}
+                        {monthName.substring(0, 3).toUpperCase()}
                       </button>
                     );
                   })}
@@ -941,31 +919,67 @@ window.App = function App() {
               </div>
             )}
 
+            {/* ADD / EDIT EXPENSE MODAL - REDESIGNED */}
             {(modal.type === 'add' || modal.type === 'edit') && (
-              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
-                <h3 className={MDL.titleHeader}>{modal.type === 'add' ? 'Add Expense' : 'Edit Expense'}</h3>
-                <div className={MDL.inputRowGroup}>
-                  <div className={MDL.numericInputBox}>
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A), padding: '16px' }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+                
+                {/* HEADER ROW: Icon + Title with 8px gap */}
+                <div className={MDL.headerRow}>
+                  <Icon name="editExpenseIcon" />
+                  <span className={MDL.headerTitle}>
+                    {modal.type === 'add' ? 'Add expense' : 'Edit expense'}
+                  </span>
+                </div>
+
+                {/* AMOUNT FIELD ROW (with toggle button) */}
+                <div className={MDL.actionsFlexRow} style={{ marginBottom: '12px' }}>
+                  <div style={MDL.amountInputBoxStyle} className={MDL.amountInputBox}>
                     <input
-                      type="number" placeholder="0.00" value={modal.amount} onChange={(e) => setModal(m => ({ ...m, amount: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
-                      className={MDL.numericInputField} autoFocus
+                      type="number"
+                      placeholder="0.00"
+                      value={modal.amount}
+                      onChange={(e) => setModal(m => ({ ...m, amount: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
+                      className={MDL.amountInputField}
+                      autoFocus
+                      style={MDL.amountPlaceholderStyle}
                     />
                   </div>
                   <button onClick={() => setModal(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
-                    {modal.paid ? <Icon name="buttonPaid" /> : <Icon name="buttonUnpaid" />}
+                    <img 
+                      src={`./SVG/${modal.paid ? 'Button-Paid.svg' : 'Button-Unpaid.svg'}`}
+                      className={MDL.paidStateToggleImg}
+                      alt={modal.paid ? 'Paid' : 'Unpaid'}
+                    />
                   </button>
                 </div>
-                <div className={MDL.descriptionInputBox}>
+
+                {/* DESCRIPTION FIELD */}
+                <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: '16px' }} className={MDL.descriptionInputBox}>
                   <input
-                    type="text" placeholder="Description (leave empty for default)" value={modal.description} onChange={(e) => setModal(m => ({ ...m, description: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
+                    type="text"
+                    placeholder="Edit description (Optional)"
+                    value={modal.description}
+                    onChange={(e) => setModal(m => ({ ...m, description: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmModal(); }}
                     className={MDL.descriptionInputField}
+                    style={MDL.descriptionPlaceholderStyle}
                   />
                 </div>
+
+                {/* ACTION BUTTONS: OK + Cancel + Delete (edit mode only) */}
                 <div className={MDL.actionsFlexRow}>
-                  <button onClick={handleConfirmModal} className={MDL.confirmBtn}>Confirm</button>
-                  <button onClick={closeModal} className={MDL.cancelBtn}>Cancel</button>
+                  <button onClick={handleConfirmModal} className={MDL.confirmBtn}>
+                    OK
+                  </button>
+                  <button onClick={closeModal} className={MDL.cancelBtn}>
+                    Cancel
+                  </button>
                   {modal.type === 'edit' && (
-                    <button onClick={() => setModal(m => ({ ...m, type: 'delete' }))} style={MDL.deleteActionBtnStyle} className={MDL.deleteActionBtn}>
+                    <button 
+                      onClick={() => setModal(m => ({ ...m, type: 'delete' }))} 
+                      className={`${MDL.deleteActionBtn} ${MDL.deleteActionBtnRingClass}`}
+                    >
                       <Icon name="trash" />
                     </button>
                   )}
@@ -973,6 +987,7 @@ window.App = function App() {
               </div>
             )}
 
+            {/* DELETE EXPENSE CONFIRMATION MODAL */}
             {modal.type === 'delete' && (
               <div style={{ ...MDL.deleteContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
                 <h4 className={MDL.deletePromptTitle}>Are you sure you want to delete this amount?</h4>

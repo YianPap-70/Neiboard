@@ -25,24 +25,6 @@ window.DESIGN = {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ],
-  monthAbbreviationLength: 3, // For calendar and range picker displays
-  
-  // ─── TEXTAREA CONFIGURATION ──────────────────────────────────────────────
-  textarea: {
-    maxVisibleLines: 5,
-    verticalPadding: 28, // Total vertical padding (top+bottom) in pixels
-    transitionDuration: '0.2s',
-    transitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
-    minHeight: '50px'
-  },
-
-  // ─── INPUT PLACEHOLDER STYLES ────────────────────────────────────────────
-  inputStyles: {
-    placeholderColor: 'rgba(225,227,248,0.5)',
-    textColor: '#E1E3F8',
-    placeholderFontSize: '12px',
-    textFontSize: '14px'
-  },
 
   // ─── GLOBAL LAYOUT & APP CONTAINER ────────────────────────────────────────
   layout: {
@@ -57,10 +39,8 @@ window.DESIGN = {
     stickyContainer: "sticky top-0 z-40 w-full mx-auto pt-3 pb-2 flex flex-col gap-2",
     stickyContainerStyle: { backgroundColor: '#11112E' },
 
-    // Universal touch target container for icons
     touchTargetBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity",
 
-    // Row 1 Structuring
     topRow: "flex items-center pl-[2px] pr-[2px] w-full",
     leftActionGroup: "flex items-center gap-2",
     debtSection: "flex items-center gap-2 ml-auto",
@@ -69,17 +49,14 @@ window.DESIGN = {
     currencySizeMod: "text-[0.7em] mr-1",
     syncIconWrapper: "ml-2",
 
-    // Row 2 Structuring
     bottomRow: "flex items-center pl-[2px] pr-[2px] w-full",
     monthTextBtn: "font-extralight tracking-wide text-left text-2xl text-[#F2C454] hover:opacity-80 transition-opacity select-none truncate pr-2",
 
-    // Navigation Split Pill Container
     navPillContainer: "w-[100px] h-[44px] bg-[#49496A] rounded-[22px] flex items-center justify-between ml-auto select-none relative overflow-hidden shrink-0",
     navPillIconArea: "w-[50px] h-11 flex items-center justify-center pointer-events-none text-[#E1E3F8]",
     navPillLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.1)] transition-colors",
     navPillRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.1)] transition-colors",
 
-    // Floating snap button
     goTodayFloatBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity ml-1"
   },
 
@@ -133,10 +110,8 @@ window.DESIGN = {
     cardClickableHeader: "flex items-center justify-between cursor-pointer select-none gap-3",
 
     profileArea: "flex items-center min-w-0 gap-3",
-    // Avatar is now a tap target — isolated from card expand
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
     avatarImg: "object-contain h-[46px] w-[46px] opacity-50 pointer-events-none",
-    // Clickable name/meta area (expands card)
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
     apartmentNumber: "font-medium truncate text-sm text-[rgba(225,227,248,0.5)]",
@@ -199,46 +174,51 @@ window.DESIGN = {
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
-    boxContainer: "w-full relative shrink-0 bg-[#333355] p-5 shadow-2xl",
-    boxContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '340px' },
+    boxContainer: "w-full relative shrink-0 bg-[#333355] shadow-2xl",
+    boxContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: 'calc(100% - 64px)', margin: '0 auto' },
     deleteContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '320px' },
 
-    titleHeader: "font-bold uppercase tracking-widest mb-4 text-[11px] text-[rgba(225,227,248,0.5)]",
-    inputRowGroup: "flex items-center justify-between gap-3 mb-4",
-    numericInputBox: "flex-1 px-4 flex items-center min-w-0 bg-[#E1E3F8] h-[56px] rounded-[12px]",
-    numericInputField: "bg-transparent font-bold w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::placeholder]:text-sm [&::placeholder]:font-normal text-[28px] text-[#11112E]",
+    headerRow: "flex items-center gap-2 mb-4",
+    headerIcon: "h-4 w-4 shrink-0 opacity-50",
+    headerTitle: "text-[14px] text-[#E1E3F8] opacity-50 tracking-wide",
 
-    paidStateToggleBtn: "shrink-0 w-[54px] h-[54px] flex items-center justify-center transition-transform active:scale-95",
-    descriptionInputBox: "px-4 flex items-center mb-6 bg-[#E1E3F8] h-[50px] rounded-[12px]",
-    descriptionInputField: "bg-transparent w-full focus:outline-none [&::placeholder]:text-xs text-base text-[#11112E]",
+    amountInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
+    amountInputBoxStyle: { height: '52px' },
+    amountInputField: "bg-transparent font-bold w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[26px] text-[#333355]",
+    amountPlaceholderStyle: { fontSize: '14px', color: '#E1E3F8', opacity: 0.5, fontWeight: 'normal' },
 
-    actionsFlexRow: "flex items-center gap-3",
-    confirmBtn: "flex-1 font-bold transition-transform active:scale-95 text-center bg-[#FB7E48] text-[#11112E] h-12 rounded-[9999px]",
-    cancelBtn: "flex-1 font-semibold transition-transform active:scale-95 text-center bg-[#49496A] text-[#E1E3F8] h-12 rounded-[9999px]",
+    paidStateToggleBtn: "shrink-0 w-[52px] h-[52px] flex items-center justify-center transition-transform active:scale-95",
+    paidStateToggleImg: "h-9 w-auto",
 
-    deleteActionBtn: "shrink-0 flex items-center justify-center transition-transform active:scale-95 w-12 h-12 rounded-[9999px] text-[#E1E3F8]",
-    deleteActionBtnStyle: { backgroundColor: _DESIGN_PRIVATE.HEX_WARNING_RED },
+    descriptionInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
+    descriptionInputBoxStyle: { height: '44px' },
+    descriptionInputField: "bg-transparent w-full focus:outline-none text-[16px] text-[#333355]",
+    descriptionPlaceholderStyle: { fontSize: '14px', color: '#E1E3F8', opacity: 0.5 },
+
+    actionsFlexRow: "flex items-center gap-3 w-full",
+    
+    confirmBtn: "flex-1 font-bold transition-transform active:scale-95 text-center bg-[#49496A] text-[#E1E3F8] h-[52px] rounded-[9999px]",
+    cancelBtn: "flex-1 font-semibold transition-transform active:scale-95 text-center bg-[#49496A] text-[#E1E3F8] h-[52px] rounded-[9999px]",
+    
+    deleteActionBtn: "shrink-0 flex items-center justify-center transition-transform active:scale-95 w-[52px] h-[52px] rounded-[9999px] bg-[#49496A] outline-none select-none",
+    deleteActionBtnRingClass: "ring-2 ring-[#E25344]",
 
     deletePromptTitle: "font-bold mb-6 text-xl text-[#E1E3F8]",
     deleteYesBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] text-[#E1E3F8]",
     deleteYesBtnStyle: { backgroundColor: _DESIGN_PRIVATE.HEX_WARNING_RED },
     deleteNoBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] bg-[#49496A] text-[#E1E3F8]",
 
-    // ─── CALENDAR DESIGN SYSTEM TOKENS ────────────────────────────────────────
     calendar: {
       yearPill: "w-full h-11 bg-[#49496A] rounded-[22px] flex items-center justify-between px-4 mb-4 select-none relative overflow-hidden",
       yearIconArea: "w-6 h-11 flex items-center justify-center pointer-events-none text-[#E1E3F8]",
       yearRollWrapper: "h-7 overflow-hidden relative pointer-events-none flex items-center justify-center w-28",
       yearRollContainer: "absolute flex flex-col items-center",
       yearText: "text-xl font-bold text-[#E1E3F8] tracking-wider h-7 leading-7 flex items-center justify-center",
-
       leftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)] transition-colors",
       rightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)] transition-colors",
-
       gridContainer: "grid grid-cols-4 gap-x-2 gap-y-2 mb-4 justify-items-center justify-center mx-auto",
       monthCircle: "w-[52px] h-[52px] rounded-full bg-[#49496A] text-[13px] font-bold text-[#E1E3F8] tracking-wide flex items-center justify-center transition-all duration-300 outline-none select-none",
       monthActiveRing: "ring-2 ring-[#9CE66B]",
-
       footerRow: "flex items-center gap-3 mt-4",
       actionBtn: "flex-1 h-11 rounded-[22px] bg-[#49496A] text-[#E1E3F8] text-sm font-semibold tracking-wide text-center transition-transform active:scale-95 outline-none"
     }
@@ -253,56 +233,30 @@ window.DESIGN = {
     boxContainer: "w-full relative shrink-0 bg-[#333355] shadow-2xl",
     boxContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '340px', padding: '16px' },
 
-    // Header row: icon + label
     headerRow: "flex items-center gap-3 mb-4",
     headerIcon: "h-7 w-7 shrink-0 opacity-80",
     headerLabel: "font-bold text-lg text-[#E1E3F8] tracking-wide",
 
-    // Text field shared styles
     fieldWrapper: "bg-[#49496A] rounded-[12px] px-4 flex items-start w-full",
-    // Single-line fields (name, apartment)
-    singleLineField: "w-full bg-transparent focus:outline-none h-[50px] leading-[50px]",
-    // Notes field (multiline, auto-expand)
-    notesField: "w-full bg-transparent focus:outline-none resize-none leading-[1.5] py-[14px] overflow-hidden",
-    
-    // Field gaps
+    singleLineField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] h-[50px] leading-[50px]",
+    notesField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] resize-none leading-[1.5] py-[14px] overflow-hidden",
     fieldGap: "12px",
     headerToFieldGap: "16px",
     fieldToButtonGap: "16px",
 
-    // Button row
     buttonRow: "flex items-center gap-3 w-full",
-    // OK / +Next buttons: green ring
     okBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
-    // Cancel (X) button for Add Card: red ring, icon only, fixed size
     cancelIconBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     cancelIconImg: "h-5 w-5 pointer-events-none",
-    // Cancel text button for Edit Card: red ring
     cancelTextBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
-    // Trash button for Edit Card: red ring, icon only, fixed size
     trashBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     trashIcon: "h-5 w-5 pointer-events-none",
 
-    // ─── DELETE CARD CONFIRMATION ────────────────────────────────────────────
     deleteConfirmBoxStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '320px', padding: '20px' },
     deleteConfirmTitle: "font-bold text-xl text-[#E1E3F8] text-center mb-6 leading-snug",
     deleteConfirmRow: "flex items-center gap-4",
-    // Yes: red ring
     deleteConfirmYesBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
-    // No: green ring
     deleteConfirmNoBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
-    
-    // Injected style block content (moved from App.js)
-    inputStyles: `
-      .card-modal-input::placeholder {
-        color: rgba(225,227,248,0.5);
-        font-size: 12px;
-      }
-      .card-modal-input {
-        color: #E1E3F8;
-        font-size: 14px;
-      }
-    `
   },
 
   // ─── REUSABLE ASSETS ──────────────────────────────────────────────────────
@@ -314,19 +268,18 @@ window.DESIGN = {
     calendarLeft: { src: 'Arrow-Left.svg', className: 'h-[18px]', alt: 'Previous Year' },
     calendarRight: { src: 'Arrow-Right.svg', className: 'h-[18px]', alt: 'Next Year' },
     goToday: { src: 'Icon-Go-Today.svg', className: 'h-8', alt: 'Go to Today' },
-
     checkmark: { src: 'Icon-Check.svg', className: 'h-5', alt: 'Paid' },
     warning: { src: 'Icon-Warning-Filled.svg', className: 'h-5', alt: 'Unpaid' },
     caret: { src: 'Icon-Caret.svg', className: 'w-4 h-4', alt: 'Expand/Collapse' },
     trash: { src: 'Icon-Trash.svg', className: 'h-6', alt: 'Delete' },
-    buttonPaid: { src: 'Button-Paid.svg', className: 'w-full h-full', alt: 'Paid' },
-    buttonUnpaid: { src: 'Button-Unpaid.svg', className: 'w-full h-full', alt: 'Mark as Paid' },
+    buttonPaid: { src: 'Button-Paid.svg', className: 'h-9 w-auto', alt: 'Paid' },
+    buttonUnpaid: { src: 'Button-Unpaid.svg', className: 'h-9 w-auto', alt: 'Mark as Paid' },
     download: { src: 'Icon-Download.svg', className: 'h-5', alt: 'Download PDF' },
-    // New card modal icons
     addUserHeader: { src: 'Button-Add-User.svg', className: 'h-7 w-7', alt: 'Add Card' },
-    editHeader: { src: 'Icon-Edit.svg', className: 'h-7 w-7', alt: 'Edit Card' },
+    editHeader: { src: 'Icon-Edit.svg', className: 'h-4 w-4', alt: 'Edit Expense' },
     cancelEx: { src: 'Icon-Ex.svg', className: 'h-5 w-5', alt: 'Cancel' },
     trashCard: { src: 'Icon-Trash.svg', className: 'h-5 w-5', alt: 'Delete Card' },
+    editExpenseIcon: { src: 'Icon-Edit.svg', className: 'h-4 w-4', alt: 'Edit' }
   },
 
   animation: {
