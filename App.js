@@ -28,7 +28,6 @@ function Icon({ name, className = '' }) {
   );
 }
 
-// Rewritten component to react natively to app state currency modifications
 function CurrencySymbol({ activeSymbol, className = '' }) {
   if (activeSymbol === '') return null;
   return <span className={className}>{activeSymbol}</span>;
@@ -38,6 +37,7 @@ function Drawer({ isOpen, children }) {
   const [height, setHeight] = useState(0);
   const contentRef = useRef(null);
   const A = window.DESIGN.animation;
+  const drawerConfig = window.DESIGN.drawer;
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -50,23 +50,29 @@ function Drawer({ isOpen, children }) {
   }, [isOpen, children]);
 
   return (
-    <div style={{ height: height + 'px', overflow: 'hidden', transition: `height ${A.drawerDuration} ${A.drawerCurve}` }}>
+    <div 
+      style={{ 
+        height: height + 'px', 
+        transition: `height ${A.drawerDuration} ${A.drawerCurve}`,
+        ...drawerConfig.containerStyle 
+      }}
+    >
       <div ref={contentRef}>{children}</div>
     </div>
   );
 }
 
-// ─── AUTO-EXPANDING TEXTAREA ──────────────────────────────────────────────────
-// Grows vertically as user types, up to 5 lines, then stops.
 function AutoTextarea({ value, onChange, placeholder, className, style }) {
   const ref = useRef(null);
+  const A = window.DESIGN.animation;
+  const textareaConfig = window.DESIGN.autoTextarea;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.style.height = 'auto';
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 21;
-    const maxHeight = lineHeight * 5 + 28; // 5 lines + vertical padding
+    const maxHeight = lineHeight * textareaConfig.maxLines + 28;
     el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
     el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
   }, [value]);
@@ -78,27 +84,25 @@ function AutoTextarea({ value, onChange, placeholder, className, style }) {
       onChange={onChange}
       placeholder={placeholder}
       className={className}
-      style={{ ...style, transition: 'height 0.2s cubic-bezier(0.25, 1, 0.5, 1)', minHeight: '50px' }}
+      style={{ 
+        ...style, 
+        transition: `height ${A.autoTextareaDuration} ${A.autoTextareaCurve}`,
+        minHeight: textareaConfig.minHeight 
+      }}
       rows={1}
     />
   );
 }
 
-// ─── CARD PROFILE MODAL (ADD / EDIT) ─────────────────────────────────────────
 function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onDeleteRequest, animStyle }) {
   const CM = window.DESIGN.cardModal;
-  const A = window.DESIGN.animation;
+  const inputStyles = window.DESIGN.cardModalInput;
 
   const [name, setName] = useState(residentData?.name || '');
   const [apartment, setApartment] = useState(residentData?.apartment || '');
   const [notes, setNotes] = useState(residentData?.notes || '');
 
-  const placeholderStyle = {
-    // Placeholder colour & size set via CSS injection below — textareas & inputs share same approach
-  };
-
   const fieldGap = CM.fieldGap;
-  const headerToFieldGap = CM.headerToFieldGap;
   const fieldToButtonGap = CM.fieldToButtonGap;
 
   const handleConfirm = () => {
@@ -119,10 +123,16 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
       style={{ ...CM.boxContainerStyle, ...animStyle }}
       className={CM.boxContainer}
     >
-      {/* Inline style block for placeholder styling — cannot be done via Tailwind on mobile WebView */}
+      {/* Style tag for placeholder styling - this is OK because it's styling, not layout */}
       <style>{`
-        .card-modal-input::placeholder { color: rgba(225,227,248,0.5); font-size: 12px; }
-        .card-modal-input { color: #E1E3F8; font-size: 14px; }
+        .card-modal-input::placeholder {
+          color: ${inputStyles.placeholderColor};
+          font-size: ${inputStyles.placeholderFontSize};
+        }
+        .card-modal-input {
+          color: ${inputStyles.textColor};
+          font-size: ${inputStyles.fontSize};
+        }
       `}</style>
 
       {/* HEADER ROW */}
@@ -171,22 +181,16 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
       <div className={CM.buttonRow}>
         {isAdd ? (
           <>
-            {/* OK — finish and add */}
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
-            {/* + Next — add and clear for another */}
             <button className={CM.okBtn} onClick={handleNext}>+ Next</button>
-            {/* Cancel X icon */}
             <button className={CM.cancelIconBtn} onClick={onCancel}>
               <img src="./SVG/Icon-Ex.svg" className={`keep-raw-colors ${CM.cancelIconImg}`} alt="Cancel" />
             </button>
           </>
         ) : (
           <>
-            {/* OK — save edits */}
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
-            {/* Cancel — discard */}
             <button className={CM.cancelTextBtn} onClick={onCancel}>Cancel</button>
-            {/* Trash — delete resident */}
             <button className={CM.trashBtn} onClick={onDeleteRequest}>
               <img src="./SVG/Icon-Trash.svg" className={`keep-raw-colors ${CM.trashIcon}`} alt="Delete Card" />
             </button>
@@ -197,13 +201,12 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
   );
 }
 
-// ─── DELETE CARD CONFIRMATION MODAL ──────────────────────────────────────────
 function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle }) {
   const CM = window.DESIGN.cardModal;
   return (
     <div
       style={{ ...CM.deleteConfirmBoxStyle, ...animStyle }}
-      className={`${window.DESIGN.modal.boxContainer}`}
+      className={window.DESIGN.modal.boxContainer}
     >
       <p className={CM.deleteConfirmTitle}>Are you sure you want to delete this Card?</p>
       <div className={CM.deleteConfirmRow}>
@@ -224,7 +227,6 @@ window.App = function App() {
   const CAL = D.modal.calendar;
   const MNU = D.mainMenu;
   const A = D.animation;
-  const CM = D.cardModal;
 
   useEffect(() => {
     if (LAYOUT && LAYOUT.appBackgroundHex) {
@@ -232,29 +234,23 @@ window.App = function App() {
     }
   }, []);
 
-  // Menu Open/Close State Controller
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('EN');
+  const [currentSortBy, setCurrentSortBy] = useState('Tag');
+  const [currencyIndex, setCurrencyIndex] = useState(0);
 
-  // Sorting and Option Controls States
-  const [currentLanguage, setCurrentLanguage] = useState('EN'); // EN or GR
-  const [currentSortBy, setCurrentSortBy] = useState('Tag'); // Tag or Debt
-  const [currencyIndex, setCurrencyIndex] = useState(0); // Index for options tracking
-
-  // Active currency symbol computed state
   const activeCurrencySymbol = useMemo(() => {
     return D.currencyOptions[currencyIndex]?.symbol ?? '€';
   }, [currencyIndex, D.currencyOptions]);
 
-  // Date Range Picker States
   const [fromMonth, setFromMonth] = useState('');
   const [toMonth, setToMonth] = useState('');
-  const [calendarTargetField, setCalendarTargetField] = useState(null); // 'appCurrent', 'rangeFrom', 'rangeTo'
+  const [calendarTargetField, setCalendarTargetField] = useState(null);
 
   const [currentMonthIdx, setCurrentMonthIdx] = useState(systemDate.getMonth());
   const [currentYear, setCurrentYear] = useState(systemDate.getFullYear());
   const currentMonthString = `${D.monthNames[currentMonthIdx]} ${currentYear}`;
 
-  // Stable top-level state counters for the interactive selection overlay
   const [tempYear, setTempYear] = useState(systemDate.getFullYear());
   const [tempMonthIdx, setTempMonthIdx] = useState(systemDate.getMonth());
 
@@ -262,13 +258,10 @@ window.App = function App() {
   const [expandedResident, setExpandedResident] = useState(null);
   const [openPreviousDrawer, setOpenPreviousDrawer] = useState({});
 
-  // ─── EXPENSE MODAL STATE ────────────────────────────────────────────────────
   const [modal, setModal] = useState({
     type: null, residentId: null, expenseId: null, amount: '', description: '', paid: false
   });
 
-  // ─── CARD PROFILE MODAL STATE ───────────────────────────────────────────────
-  // cardModal.type: null | 'addCard' | 'editCard' | 'deleteCard'
   const [cardModal, setCardModal] = useState({
     type: null,
     residentId: null,
@@ -301,14 +294,12 @@ window.App = function App() {
     return false;
   }, [currentMonthIdx, currentYear]);
 
-  // Combined compute loop that returns the total ledger debt across cards
   const totalAllDebts = useMemo(() => {
     return residents.reduce((total, resident) => {
       return total + resident.expenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
     }, 0);
   }, [residents]);
 
-  // Recalculates resident card positioning dynamically on render depending on menu choices
   const processedResidents = useMemo(() => {
     const listCopy = [...residents];
 
@@ -347,7 +338,6 @@ window.App = function App() {
     }
   };
 
-  // ─── EXPENSE MODAL HANDLERS ─────────────────────────────────────────────────
   const openModal = (type, residentId, expenseId = null, amount = '', description = '', paid = false) => {
     if (type === 'calendar') {
       setCalendarTargetField('appCurrent');
@@ -479,16 +469,12 @@ window.App = function App() {
     setToMonth('');
   };
 
-  // ─── CARD PROFILE MODAL HANDLERS ────────────────────────────────────────────
-
-  // Opens Add Card modal (from header Add User button)
   const handleOpenAddCard = () => {
     setCardModal({ type: 'addCard', residentId: null });
   };
 
-  // Opens Edit Card modal (from avatar tap on a resident card)
   const handleOpenEditCard = (residentId, e) => {
-    e.stopPropagation(); // Prevent card expand/collapse
+    e.stopPropagation();
     setCardModal({ type: 'editCard', residentId });
   };
 
@@ -496,7 +482,6 @@ window.App = function App() {
     setCardModal({ type: null, residentId: null });
   };
 
-  // Confirm Add Card — creates a new resident and closes modal
   const handleConfirmAddCard = ({ name, apartment, notes }) => {
     const newResident = {
       id: 'R-' + Date.now(),
@@ -510,7 +495,6 @@ window.App = function App() {
     closeCardModal();
   };
 
-  // + Next — adds the card and clears fields for the next entry (modal stays open)
   const handleNextAddCard = ({ name, apartment, notes }) => {
     const newResident = {
       id: 'R-' + Date.now(),
@@ -521,10 +505,8 @@ window.App = function App() {
       expenses: [],
     };
     setResidents(prev => [...prev, newResident]);
-    // Modal stays open — CardProfileModal clears its own fields internally
   };
 
-  // Confirm Edit Card — updates name, apartment, notes on the resident
   const handleConfirmEditCard = ({ name, apartment, notes }) => {
     setResidents(prev => prev.map(res =>
       res.id === cardModal.residentId
@@ -534,15 +516,12 @@ window.App = function App() {
     closeCardModal();
   };
 
-  // Trash pressed in Edit Card — transition to delete confirmation
   const handleDeleteCardRequest = () => {
     setCardModal(prev => ({ ...prev, type: 'deleteCard' }));
   };
 
-  // Confirmed deletion of resident card
   const handleConfirmDeleteCard = () => {
     setResidents(prev => prev.filter(res => res.id !== cardModal.residentId));
-    // Collapse if was expanded
     if (expandedResident === cardModal.residentId) {
       setExpandedResident(null);
       setOpenPreviousDrawer({});
@@ -550,18 +529,15 @@ window.App = function App() {
     closeCardModal();
   };
 
-  // "No" on delete confirmation — go back to Edit Card
   const handleCancelDeleteCard = () => {
     setCardModal(prev => ({ ...prev, type: 'editCard' }));
   };
 
-  // Derive resident data for Edit Card modal
   const editingResident = useMemo(() => {
     if (!cardModal.residentId) return null;
     return residents.find(r => r.id === cardModal.residentId) || null;
   }, [cardModal.residentId, residents]);
 
-  // Shared animation style for card modal content
   const cardModalContentAnim = MDL.contentAnimation(A);
   const cardModalBackdropAnim = MDL.backdropAnimation(A);
 
@@ -569,16 +545,12 @@ window.App = function App() {
     <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
       <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
 
-        {/* TOP COMPONENT STICKY HEADER BOX */}
         <header style={HDR.stickyContainerStyle} className={HDR.stickyContainer}>
-
-          {/* FIRST ROW */}
           <div className={HDR.topRow}>
             <div className={HDR.leftActionGroup}>
               <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
                 <Icon name="hamburger" />
               </button>
-              {/* Add User button now opens Add Card modal */}
               <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
                 <Icon name="addUser" />
               </button>
@@ -601,13 +573,11 @@ window.App = function App() {
             </div>
           </div>
 
-          {/* SECOND ROW */}
           <div className={HDR.bottomRow}>
             <button className={HDR.monthTextBtn} onClick={() => openModal('calendar', null)}>
               {currentMonthString}
             </button>
 
-            {/* Unified Month Navigation Pill */}
             <div className={HDR.navPillContainer}>
               <div className={HDR.navPillIconArea}>
                 <Icon name="calendarLeft" />
@@ -615,13 +585,10 @@ window.App = function App() {
               <div className={HDR.navPillIconArea}>
                 <Icon name="calendarRight" />
               </div>
-
-              {/* Invisible High-Accessibility Touch Slices */}
               <div className={HDR.navPillLeftTapZone} onClick={handlePrevMonth} />
               <div className={HDR.navPillRightTapZone} onClick={handleNextMonth} />
             </div>
 
-            {/* "Go Today" Action Pin Snap button */}
             <button
               onClick={handleGoToCurrentMonth}
               className={HDR.goTodayFloatBtn}
@@ -634,7 +601,6 @@ window.App = function App() {
 
         <div style={{ height: '12px' }} />
 
-        {/* RENDER DYNAMIC CARDS CONTAINER */}
         <div className={CARD.cardListContainer}>
           {processedResidents.map((resident) => {
             const isExpanded = expandedResident === resident.id;
@@ -657,10 +623,7 @@ window.App = function App() {
                 <div className={CARD.cardBody}>
                   <div className={CARD.cardInnerPadding}>
 
-                    {/* CARD HEADER — split into avatar button + expandable right area */}
-                    <div className="flex items-center justify-between gap-3">
-
-                      {/* AVATAR — isolated tap target → opens Edit Card modal */}
+                    <div className={CARD.cardHeaderContainer}>
                       <button
                         className={CARD.avatarBtn}
                         onClick={(e) => handleOpenEditCard(resident.id, e)}
@@ -676,9 +639,8 @@ window.App = function App() {
                         />
                       </button>
 
-                      {/* RIGHT AREA — name + balance + caret → expands/collapses card */}
                       <div
-                        className="flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3"
+                        className={CARD.cardHeaderRightArea}
                         onClick={() => handleResidentHeaderClick(resident.id)}
                       >
                         <div className={CARD.textMetaArea}>
@@ -694,8 +656,8 @@ window.App = function App() {
                           </span>
                         </div>
                       </div>
-
                     </div>
+
                   </div>
 
                   <Drawer isOpen={isExpanded}>
@@ -787,12 +749,10 @@ window.App = function App() {
           })}
         </div>
 
-        {/* MAIN OVERLAY MENU */}
         {isMainMenuOpen && (
           <div style={MNU.backdropAnimation(A)} className={MNU.backdropOverlay} onClick={() => setIsMainMenuOpen(false)}>
             <div style={{ ...MNU.boxContainerStyle, ...MNU.contentAnimation(A) }} className={MNU.boxContainer} onClick={(e) => e.stopPropagation()}>
 
-              {/* LANGUAGE SECTION */}
               <div className={MNU.sectionRow}>
                 <span className={MNU.sectionLabelLeft}>Language</span>
                 <div className={MNU.optionsRightGroup}>
@@ -801,7 +761,6 @@ window.App = function App() {
                 </div>
               </div>
 
-              {/* SORT BY SECTION */}
               <div className={MNU.sectionRow}>
                 <span className={MNU.sectionLabelLeft}>Sort by</span>
                 <div className={MNU.optionsRightGroup}>
@@ -810,7 +769,6 @@ window.App = function App() {
                 </div>
               </div>
 
-              {/* SLOT MACHINE SYMBOL SELECTOR SECTION */}
               <div className={MNU.sectionRow}>
                 <span className={MNU.sectionLabelLeft}>Symbol</span>
                 <div className={MNU.optionsRightGroup}>
@@ -838,7 +796,6 @@ window.App = function App() {
                 </div>
               </div>
 
-              {/* RANGE SELECTOR AND DATA DELETE BLOCK */}
               <div className={MNU.dateRangeSection}>
                 <div className={MNU.dateRangeButtonsRow}>
                   <button onClick={() => handleOpenRangePicker('rangeFrom')} className={MNU.dateRangeBtn}>
@@ -858,7 +815,6 @@ window.App = function App() {
                 </button>
               </div>
 
-              {/* ACTION FOOTER ROW */}
               <div className={MNU.footerRow}>
                 <button className={MNU.actionBtn} onClick={() => console.log('Export PDF...')}>
                   <Icon name="download" /> PDF
@@ -872,11 +828,9 @@ window.App = function App() {
           </div>
         )}
 
-        {/* INPUT INTERFACE MODALS — EXPENSE */}
         {modal.type && (
           <div style={MDL.backdropAnimation(A)} className={MDL.backdropOverlay} onClick={closeModal}>
 
-            {/* CALENDAR SELECTION MODAL */}
             {modal.type === 'calendar' && (
               <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
                 <div className={CAL.yearPill}>
@@ -919,11 +873,9 @@ window.App = function App() {
               </div>
             )}
 
-            {/* ADD / EDIT EXPENSE MODAL - REDESIGNED */}
             {(modal.type === 'add' || modal.type === 'edit') && (
-              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A), padding: '16px' }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
                 
-                {/* HEADER ROW: Icon + Title with 8px gap */}
                 <div className={MDL.headerRow}>
                   <Icon name="editExpenseIcon" />
                   <span className={MDL.headerTitle}>
@@ -931,7 +883,6 @@ window.App = function App() {
                   </span>
                 </div>
 
-                {/* AMOUNT FIELD ROW (with toggle button) */}
                 <div className={MDL.actionsFlexRow} style={{ marginBottom: '12px' }}>
                   <div style={MDL.amountInputBoxStyle} className={MDL.amountInputBox}>
                     <input
@@ -954,7 +905,6 @@ window.App = function App() {
                   </button>
                 </div>
 
-                {/* DESCRIPTION FIELD */}
                 <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: '16px' }} className={MDL.descriptionInputBox}>
                   <input
                     type="text"
@@ -967,7 +917,6 @@ window.App = function App() {
                   />
                 </div>
 
-                {/* ACTION BUTTONS: OK + Cancel + Delete (edit mode only) */}
                 <div className={MDL.actionsFlexRow}>
                   <button onClick={handleConfirmModal} className={MDL.confirmBtn}>
                     OK
@@ -987,9 +936,8 @@ window.App = function App() {
               </div>
             )}
 
-            {/* DELETE EXPENSE CONFIRMATION MODAL */}
             {modal.type === 'delete' && (
-              <div style={{ ...MDL.deleteContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
                 <h4 className={MDL.deletePromptTitle}>Are you sure you want to delete this amount?</h4>
                 <div className={MDL.actionsFlexRow}>
                   <button onClick={handleDeleteExpense} style={MDL.deleteYesBtnStyle} className={MDL.deleteYesBtn}>Yes</button>
@@ -1000,16 +948,13 @@ window.App = function App() {
           </div>
         )}
 
-        {/* CARD PROFILE MODALS — ADD CARD / EDIT CARD / DELETE CARD CONFIRM */}
         {cardModal.type && (
           <div
             style={cardModalBackdropAnim}
             className={CM.backdropOverlay}
             onClick={closeCardModal}
           >
-            <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '340px' }}>
-
-              {/* ADD CARD MODAL */}
+            <div onClick={(e) => e.stopPropagation()}>
               {cardModal.type === 'addCard' && (
                 <CardProfileModal
                   mode="add"
@@ -1021,7 +966,6 @@ window.App = function App() {
                 />
               )}
 
-              {/* EDIT CARD MODAL */}
               {cardModal.type === 'editCard' && editingResident && (
                 <CardProfileModal
                   mode="edit"
@@ -1034,7 +978,6 @@ window.App = function App() {
                 />
               )}
 
-              {/* DELETE CARD CONFIRMATION MODAL */}
               {cardModal.type === 'deleteCard' && (
                 <DeleteCardConfirmModal
                   onConfirm={handleConfirmDeleteCard}
@@ -1042,7 +985,6 @@ window.App = function App() {
                   animStyle={cardModalContentAnim}
                 />
               )}
-
             </div>
           </div>
         )}

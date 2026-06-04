@@ -107,7 +107,10 @@ window.DESIGN = {
     topIndicatorHasDebtColor: "#F2C454",
     cardBody: "bg-[#333355]",
     cardInnerPadding: "p-4",
-    cardClickableHeader: "flex items-center justify-between cursor-pointer select-none gap-3",
+    
+    // Card header layout (moved from App.js)
+    cardHeaderContainer: "flex items-center justify-between gap-3",
+    cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
 
     profileArea: "flex items-center min-w-0 gap-3",
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
@@ -143,6 +146,28 @@ window.DESIGN = {
     expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-semibold"
   },
 
+  // ─── DRAWER COMPONENT (moved from App.js) ─────────────────────────────────
+  drawer: {
+    containerStyle: { overflow: 'hidden' },
+    transitionProperty: 'height',
+    contentWrapperClass: "", // No classes needed, just the ref container
+  },
+
+  // ─── AUTO-TEXTAREA COMPONENT (moved from App.js) ──────────────────────────
+  autoTextarea: {
+    transition: 'height 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
+    minHeight: '50px',
+    maxLines: 5,
+  },
+
+  // ─── CARD MODAL INPUT STYLES (moved from inline <style> tag) ──────────────
+  cardModalInput: {
+    placeholderColor: 'rgba(225,227,248,0.5)',
+    placeholderFontSize: '12px',
+    textColor: '#E1E3F8',
+    fontSize: '14px',
+  },
+
   // ─── HISTORICAL DRAWER BAR COMPONENTS ─────────────────────────────────────
   historyDrawer: {
     drawerWrapper: "bg-[#49496A] px-4",
@@ -174,9 +199,13 @@ window.DESIGN = {
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
-    boxContainer: "w-full relative shrink-0 bg-[#333355] shadow-2xl",
-    boxContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: 'calc(100% - 64px)', margin: '0 auto' },
-    deleteContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '320px' },
+    // SINGLE SOURCE OF TRUTH for all modal containers
+    boxContainer: "w-full relative shrink-0 bg-[#333355]",
+    boxContainerStyle: { 
+      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
+      maxWidth: '376px',
+      padding: '16px'
+    },
 
     headerRow: "flex items-center gap-2 mb-4",
     headerIcon: "h-4 w-4 shrink-0 opacity-50",
@@ -203,7 +232,7 @@ window.DESIGN = {
     deleteActionBtn: "shrink-0 flex items-center justify-center transition-transform active:scale-95 w-[52px] h-[52px] rounded-[9999px] bg-[#49496A] outline-none select-none",
     deleteActionBtnRingClass: "ring-2 ring-[#E25344]",
 
-    deletePromptTitle: "font-bold mb-6 text-xl text-[#E1E3F8]",
+    deletePromptTitle: "font-bold mb-6 text-xl text-[#E1E3F8] text-center",
     deleteYesBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] text-[#E1E3F8]",
     deleteYesBtnStyle: { backgroundColor: _DESIGN_PRIVATE.HEX_WARNING_RED },
     deleteNoBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] bg-[#49496A] text-[#E1E3F8]",
@@ -230,8 +259,12 @@ window.DESIGN = {
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
-    boxContainer: "w-full relative shrink-0 bg-[#333355] shadow-2xl",
-    boxContainerStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '340px', padding: '16px' },
+    boxContainer: "w-full relative shrink-0 bg-[#333355]",
+    boxContainerStyle: { 
+      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
+      maxWidth: '376px',
+      padding: '16px'
+    },
 
     headerRow: "flex items-center gap-3 mb-4",
     headerIcon: "h-7 w-7 shrink-0 opacity-80",
@@ -252,7 +285,11 @@ window.DESIGN = {
     trashBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     trashIcon: "h-5 w-5 pointer-events-none",
 
-    deleteConfirmBoxStyle: { borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, maxWidth: '320px', padding: '20px' },
+    deleteConfirmBoxStyle: { 
+      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
+      maxWidth: '376px',
+      padding: '20px'
+    },
     deleteConfirmTitle: "font-bold text-xl text-[#E1E3F8] text-center mb-6 leading-snug",
     deleteConfirmRow: "flex items-center gap-4",
     deleteConfirmYesBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
@@ -288,6 +325,8 @@ window.DESIGN = {
     caretDuration: '500ms',
     modalCurve: 'cubic-bezier(0.34, 1.2, 0.64, 1)',
     modalDuration: '0.4s',
+    autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    autoTextareaDuration: '0.2s',
   }
 };
 
