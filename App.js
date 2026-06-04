@@ -11,6 +11,53 @@ const systemDate = new Date();
 // Continuous linear alignment timeline for calendar translation calculations
 const TIMELINE_YEARS = Array.from({ length: 31 }, (_, i) => 2015 + i); // 2015 to 2045 continuous list
 
+// ─── TEST DATA GENERATOR ──────────────────────────────────────────────────
+(function generateTestResidents() {
+  if (window.initialResidents) return;
+
+  const SURNAMES = ['Ramirez', 'Chen', 'Marcus', 'Patel', 'Kowalski', 'Nguyen', 'Ferreira', 'Schmidt', 'Okafor', 'Petrov'];
+  const EXPENSE_NAMES = ['Monthly Maintenance', 'Heating Oil', 'Elevator Repair', 'Water Balance', 'Shared Repairs', 'Stairwell Lighting'];
+  const APARTMENTS = ['1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C'];
+
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const pickUnique = (arr, n) => [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+
+  const today = new Date();
+  const currentMonth = window.DESIGN.monthNames[today.getMonth()];
+  const currentYear = today.getFullYear();
+
+  const pastMonths = [];
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    pastMonths.push(`${window.DESIGN.monthNames[d.getMonth()]} ${d.getFullYear()}`);
+  }
+
+  const usedApartments = [];
+  const cardCount = rand(5, 8);
+  const residents = [];
+
+  for (let i = 0; i < cardCount; i++) {
+    let apt;
+    do { apt = pick(APARTMENTS); } while (usedApartments.includes(apt));
+    usedApartments.push(apt);
+
+    const surname = SURNAMES[i] || `Family ${i + 1}`;
+    const expenses = [];
+    let expCounter = 0;
+
+    pickUnique(EXPENSE_NAMES, rand(1, 2)).forEach((name) => {
+      expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: Math.random() > 0.4, month: `${currentMonth} ${currentYear}` });
+    });
+    pickUnique(EXPENSE_NAMES, rand(0, 2)).forEach((name) => {
+      expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: false, month: pick(pastMonths) });
+    });
+
+    residents.push({ id: `R${i}`, name: `${surname} Family`, apartment: `Apt ${apt}`, avatar: 'Avatar-Resident.svg', notes: '', expenses });
+  }
+  window.initialResidents = residents;
+})();
+
 function formatAmount(amount) {
   return (+parseFloat(amount).toFixed(2)).toString();
 }
@@ -137,11 +184,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
 
       {/* HEADER ROW */}
       <div className={CM.headerRow}>
-        <img
-          src={isAdd ? `./SVG/Button-Add-User.svg` : `./SVG/Icon-Edit.svg`}
-          className={`keep-raw-colors ${CM.headerIcon}`}
-          alt={isAdd ? 'Add Card' : 'Edit Card'}
-        />
+        <Icon name={isAdd ? 'cardAdd' : 'cardEdit'} className={CM.headerIcon} />
         <span className={CM.headerLabel}>{isAdd ? 'Add Card' : 'Edit Card'}</span>
       </div>
 
@@ -184,7 +227,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
             <button className={CM.okBtn} onClick={handleNext}>+ Next</button>
             <button className={CM.cancelIconBtn} onClick={onCancel}>
-              <img src="./SVG/Icon-Ex.svg" className={`keep-raw-colors ${CM.cancelIconImg}`} alt="Cancel" />
+              <Icon name="cardCancel" />
             </button>
           </>
         ) : (
@@ -192,7 +235,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
             <button className={CM.cancelTextBtn} onClick={onCancel}>Cancel</button>
             <button className={CM.trashBtn} onClick={onDeleteRequest}>
-              <img src="./SVG/Icon-Trash.svg" className={`keep-raw-colors ${CM.trashIcon}`} alt="Delete Card" />
+              <Icon name="cardTrash" />
             </button>
           </>
         )}
@@ -224,10 +267,11 @@ window.App = function App() {
   const CARD = D.residentCard;
   const DRW = D.historyDrawer;
   const MDL = D.modal;
-const CAL = D.modal.calendar;
-const MNU = D.mainMenu;
-const A = D.animation;
-const CM = D.cardModal;
+  const CAL = D.modal.calendar;
+  const MNU = D.mainMenu;
+  const A = D.animation;
+  const CM = D.cardModal;
+  const SPC = D.spacing;
 
   useEffect(() => {
     if (LAYOUT && LAYOUT.appBackgroundHex) {
@@ -593,14 +637,14 @@ const CM = D.cardModal;
             <button
               onClick={handleGoToCurrentMonth}
               className={HDR.goTodayFloatBtn}
-              style={{ opacity: isFilteredAwayFromToday ? 1.0 : 0.3 }}
+              style={{ opacity: isFilteredAwayFromToday ? HDR.goTodayActiveOpacity : HDR.goTodayInactiveOpacity }}
             >
               <Icon name="goToday" />
             </button>
           </div>
         </header>
 
-        <div style={{ height: '12px' }} />
+        <div style={{ height: SPC.headerToListGap }} />
 
         <div className={CARD.cardListContainer}>
           {processedResidents.map((resident) => {
@@ -781,7 +825,7 @@ const CM = D.cardModal;
                         style={{
                           transform: `translateY(-${currencyIndex * 28}px)`,
                           height: `${D.currencyOptions.length * 28}px`,
-                          transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                          transition: A.rollerTransition,
                           top: '0px'
                         }}
                       >
@@ -842,7 +886,7 @@ const CM = D.cardModal;
                       style={{
                         transform: `translateY(-${currentTimelineIndex * 28}px)`,
                         height: `${TIMELINE_YEARS.length * 28}px`,
-                        transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                        transition: A.rollerTransition,
                         top: '0px'
                       }}
                     >
@@ -884,7 +928,7 @@ const CM = D.cardModal;
                   </span>
                 </div>
 
-                <div className={MDL.actionsFlexRow} style={{ marginBottom: '12px' }}>
+                <div className={MDL.actionsFlexRow} style={{ marginBottom: MDL.amountToDescriptionGap }}>
                   <div style={MDL.amountInputBoxStyle} className={MDL.amountInputBox}>
                     <input
                       type="number"
@@ -898,15 +942,11 @@ const CM = D.cardModal;
                     />
                   </div>
                   <button onClick={() => setModal(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
-                    <img 
-                      src={`./SVG/${modal.paid ? 'Button-Paid.svg' : 'Button-Unpaid.svg'}`}
-                      className={MDL.paidStateToggleImg}
-                      alt={modal.paid ? 'Paid' : 'Unpaid'}
-                    />
+                    <Icon name={modal.paid ? 'paidToggle' : 'unpaidToggle'} className={MDL.paidStateToggleImg} />
                   </button>
                 </div>
 
-                <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: '16px' }} className={MDL.descriptionInputBox}>
+                <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: MDL.descriptionToActionsGap }} className={MDL.descriptionInputBox}>
                   <input
                     type="text"
                     placeholder="Edit description (Optional)"
