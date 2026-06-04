@@ -224,9 +224,10 @@ window.App = function App() {
   const CARD = D.residentCard;
   const DRW = D.historyDrawer;
   const MDL = D.modal;
-  const CAL = D.modal.calendar;
-  const MNU = D.mainMenu;
-  const A = D.animation;
+const CAL = D.modal.calendar;
+const MNU = D.mainMenu;
+const A = D.animation;
+const CM = D.cardModal;
 
   useEffect(() => {
     if (LAYOUT && LAYOUT.appBackgroundHex) {
