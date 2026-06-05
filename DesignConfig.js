@@ -305,6 +305,7 @@ window.DESIGN = {
     hamburger:       { src: 'Icon-Hamburger.svg',       className: 'h-8',    alt: 'Menu' },
     addUser:         { src: 'Button-Add-User.svg',      className: 'h-8',    alt: 'Add User' },
     wallet:          { src: 'Icon-Wallet.svg',          className: 'h-8',    alt: 'Wallet' },
+    residentCard:    { src: 'Icon-ResidentCard.svg',    className: 'h-8',    alt: 'Resident Cards' },
     synced:          { src: 'Icon-Synced.svg',          className: 'h-8',    alt: 'Synced Status' },
     calendarLeft:    { src: 'Arrow-Left.svg',           className: 'h-[18px]', alt: 'Previous' },
     calendarRight:   { src: 'Arrow-Right.svg',          className: 'h-[18px]', alt: 'Next' },
@@ -321,6 +322,7 @@ window.DESIGN = {
     cardTrash:       { src: 'Icon-Trash.svg',           className: 'h-5 w-5', alt: 'Delete Card' },
     paidToggle:      { src: 'Button-Paid.svg',          className: 'h-9 w-auto', alt: 'Paid' },
     unpaidToggle:    { src: 'Button-Unpaid.svg',        className: 'h-9 w-auto', alt: 'Mark as Paid' },
+    buildingUnpaidToggle: { src: 'Building-ExpenceUnpaid.svg', className: 'h-9 w-auto', alt: 'Mark as Paid' },
   },
 
   animation: {
@@ -332,5 +334,95 @@ window.DESIGN = {
     autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
     autoTextareaDuration: '0.2s',
     rollerTransition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
-  }
+    viewTransitionDuration: '0.35s',
+    viewTransitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    coinFlipDuration: '0.5s',
+  },
+
+  // ─── WALLET FLIP BUTTON ───────────────────────────────────────────────────
+  walletFlipBtn: {
+    // The outer container sets perspective for 3D effect
+    container: "w-[44px] h-[44px] flex items-center justify-center shrink-0",
+    containerStyle: { perspective: '200px' },
+    // The inner flipper rotates on Y axis
+    flipperBase: "w-[44px] h-[44px] relative flex items-center justify-center",
+    flipperStyle: (isBuilding, duration) => ({
+      transition: `transform ${duration} cubic-bezier(0.25, 1, 0.5, 1)`,
+      transform: isBuilding ? 'rotateY(180deg)' : 'rotateY(0deg)',
+      transformStyle: 'preserve-3d',
+      position: 'relative',
+      width: '44px',
+      height: '44px',
+    }),
+    faceBase: {
+      position: 'absolute',
+      top: 0, left: 0,
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backfaceVisibility: 'hidden',
+      WebkitBackfaceVisibility: 'hidden',
+    },
+    backFaceStyle: {
+      position: 'absolute',
+      top: 0, left: 0,
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backfaceVisibility: 'hidden',
+      WebkitBackfaceVisibility: 'hidden',
+      transform: 'rotateY(180deg)',
+    },
+  },
+
+  // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
+  viewTransition: {
+    // Cards exit: scale down + fade out
+    cardsExitStyle: (duration, curve) => ({
+      animation: `viewScaleFadeOut ${duration} ${curve} forwards`,
+    }),
+    // Building enter: scale up + fade in
+    buildingEnterStyle: (duration, curve) => ({
+      animation: `viewScaleFadeIn ${duration} ${curve} forwards`,
+    }),
+    cardsEnterStyle: (duration, curve) => ({
+      animation: `viewScaleFadeIn ${duration} ${curve} forwards`,
+    }),
+    buildingExitStyle: (duration, curve) => ({
+      animation: `viewScaleFadeOut ${duration} ${curve} forwards`,
+    }),
+  },
+
+  // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
+  buildingExpenses: {
+    listContainer: "flex flex-col",
+
+    // Top label row: "Expenses" left, "total X" right — same row, flexible space
+    labelRow: "flex items-center justify-between w-full",
+    labelRowGap: '30px', // marginBottom from labelRow to items, marginTop from +Add to prevLabel
+
+    sectionLabel: "font-light text-[14px] text-[#E1E3F8]",
+    totalLabel: "font-light text-[14px] text-[#E1E3F8]",
+    totalAmount: "font-bold text-[18px] text-[#F2C454] ml-1",
+
+    // +Add pill — reuses same classes as card addExpenseBtn
+    addBtn: "w-[100px] h-[44px] rounded-[22px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-sm text-[#E1E3F8] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95",
+    addBtnWrapper: "flex",
+    addBtnGap: '30px', // marginTop from labelRow (or items) to addBtn
+
+    // Expense items — same as resident card items
+    itemsWrapper: "flex flex-col",
+    itemRow: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-[rgba(255,255,255,0.03)]",
+    itemRowDivider: "border-t-2 border-solid border-[rgba(225,227,248,0.3)]",
+    itemLeft: "flex items-center min-w-0 gap-3 pointer-events-none",
+    itemIconArea: "shrink-0 h-5 flex items-center pointer-events-none",
+    itemDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? 'text-[#9CE66B]' : 'text-[#E1E3F8]'}`,
+    itemAmount: (isPaid) => `font-semibold shrink-0 text-lg pointer-events-none ${isPaid ? 'text-[#9CE66B]' : 'text-[#E1E3F8]'}`,
+    itemCurrencyMod: "text-[0.7em] mr-0.5 font-semibold",
+
+    // Card-like container for current and previous sections
+    cardContainer: "bg-[#333355] rounded-[12px] overflow-hidden px-4",
+    cardContainerGap: '16px', // gap between current card and prev card
+
+    prevLabel: "font-light text-[14px] text-[#E1E3F8]",
+    prevLabelWrapper: "flex items-center justify-between w-full",
+  },
 };

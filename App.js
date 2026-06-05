@@ -260,6 +260,130 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle }) {
   );
 }
 
+function WalletFlipButton({ isBuildingView, onToggle }) {
+  const WFB = window.DESIGN.walletFlipBtn;
+  const A = window.DESIGN.animation;
+  return (
+    <button
+      style={WFB.containerStyle}
+      className={WFB.container}
+      onClick={onToggle}
+      aria-label={isBuildingView ? 'Show resident cards' : 'Show building expenses'}
+    >
+      <div style={WFB.flipperStyle(isBuildingView, A.coinFlipDuration)}>
+        {/* Front face: Wallet */}
+        <div style={WFB.faceBase}>
+          <Icon name="wallet" />
+        </div>
+        {/* Back face: ResidentCard */}
+        <div style={WFB.backFaceStyle}>
+          <Icon name="residentCard" />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function BuildingExpenses({ expenses, setExpenses, currentMonthString, isPastExpense, activeCurrencySymbol, openBuildingModal }) {
+  const BE = window.DESIGN.buildingExpenses;
+  const CARD = window.DESIGN.residentCard;
+
+  const currentExpenses = expenses.filter(exp => exp.month === currentMonthString);
+  const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
+
+  const allUnpaid = expenses.filter(exp => !exp.paid);
+  const showTotal = allUnpaid.length >= 2;
+  const totalUnpaid = allUnpaid.reduce((sum, exp) => sum + exp.amount, 0);
+
+  const hasCurrent = currentExpenses.length > 0;
+  const hasPast = pastUnpaidExpenses.length > 0;
+
+  return (
+    <div className={BE.listContainer}>
+
+      {/* ── CURRENT MONTH SECTION ── */}
+      <div className={BE.cardContainer} style={{ marginBottom: hasPast ? BE.cardContainerGap : undefined }}>
+
+        {/* Label row */}
+        <div className={BE.labelRow} style={{ paddingTop: '16px', marginBottom: hasCurrent ? '0px' : BE.addBtnGap }}>
+          <span className={BE.sectionLabel}>
+            {hasCurrent ? 'Expenses' : 'No expenses for this month'}
+          </span>
+          {showTotal && (
+            <span className={BE.totalLabel}>
+              total<CurrencySymbol activeSymbol={activeCurrencySymbol} className={`${BE.totalAmount} text-[0.7em] mr-0.5`} />
+              <span className={BE.totalAmount}>{formatAmount(totalUnpaid)}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Current expense items */}
+        {hasCurrent && (
+          <div className={BE.itemsWrapper} style={{ marginBottom: BE.addBtnGap }}>
+            {currentExpenses.map((exp, idx) => (
+              <div
+                key={exp.id}
+                className={`${BE.itemRow} ${idx > 0 ? BE.itemRowDivider : ''}`}
+                onClick={() => openBuildingModal('edit', exp.id, exp.amount.toString(), exp.description, exp.paid)}
+              >
+                <div className={BE.itemLeft}>
+                  <div className={BE.itemIconArea}>
+                    {exp.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                  </div>
+                  <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+                </div>
+                <span className={BE.itemAmount(exp.paid)}>
+                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.itemCurrencyMod} />{formatAmount(exp.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* +Add button */}
+        <div className={BE.addBtnWrapper} style={{ paddingBottom: '16px' }}>
+          <button className={BE.addBtn} onClick={() => openBuildingModal('add')}>
+            + Add
+          </button>
+        </div>
+
+      </div>
+
+      {/* ── PREVIOUS MONTHS SECTION ── */}
+      {hasPast && (
+        <div className={BE.cardContainer}>
+          <div className={BE.prevLabelWrapper} style={{ paddingTop: '16px', marginBottom: '0px' }}>
+            <span className={BE.prevLabel}>Unpaid from previous months</span>
+          </div>
+          <div className={BE.itemsWrapper} style={{ paddingBottom: '16px' }}>
+            {pastUnpaidExpenses.map((exp, idx) => (
+              <div
+                key={exp.id}
+                className={`${BE.itemRow} ${idx > 0 ? BE.itemRowDivider : ''}`}
+                onClick={() => openBuildingModal('edit', exp.id, exp.amount.toString(), exp.description, exp.paid)}
+              >
+                <div className={BE.itemLeft}>
+                  <div className={BE.itemIconArea}>
+                    {exp.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+                    <span style={{ fontSize: '12px', color: 'rgba(225,227,248,0.5)', fontWeight: 600 }}>{exp.month}</span>
+                  </div>
+                </div>
+                <span className={BE.itemAmount(exp.paid)}>
+                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.itemCurrencyMod} />{formatAmount(exp.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
 window.App = function App() {
   const D = window.DESIGN;
   const LAYOUT = D.layout;
@@ -280,6 +404,20 @@ window.App = function App() {
   }, []);
 
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
+  const [isBuildingView, setIsBuildingView] = useState(false);
+  const [buildingExpenses, setBuildingExpenses] = useState([]);
+  const [buildingViewAnimState, setBuildingViewAnimState] = useState('idle'); // 'idle' | 'exiting' | 'entering'
+
+  const handleToggleView = useCallback(() => {
+    const A = D.animation;
+    const duration = parseFloat(A.viewTransitionDuration) * 1000;
+    setBuildingViewAnimState('exiting');
+    setTimeout(() => {
+      setIsBuildingView(prev => !prev);
+      setBuildingViewAnimState('entering');
+      setTimeout(() => setBuildingViewAnimState('idle'), duration);
+    }, duration);
+  }, [D.animation]);
   const [currentLanguage, setCurrentLanguage] = useState('EN');
   const [currentSortBy, setCurrentSortBy] = useState('Tag');
   const [currencyIndex, setCurrencyIndex] = useState(0);
@@ -437,6 +575,44 @@ window.App = function App() {
       return updated;
     });
     closeModal();
+  };
+
+  // ─── BUILDING EXPENSES MODAL ──────────────────────────────────────────────
+  const [buildingModal, setBuildingModal] = useState({
+    type: null, expenseId: null, amount: '', description: '', paid: false
+  });
+
+  const openBuildingModal = (type, expenseId = null, amount = '', description = '', paid = false) => {
+    setBuildingModal({ type, expenseId, amount, description, paid });
+  };
+
+  const closeBuildingModal = () => setBuildingModal(m => ({ ...m, type: null }));
+
+  const handleConfirmBuildingModal = () => {
+    const parsedAmount = parseFloat(buildingModal.amount) || 0;
+    const desc = buildingModal.description.trim() || 'Building Expense';
+    if (buildingModal.type === 'add') {
+      setBuildingExpenses(prev => [...prev, {
+        id: 'bexp-' + Date.now(),
+        description: desc,
+        amount: parsedAmount,
+        paid: buildingModal.paid,
+        month: currentMonthString,
+      }]);
+    } else if (buildingModal.type === 'edit' && buildingModal.expenseId) {
+      setBuildingExpenses(prev => prev.map(exp =>
+        exp.id === buildingModal.expenseId
+          ? { ...exp, description: desc, amount: parsedAmount, paid: buildingModal.paid }
+          : exp
+      ));
+    }
+    closeBuildingModal();
+  };
+
+  const handleDeleteBuildingExpense = () => {
+    if (!buildingModal.expenseId) return;
+    setBuildingExpenses(prev => prev.filter(exp => exp.id !== buildingModal.expenseId));
+    closeBuildingModal();
   };
 
   const handleConfirmCalendar = () => {
@@ -599,9 +775,7 @@ window.App = function App() {
               <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
                 <Icon name="addUser" />
               </button>
-              <button className={HDR.touchTargetBtn} onClick={() => console.log('Wallet Menu')}>
-                <Icon name="wallet" />
-              </button>
+              <WalletFlipButton isBuildingView={isBuildingView} onToggle={handleToggleView} />
             </div>
 
             <div className={HDR.debtSection}>
@@ -646,8 +820,41 @@ window.App = function App() {
 
         <div style={{ height: SPC.headerToListGap }} />
 
-        <div className={CARD.cardListContainer}>
-          {processedResidents.map((resident) => {
+        {/* ── ANIMATED VIEW: RESIDENT CARDS or BUILDING EXPENSES ── */}
+        {(() => {
+          const A = D.animation;
+          const isExiting = buildingViewAnimState === 'exiting';
+          const isEntering = buildingViewAnimState === 'entering';
+
+          // Which view is currently mounted
+          const showBuilding = isBuildingView || (isExiting && !isBuildingView === false);
+
+          // Animation styles
+          let animStyle = {};
+          if (isExiting) {
+            animStyle = isBuildingView
+              ? D.viewTransition.buildingExitStyle(A.viewTransitionDuration, A.viewTransitionCurve)
+              : D.viewTransition.cardsExitStyle(A.viewTransitionDuration, A.viewTransitionCurve);
+          } else if (isEntering) {
+            animStyle = isBuildingView
+              ? D.viewTransition.buildingEnterStyle(A.viewTransitionDuration, A.viewTransitionCurve)
+              : D.viewTransition.cardsEnterStyle(A.viewTransitionDuration, A.viewTransitionCurve);
+          }
+
+          return (
+            <div style={animStyle}>
+              {isBuildingView ? (
+                <BuildingExpenses
+                  expenses={buildingExpenses}
+                  setExpenses={setBuildingExpenses}
+                  currentMonthString={currentMonthString}
+                  isPastExpense={isPastExpense}
+                  activeCurrencySymbol={activeCurrencySymbol}
+                  openBuildingModal={openBuildingModal}
+                />
+              ) : (
+                <div className={CARD.cardListContainer}>
+                  {processedResidents.map((resident) => {
             const isExpanded = expandedResident === resident.id;
             const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
 
@@ -793,6 +1000,10 @@ window.App = function App() {
             );
           })}
         </div>
+              )}
+            </div>
+          );
+        })()}
 
         {isMainMenuOpen && (
           <div style={MNU.backdropAnimation(A)} className={MNU.backdropOverlay} onClick={() => setIsMainMenuOpen(false)}>
@@ -1027,6 +1238,78 @@ window.App = function App() {
                 />
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── BUILDING EXPENSES MODAL ── */}
+        {buildingModal.type && (
+          <div style={MDL.backdropAnimation(A)} className={MDL.backdropOverlay} onClick={closeBuildingModal}>
+
+            {(buildingModal.type === 'add' || buildingModal.type === 'edit') && (
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+
+                <div className={MDL.headerRow}>
+                  <Icon name="editExpenseIcon" />
+                  <span className={MDL.headerTitle}>
+                    {buildingModal.type === 'add' ? 'Add building expense' : 'Edit building expense'}
+                  </span>
+                </div>
+
+                <div className={MDL.actionsFlexRow} style={{ marginBottom: MDL.amountToDescriptionGap }}>
+                  <div style={MDL.amountInputBoxStyle} className={MDL.amountInputBox}>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={buildingModal.amount}
+                      onChange={(e) => setBuildingModal(m => ({ ...m, amount: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmBuildingModal(); }}
+                      className={MDL.amountInputField}
+                      autoFocus
+                      style={MDL.amountPlaceholderStyle}
+                    />
+                  </div>
+                  <button onClick={() => setBuildingModal(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
+                    <Icon name={buildingModal.paid ? 'paidToggle' : 'buildingUnpaidToggle'} className={MDL.paidStateToggleImg} />
+                  </button>
+                </div>
+
+                <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: MDL.descriptionToActionsGap }} className={MDL.descriptionInputBox}>
+                  <input
+                    type="text"
+                    placeholder="Edit description (Optional)"
+                    value={buildingModal.description}
+                    onChange={(e) => setBuildingModal(m => ({ ...m, description: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmBuildingModal(); }}
+                    className={MDL.descriptionInputField}
+                    style={MDL.descriptionPlaceholderStyle}
+                  />
+                </div>
+
+                <div className={MDL.actionsFlexRow}>
+                  <button onClick={handleConfirmBuildingModal} className={MDL.confirmBtn}>OK</button>
+                  <button onClick={closeBuildingModal} className={MDL.cancelBtn}>Cancel</button>
+                  {buildingModal.type === 'edit' && (
+                    <button
+                      onClick={() => setBuildingModal(m => ({ ...m, type: 'buildingDelete' }))}
+                      className={`${MDL.deleteActionBtn} ${MDL.deleteActionBtnRingClass}`}
+                    >
+                      <Icon name="trash" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {buildingModal.type === 'buildingDelete' && (
+              <div style={{ ...MDL.boxContainerStyle, ...MDL.contentAnimation(A) }} className={MDL.boxContainer} onClick={(e) => e.stopPropagation()}>
+                <h4 className={MDL.deletePromptTitle}>Are you sure you want to delete this expense?</h4>
+                <div className={MDL.actionsFlexRow}>
+                  <button onClick={handleDeleteBuildingExpense} style={MDL.deleteYesBtnStyle} className={MDL.deleteYesBtn}>Yes</button>
+                  <button onClick={() => setBuildingModal(m => ({ ...m, type: 'edit' }))} className={MDL.deleteNoBtn}>No</button>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
