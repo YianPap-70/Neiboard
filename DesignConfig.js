@@ -381,12 +381,8 @@ window.DESIGN = {
   buildingExitStyle: (duration, curve) => ({
     animation: `viewSlideOutToRight ${duration} ${curve} forwards`,
   }),
-  cardsEnterStyle: (duration, curve) => ({
-    animation: `viewSlideInFromRight ${duration} ${curve} forwards`,
-  }),
-  buildingEnterStyle: (duration, curve) => ({
-    animation: `viewSlideInFromLeft ${duration} ${curve} forwards`,
-  }),
+  cardsEnterStyle: () => ({}),
+  buildingEnterStyle: () => ({}),
 },
 
   // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────

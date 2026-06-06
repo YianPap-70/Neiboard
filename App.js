@@ -411,13 +411,14 @@ window.App = function App() {
   const handleToggleView = useCallback(() => {
   const A = D.animation;
   const duration = parseFloat(A.viewTransitionDuration) * 1000;
-  // Flip the view immediately (no delay)
-  setIsBuildingView(prev => !prev);
-  // Then animate the content transition
+  
+  // Start exit animation
   setBuildingViewAnimState('exiting');
+  
+  // Wait for exit to finish, then swap view
   setTimeout(() => {
-    setBuildingViewAnimState('entering');
-    setTimeout(() => setBuildingViewAnimState('idle'), duration);
+    setIsBuildingView(prev => !prev);
+    setBuildingViewAnimState('idle');
   }, duration);
 }, [D.animation]);
   const [currentLanguage, setCurrentLanguage] = useState('EN');
