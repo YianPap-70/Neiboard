@@ -375,21 +375,19 @@ window.DESIGN = {
 
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
   viewTransition: {
-    // Cards exit: scale down + fade out
-    cardsExitStyle: (duration, curve) => ({
-      animation: `viewScaleFadeOut ${duration} ${curve} forwards`,
-    }),
-    // Building enter: scale up + fade in
-    buildingEnterStyle: (duration, curve) => ({
-      animation: `viewScaleFadeIn ${duration} ${curve} forwards`,
-    }),
-    cardsEnterStyle: (duration, curve) => ({
-      animation: `viewScaleFadeIn ${duration} ${curve} forwards`,
-    }),
-    buildingExitStyle: (duration, curve) => ({
-      animation: `viewScaleFadeOut ${duration} ${curve} forwards`,
-    }),
-  },
+  cardsExitStyle: (duration, curve) => ({
+    animation: `viewSlideOutToLeft ${duration} ${curve} forwards`,
+  }),
+  buildingExitStyle: (duration, curve) => ({
+    animation: `viewSlideOutToRight ${duration} ${curve} forwards`,
+  }),
+  cardsEnterStyle: (duration, curve) => ({
+    animation: `viewSlideInFromRight ${duration} ${curve} forwards`,
+  }),
+  buildingEnterStyle: (duration, curve) => ({
+    animation: `viewSlideInFromLeft ${duration} ${curve} forwards`,
+  }),
+},
 
   // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
   buildingExpenses: {
