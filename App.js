@@ -409,15 +409,17 @@ window.App = function App() {
   const [buildingViewAnimState, setBuildingViewAnimState] = useState('idle'); // 'idle' | 'exiting' | 'entering'
 
   const handleToggleView = useCallback(() => {
-    const A = D.animation;
-    const duration = parseFloat(A.viewTransitionDuration) * 1000;
-    setBuildingViewAnimState('exiting');
-    setTimeout(() => {
-      setIsBuildingView(prev => !prev);
-      setBuildingViewAnimState('entering');
-      setTimeout(() => setBuildingViewAnimState('idle'), duration);
-    }, duration);
-  }, [D.animation]);
+  const A = D.animation;
+  const duration = parseFloat(A.viewTransitionDuration) * 1000;
+  // Flip the view immediately (no delay)
+  setIsBuildingView(prev => !prev);
+  // Then animate the content transition
+  setBuildingViewAnimState('exiting');
+  setTimeout(() => {
+    setBuildingViewAnimState('entering');
+    setTimeout(() => setBuildingViewAnimState('idle'), duration);
+  }, duration);
+}, [D.animation]);
   const [currentLanguage, setCurrentLanguage] = useState('EN');
   const [currentSortBy, setCurrentSortBy] = useState('Tag');
   const [currencyIndex, setCurrencyIndex] = useState(0);
