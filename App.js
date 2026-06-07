@@ -260,17 +260,24 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle }) {
   );
 }
 
-function WalletFlipButton({ isBuildingView, onToggle }) {
+function WalletFlipButton({ onToggle }) {
   const WFB = window.DESIGN.walletFlipBtn;
   const A = window.DESIGN.animation;
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const handlePress = () => {
+    setIsFlipped(prev => !prev);
+    onToggle();
+  };
+
   return (
     <button
       style={WFB.containerStyle}
       className={WFB.container}
-      onClick={onToggle}
-      aria-label={isBuildingView ? 'Show resident cards' : 'Show building expenses'}
+      onClick={handlePress}
+      aria-label={isFlipped ? 'Show resident cards' : 'Show building expenses'}
     >
-      <div style={WFB.flipperStyle(isBuildingView, A.coinFlipDuration)}>
+      <div style={WFB.flipperStyle(isFlipped, A.coinFlipDuration)}>
         {/* Front face: Wallet */}
         <div style={WFB.faceBase}>
           <Icon name="wallet" />
@@ -409,18 +416,24 @@ window.App = function App() {
   const [buildingViewAnimState, setBuildingViewAnimState] = useState('idle'); // 'idle' | 'exiting' | 'entering'
 
   const handleToggleView = useCallback(() => {
-  const A = D.animation;
-  const duration = parseFloat(A.viewTransitionDuration) * 1000;
-  
-  // Start exit animation
-  setBuildingViewAnimState('exiting');
-  
-  // Wait for exit to finish, then swap view
-  setTimeout(() => {
+    const A = D.animation;
+    const duration = parseFloat(A.viewTransitionDuration) * 1000;
+
+    // Reset card expanded state so cards return to initial position
+    setExpandedResident(null);
+    setOpenPreviousDrawer({});
+
+    // Start transition: render both layers
+    setBuildingViewAnimState('transitioning');
+
+    // After animation completes, drop the outgoing layer
+    setTimeout(() => {
+      setBuildingViewAnimState('idle');
+    }, duration);
+
+    // Swap the actual view immediately so the entering layer is the new one
     setIsBuildingView(prev => !prev);
-    setBuildingViewAnimState('idle');
-  }, duration);
-}, [D.animation]);
+  }, [D.animation]);
   const [currentLanguage, setCurrentLanguage] = useState('EN');
   const [currentSortBy, setCurrentSortBy] = useState('Tag');
   const [currencyIndex, setCurrencyIndex] = useState(0);
@@ -778,7 +791,7 @@ window.App = function App() {
               <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
                 <Icon name="addUser" />
               </button>
-              <WalletFlipButton isBuildingView={isBuildingView} onToggle={handleToggleView} />
+              <WalletFlipButton onToggle={handleToggleView} />
             </div>
 
             <div className={HDR.debtSection}>
@@ -826,186 +839,198 @@ window.App = function App() {
         {/* ── ANIMATED VIEW: RESIDENT CARDS or BUILDING EXPENSES ── */}
         {(() => {
           const A = D.animation;
-          const isExiting = buildingViewAnimState === 'exiting';
-          const isEntering = buildingViewAnimState === 'entering';
+          const isTransitioning = buildingViewAnimState === 'transitioning';
+          const dur = A.viewTransitionDuration;
+          const curve = A.viewTransitionCurve;
+          const VT = D.viewTransition;
 
-          // Which view is currently mounted
-          const showBuilding = isBuildingView || (isExiting && !isBuildingView === false);
+          // The entering view is whichever isBuildingView currently is (swapped instantly)
+          // The exiting view is the opposite
+          const enterStyle = isBuildingView
+            ? VT.enterFromRightStyle(dur, curve)   // cards → building: slides in from right
+            : VT.enterFromLeftStyle(dur, curve);   // building → cards: slides in from left
 
-          // Animation styles
-          let animStyle = {};
-          if (isExiting) {
-            animStyle = isBuildingView
-              ? D.viewTransition.buildingExitStyle(A.viewTransitionDuration, A.viewTransitionCurve)
-              : D.viewTransition.cardsExitStyle(A.viewTransitionDuration, A.viewTransitionCurve);
-          } else if (isEntering) {
-            animStyle = isBuildingView
-              ? D.viewTransition.buildingEnterStyle(A.viewTransitionDuration, A.viewTransitionCurve)
-              : D.viewTransition.cardsEnterStyle(A.viewTransitionDuration, A.viewTransitionCurve);
-          }
+          const exitStyle = VT.exitStyle(dur, curve);
 
-          return (
-            <div style={animStyle}>
-              {isBuildingView ? (
-                <BuildingExpenses
-                  expenses={buildingExpenses}
-                  setExpenses={setBuildingExpenses}
-                  currentMonthString={currentMonthString}
-                  isPastExpense={isPastExpense}
-                  activeCurrencySymbol={activeCurrencySymbol}
-                  openBuildingModal={openBuildingModal}
-                />
-              ) : (
-                <div className={CARD.cardListContainer}>
-                  {processedResidents.map((resident) => {
-            const isExpanded = expandedResident === resident.id;
-            const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
+          const cardsView = (
+            <div className={CARD.cardListContainer}>
+              {processedResidents.map((resident) => {
+                const isExpanded = expandedResident === resident.id;
+                const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
 
-            const currentMonthExpenses = resident.expenses.filter(exp => exp.month === currentMonthString);
-            const pastUnpaidExpenses = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
+                const currentMonthExpenses = resident.expenses.filter(exp => exp.month === currentMonthString);
+                const pastUnpaidExpenses = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
 
-            const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
-            const pastUnpaidTotal = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
-            const totalResidentDebt = currentUnpaidTotal + pastUnpaidTotal;
+                const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+                const pastUnpaidTotal = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+                const totalResidentDebt = currentUnpaidTotal + pastUnpaidTotal;
 
-            const combinedCurrentExpenses = [...currentMonthExpenses].sort((a, b) => a.paid - b.paid);
-            const hasPastUnpaidItems = pastUnpaidExpenses.length > 0;
+                const combinedCurrentExpenses = [...currentMonthExpenses].sort((a, b) => a.paid - b.paid);
+                const hasPastUnpaidItems = pastUnpaidExpenses.length > 0;
 
-            return (
-              <div key={resident.id} style={DRW.cardRoundingContainerStyle(hasPastUnpaidItems)} className={CARD.cardWrapper}>
-                <div style={{ backgroundColor: totalResidentDebt > 0 ? CARD.topIndicatorHasDebtColor : CARD.topIndicatorNoDebtColor }} className={CARD.topIndicatorLine} />
+                return (
+                  <div key={resident.id} style={DRW.cardRoundingContainerStyle(hasPastUnpaidItems)} className={CARD.cardWrapper}>
+                    <div style={{ backgroundColor: totalResidentDebt > 0 ? CARD.topIndicatorHasDebtColor : CARD.topIndicatorNoDebtColor }} className={CARD.topIndicatorLine} />
 
-                <div className={CARD.cardBody}>
-                  <div className={CARD.cardInnerPadding}>
+                    <div className={CARD.cardBody}>
+                      <div className={CARD.cardInnerPadding}>
 
-                    <div className={CARD.cardHeaderContainer}>
-                      <button
-                        className={CARD.avatarBtn}
-                        onClick={(e) => handleOpenEditCard(resident.id, e)}
-                      >
-                        <img
-                          src={`./SVG/${resident.avatar}`}
-                          alt="Avatar"
-                          className={CARD.avatarImg}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = D.avatarFallback;
-                          }}
-                        />
-                      </button>
+                        <div className={CARD.cardHeaderContainer}>
+                          <button
+                            className={CARD.avatarBtn}
+                            onClick={(e) => handleOpenEditCard(resident.id, e)}
+                          >
+                            <img
+                              src={`./SVG/${resident.avatar}`}
+                              alt="Avatar"
+                              className={CARD.avatarImg}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = D.avatarFallback;
+                              }}
+                            />
+                          </button>
 
-                      <div
-                        className={CARD.cardHeaderRightArea}
-                        onClick={() => handleResidentHeaderClick(resident.id)}
-                      >
-                        <div className={CARD.textMetaArea}>
-                          <h2 className={CARD.residentName}>{resident.name}</h2>
-                          <p className={CARD.apartmentNumber}>{resident.apartment}</p>
+                          <div
+                            className={CARD.cardHeaderRightArea}
+                            onClick={() => handleResidentHeaderClick(resident.id)}
+                          >
+                            <div className={CARD.textMetaArea}>
+                              <h2 className={CARD.residentName}>{resident.name}</h2>
+                              <p className={CARD.apartmentNumber}>{resident.apartment}</p>
+                            </div>
+                            <div className={CARD.balanceArea}>
+                              <span className={CARD.totalDebtText}>
+                                <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
+                              </span>
+                              <span style={CARD.caretRotationStyle(isExpanded, A)}>
+                                <Icon name="caret" />
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className={CARD.balanceArea}>
-                          <span className={CARD.totalDebtText}>
-                            <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
-                          </span>
-                          <span style={CARD.caretRotationStyle(isExpanded, A)}>
-                            <Icon name="caret" />
-                          </span>
-                        </div>
+
                       </div>
+
+                      <Drawer isOpen={isExpanded}>
+                        <div>
+                          <div className={CARD.monthActionRow}>
+                            <span className={CARD.monthActionLabel}>
+                              Debts for {currentMonthString}
+                            </span>
+                            <button onClick={() => openModal('add', resident.id)} className={CARD.addExpenseBtn}>
+                              + Add
+                            </button>
+                          </div>
+
+                          <div className={CARD.itemContainer}>
+                            {combinedCurrentExpenses.length === 0 ? (
+                              <p className={CARD.noExpensesFallback}>No expenses logged for this month.</p>
+                            ) : (
+                              <div>
+                                {combinedCurrentExpenses.map((expense, idx) => (
+                                  <div
+                                    key={expense.id}
+                                    className={`${idx === 0 ? '' : CARD.itemRowDividerStyle} ${CARD.itemRowWrapper}`}
+                                    onClick={() => openModal('edit', resident.id, expense.id, expense.amount.toString(), expense.description, expense.paid)}
+                                  >
+                                    <div className={CARD.interactiveIconArea}>
+                                      <div className={CARD.iconStateBtn}>
+                                        {expense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                                      </div>
+                                      <span className={CARD.expenseDescription(expense.paid)}>
+                                        {expense.description}
+                                      </span>
+                                    </div>
+                                    <span className={CARD.expenseValueAmount(expense.paid)}>
+                                      <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(expense.amount)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Drawer>
                     </div>
 
-                  </div>
-
-                  <Drawer isOpen={isExpanded}>
-                    <div>
-                      <div className={CARD.monthActionRow}>
-                        <span className={CARD.monthActionLabel}>
-                          Debts for {currentMonthString}
-                        </span>
-                        <button onClick={() => openModal('add', resident.id)} className={CARD.addExpenseBtn}>
-                          + Add
-                        </button>
-                      </div>
-
-                      <div className={CARD.itemContainer}>
-                        {combinedCurrentExpenses.length === 0 ? (
-                          <p className={CARD.noExpensesFallback}>No expenses logged for this month.</p>
-                        ) : (
-                          <div>
-                            {combinedCurrentExpenses.map((expense, idx) => (
+                    {hasPastUnpaidItems && (
+                      <div>
+                        <Drawer isOpen={isDrawerOpen}>
+                          <div className={DRW.drawerWrapper}>
+                            {pastUnpaidExpenses.map((pastExpense, idx) => (
                               <div
-                                key={expense.id}
-                                className={`${idx === 0 ? '' : CARD.itemRowDividerStyle} ${CARD.itemRowWrapper}`}
-                                onClick={() => openModal('edit', resident.id, expense.id, expense.amount.toString(), expense.description, expense.paid)}
+                                key={pastExpense.id}
+                                className={`${idx === 0 ? DRW.rowItemFirst : DRW.rowItemDividerStyle} ${DRW.rowItemWrapper}`}
+                                onClick={() => openModal('edit', resident.id, pastExpense.id, pastExpense.amount.toString(), pastExpense.description, pastExpense.paid)}
                               >
                                 <div className={CARD.interactiveIconArea}>
                                   <div className={CARD.iconStateBtn}>
-                                    {expense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                                    {pastExpense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
                                   </div>
-                                  <span className={CARD.expenseDescription(expense.paid)}>
-                                    {expense.description}
-                                  </span>
+                                  <div className={DRW.metaSubTextGroup}>
+                                    <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
+                                    <span className={DRW.pastMonthLabel}>{pastExpense.month}</span>
+                                  </div>
                                 </div>
-                                <span className={CARD.expenseValueAmount(expense.paid)}>
-                                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(expense.amount)}
-                                </span>
+                                <div className={CARD.expenseValueAmount(pastExpense.paid)}>
+                                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(pastExpense.amount)}
+                                </div>
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </Drawer>
-                </div>
+                        </Drawer>
 
-                {hasPastUnpaidItems && (
-                  <div>
-                    <Drawer isOpen={isDrawerOpen}>
-                      <div className={DRW.drawerWrapper}>
-                        {pastUnpaidExpenses.map((pastExpense, idx) => (
-                          <div
-                            key={pastExpense.id}
-                            className={`${idx === 0 ? DRW.rowItemFirst : DRW.rowItemDividerStyle} ${DRW.rowItemWrapper}`}
-                            onClick={() => openModal('edit', resident.id, pastExpense.id, pastExpense.amount.toString(), pastExpense.description, pastExpense.paid)}
-                          >
-                            <div className={CARD.interactiveIconArea}>
-                              <div className={CARD.iconStateBtn}>
-                                {pastExpense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
-                              </div>
-                              <div className={DRW.metaSubTextGroup}>
-                                <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
-                                <span className={DRW.pastMonthLabel}>{pastExpense.month}</span>
-                              </div>
-                            </div>
-                            <div className={CARD.expenseValueAmount(pastExpense.paid)}>
-                              <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(pastExpense.amount)}
-                            </div>
+                        <div onClick={() => togglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
+                          <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
+                            <Icon name="caret" />
+                          </span>
+                          <div className={DRW.toggleBarLabelArea}>
+                            <span className={DRW.toggleBarText}>
+                              previous months total
+                            </span>
+                            <span className={DRW.toggleBarAmount}>
+                              <CurrencySymbol activeSymbol={activeCurrencySymbol} className={DRW.toggleBarCurrencyMod} />{formatAmount(pastUnpaidTotal)}
+                            </span>
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </Drawer>
-
-                    <div onClick={() => togglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
-                      <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
-                        <Icon name="caret" />
-                      </span>
-                      <div className={DRW.toggleBarLabelArea}>
-                        <span className={DRW.toggleBarText}>
-                          previous months total
-                        </span>
-                        <span className={DRW.toggleBarAmount}>
-                          <CurrencySymbol activeSymbol={activeCurrencySymbol} className={DRW.toggleBarCurrencyMod} />{formatAmount(pastUnpaidTotal)}
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-              )}
+                );
+              })}
             </div>
           );
+
+          const buildingView = (
+            <BuildingExpenses
+              expenses={buildingExpenses}
+              setExpenses={setBuildingExpenses}
+              currentMonthString={currentMonthString}
+              isPastExpense={isPastExpense}
+              activeCurrencySymbol={activeCurrencySymbol}
+              openBuildingModal={openBuildingModal}
+            />
+          );
+
+          // During transition: render both layers stacked; outgoing recedes, incoming covers
+          if (isTransitioning) {
+            return (
+              <div style={VT.outerStyle}>
+                {/* Outgoing layer — the one we just left */}
+                <div style={exitStyle}>
+                  {isBuildingView ? cardsView : buildingView}
+                </div>
+                {/* Incoming layer — slides in on top */}
+                <div style={enterStyle}>
+                  {isBuildingView ? buildingView : cardsView}
+                </div>
+              </div>
+            );
+          }
+
+          // Idle: just render the active view normally
+          return isBuildingView ? buildingView : cardsView;
         })()}
 
         {isMainMenuOpen && (

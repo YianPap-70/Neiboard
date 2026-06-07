@@ -121,7 +121,7 @@ window.DESIGN = {
 
     profileArea: "flex items-center min-w-0 gap-3",
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-    avatarImg: "object-contain h-[46px] w-[46px] opacity-50 pointer-events-none",
+    avatarImg: "object-contain h-[46px] w-[46px] opacity-100 pointer-events-none",
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
     apartmentNumber: "font-medium truncate text-sm text-[rgba(225,227,248,0.5)]",
@@ -334,8 +334,8 @@ window.DESIGN = {
     autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
     autoTextareaDuration: '0.2s',
     rollerTransition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
-    viewTransitionDuration: '0.35s',
-    viewTransitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    viewTransitionDuration: '0.6s',
+    viewTransitionCurve: 'cubic-bezier(0.4, 0, 0.2, 1)',
     coinFlipDuration: '0.5s',
   },
 
@@ -374,16 +374,33 @@ window.DESIGN = {
   },
 
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
+  // Both views are rendered simultaneously in a position:relative container.
+  // The incoming view slides in on top; the outgoing view shrinks + fades behind it.
   viewTransition: {
-  cardsExitStyle: (duration, curve) => ({
-    animation: `viewSlideOutToLeft ${duration} ${curve} forwards`,
-  }),
-  buildingExitStyle: (duration, curve) => ({
-    animation: `viewSlideOutToRight ${duration} ${curve} forwards`,
-  }),
-  cardsEnterStyle: () => ({}),
-  buildingEnterStyle: () => ({}),
-},
+    // Wrapper that holds both layers during transition
+    outerStyle: { position: 'relative' },
+
+    // The exiting layer: stays in place, shrinks + fades (Option A recede effect)
+    exitStyle: (duration, curve) => ({
+      position: 'absolute',
+      top: 0, left: 0, right: 0,
+      pointerEvents: 'none',
+      animation: `viewExitRecede ${duration} ${curve} forwards`,
+      zIndex: 0,
+    }),
+
+    // The entering layer slides in from the right (→ building) or left (→ cards)
+    enterFromRightStyle: (duration, curve) => ({
+      animation: `viewEnterFromRight ${duration} ${curve} forwards`,
+      zIndex: 1,
+      position: 'relative',
+    }),
+    enterFromLeftStyle: (duration, curve) => ({
+      animation: `viewEnterFromLeft ${duration} ${curve} forwards`,
+      zIndex: 1,
+      position: 'relative',
+    }),
+  },
 
   // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
   buildingExpenses: {
