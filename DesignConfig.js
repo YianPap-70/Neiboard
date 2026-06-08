@@ -54,8 +54,8 @@ window.DESIGN = {
 
     navPillContainer: "w-[100px] h-[44px] bg-[#49496A] rounded-[22px] flex items-center justify-between ml-auto select-none relative overflow-hidden shrink-0",
     navPillIconArea: "w-[50px] h-11 flex items-center justify-center pointer-events-none text-[#E1E3F8]",
-    navPillLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.1)] transition-colors",
-    navPillRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.1)] transition-colors",
+    navPillLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/10 transition-colors",
+    navPillRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/10 transition-colors",
 
     goTodayFloatBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity ml-1",
     goTodayActiveOpacity: 1.0,
@@ -64,12 +64,12 @@ window.DESIGN = {
 
   // ─── GLOBAL LAYOUT SPACING ────────────────────────────────────────────────
   spacing: {
-    headerToListGap: '12px',
+    headerToListGap: '16px',
   },
 
   // ─── MAIN MENU CONTAINER ──────────────────────────────────────────────────
   mainMenu: {
-    backdropOverlay: "fixed inset-0 z-50 bg-[rgba(0,0,0,0.7)] flex items-center justify-center p-4",
+    backdropOverlay: "fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4",
     backdropAnimation: (A) => ({ animation: `menuBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `menuContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
@@ -89,8 +89,8 @@ window.DESIGN = {
     symbolRollWrapper: "h-7 overflow-hidden relative pointer-events-none flex items-center justify-center flex-1",
     symbolRollContainer: "absolute flex flex-col items-center",
     symbolText: "text-base font-bold text-[#E1E3F8] h-7 leading-7 flex items-center justify-center whitespace-nowrap",
-    symbolLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)]",
-    symbolRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)]",
+    symbolLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
+    symbolRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
 
     dateRangeSection: "w-full bg-[#49496A] rounded-[12px] p-3 flex flex-col gap-3",
     dateRangeButtonsRow: "flex items-center gap-3 w-full",
@@ -98,7 +98,7 @@ window.DESIGN = {
 
     deleteBtn: "w-full h-[48px] rounded-[24px] bg-[#3D3D5F] border-none text-base font-bold flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none",
     deleteActiveRingClass: "ring-2 ring-[#E25344]",
-    deleteText: (isActive) => isActive ? "text-[#E1E3F8]" : "text-[rgba(225,227,248,0.4)]",
+    deleteText: (isActive) => isActive ? "text-[#E1E3F8]" : "text-[#E1E3F8] opacity-40",
     deleteIconClass: (isActive) => isActive ? "" : "opacity-40",
 
     footerRow: "w-full flex items-center gap-3 pt-1",
@@ -115,16 +115,15 @@ window.DESIGN = {
     cardBody: "bg-[#333355]",
     cardInnerPadding: "p-4",
     
-    // Card header layout (moved from App.js)
     cardHeaderContainer: "flex items-center justify-between gap-3",
     cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
 
     profileArea: "flex items-center min-w-0 gap-3",
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-    avatarImg: "object-contain h-[46px] w-[46px] opacity-100 pointer-events-none",
+    avatarImg: "object-contain h-[46px] w-[46px] opacity-50 pointer-events-none",
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
-    apartmentNumber: "font-medium truncate text-sm text-[rgba(225,227,248,0.5)]",
+    apartmentNumber: "font-medium truncate text-sm text-[#E1E3F8] opacity-50",
 
     balanceArea: "flex items-center shrink-0 gap-3",
     totalDebtText: "font-bold text-[22px] text-[#F2C454]",
@@ -137,15 +136,15 @@ window.DESIGN = {
     }),
 
     monthActionRow: "flex items-center justify-between px-4 py-2.5",
-    monthActionLabel: "font-medium truncate pr-2 text-xs text-[#9A9AB4]",
+    monthActionLabel: "font-medium truncate pr-2 text-xs text-[#E1E3F8] opacity-40",
 
     addExpenseBtn: "w-[100px] h-[44px] rounded-[22px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-sm text-[#E1E3F8] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95",
 
     itemContainer: "px-4 pb-4",
-    noExpensesFallback: "text-center py-4 text-xs text-[rgba(225,227,248,0.5)]",
+    noExpensesFallback: "text-center py-4 text-xs text-[#E1E3F8] opacity-50",
 
-    itemRowWrapper: "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-[rgba(255,255,255,0.03)]",
-    itemRowDividerStyle: "border-t-2 border-solid border-[rgba(225,227,248,0.2)]",
+    itemRowWrapper: "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-white/5",
+    itemRowDividerStyle: "border-t border-solid border-white/20",
     interactiveIconArea: "flex items-center min-w-0 gap-3 pointer-events-none",
     iconStateBtn: "shrink-0 h-5 flex items-center pointer-events-none",
     expenseDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? 'text-[#9CE66B]' : 'text-[#E1E3F8]'}`,
@@ -164,7 +163,7 @@ window.DESIGN = {
     maxLines: 5,
   },
 
-  // ─── CARD MODAL INPUT STYLES (moved from inline <style> tag) ──────────────
+  // ─── CARD MODAL INPUT STYLES ──────────────────────────────────────────────
   cardModalInput: {
     placeholderColor: 'rgba(225,227,248,0.5)',
     placeholderFontSize: '12px',
@@ -175,16 +174,16 @@ window.DESIGN = {
   // ─── HISTORICAL DRAWER BAR COMPONENTS ─────────────────────────────────────
   historyDrawer: {
     drawerWrapper: "bg-[#49496A] px-4",
-    rowItemWrapper: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-[rgba(255,255,255,0.03)]",
+    rowItemWrapper: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
     rowItemFirst: "pt-3 pb-3",
-    rowItemDividerStyle: "border-t-2 border-solid border-[rgba(225,227,248,0.2)]",
+    rowItemDividerStyle: "border-t border-solid border-white/20",
     metaSubTextGroup: "flex flex-col min-w-0 pr-2 pointer-events-none",
-    pastMonthLabel: "font-semibold truncate text-[12px] text-[rgba(225,227,248,0.5)]",
+    pastMonthLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
 
     toggleBar: "w-full flex items-center justify-between cursor-pointer hover:opacity-90 select-none bg-[#49496A] py-2 px-4",
     toggleBarLabelArea: "flex items-center min-w-0 gap-1.5",
-    toggleBarText: "font-medium truncate text-xs text-[rgba(225,227,248,0.5)]",
-    toggleBarAmount: "font-bold shrink-0 text-base text-[rgba(225,227,248,0.5)]",
+    toggleBarText: "font-medium truncate text-xs text-[#E1E3F8] opacity-50",
+    toggleBarAmount: "font-bold shrink-0 text-base text-[#E1E3F8] opacity-50",
     toggleBarCurrencyMod: "text-[0.7em] mr-0.5",
 
     cardRoundingContainerStyle: (hasPastUnpaidItems) => ({
@@ -199,11 +198,10 @@ window.DESIGN = {
 
   // ─── POPUP MODAL DIALOGUES ────────────────────────────────────────────────
   modal: {
-    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-[rgba(0,0,0,0.7)]",
+    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/70",
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
-    // SINGLE SOURCE OF TRUTH for all modal containers
     boxContainer: "w-full relative shrink-0 bg-[#333355]",
     boxContainerStyle: { 
       borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
@@ -249,8 +247,8 @@ window.DESIGN = {
       yearRollWrapper: "h-7 overflow-hidden relative pointer-events-none flex items-center justify-center w-28",
       yearRollContainer: "absolute flex flex-col items-center",
       yearText: "text-xl font-bold text-[#E1E3F8] tracking-wider h-7 leading-7 flex items-center justify-center",
-      leftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)] transition-colors",
-      rightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-[rgba(255,255,255,0.04)] transition-colors",
+      leftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
+      rightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
       gridContainer: "grid grid-cols-4 gap-x-2 gap-y-2 mb-4 justify-items-center justify-center mx-auto",
       monthCircle: "w-[52px] h-[52px] rounded-full bg-[#49496A] text-[13px] font-bold text-[#E1E3F8] tracking-wide flex items-center justify-center transition-all duration-300 outline-none select-none",
       monthActiveRing: "ring-2 ring-[#9CE66B]",
@@ -261,7 +259,7 @@ window.DESIGN = {
 
   // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ───────────────────────────
   cardModal: {
-    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-[rgba(0,0,0,0.7)]",
+    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/70",
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
 
@@ -334,23 +332,20 @@ window.DESIGN = {
     autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
     autoTextareaDuration: '0.2s',
     rollerTransition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
-    viewTransitionDuration: '0.6s',
-    viewTransitionCurve: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    viewTransitionDuration: '0.35s',
+    viewTransitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
     coinFlipDuration: '0.5s',
   },
 
   // ─── WALLET FLIP BUTTON ───────────────────────────────────────────────────
   walletFlipBtn: {
-    // The outer container sets perspective for 3D effect
     container: "w-[44px] h-[44px] flex items-center justify-center shrink-0",
     containerStyle: { perspective: '200px' },
-    // The inner flipper rotates on Y axis
     flipperBase: "w-[44px] h-[44px] relative flex items-center justify-center",
     flipperStyle: (isBuilding, duration) => ({
       transition: `transform ${duration} cubic-bezier(0.25, 1, 0.5, 1)`,
       transform: isBuilding ? 'rotateY(180deg)' : 'rotateY(0deg)',
       transformStyle: 'preserve-3d',
-      position: 'relative',
       width: '44px',
       height: '44px',
     }),
@@ -374,13 +369,8 @@ window.DESIGN = {
   },
 
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
-  // Both views are rendered simultaneously in a position:relative container.
-  // The incoming view slides in on top; the outgoing view shrinks + fades behind it.
   viewTransition: {
-    // Wrapper that holds both layers during transition
     outerStyle: { position: 'relative' },
-
-    // The exiting layer: stays in place, shrinks + fades (Option A recede effect)
     exitStyle: (duration, curve) => ({
       position: 'absolute',
       top: 0, left: 0, right: 0,
@@ -388,8 +378,6 @@ window.DESIGN = {
       animation: `viewExitRecede ${duration} ${curve} forwards`,
       zIndex: 0,
     }),
-
-    // The entering layer slides in from the right (→ building) or left (→ cards)
     enterFromRightStyle: (duration, curve) => ({
       animation: `viewEnterFromRight ${duration} ${curve} forwards`,
       zIndex: 1,
@@ -405,34 +393,24 @@ window.DESIGN = {
   // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
   buildingExpenses: {
     listContainer: "flex flex-col",
-
-    // Top label row: "Expenses" left, "total X" right — same row, flexible space
     labelRow: "flex items-center justify-between w-full",
-    labelRowGap: '30px', // marginBottom from labelRow to items, marginTop from +Add to prevLabel
-
+    labelRowGap: '30px',
     sectionLabel: "font-light text-[14px] text-[#E1E3F8]",
     totalLabel: "font-light text-[14px] text-[#E1E3F8]",
     totalAmount: "font-bold text-[18px] text-[#F2C454] ml-1",
-
-    // +Add pill — reuses same classes as card addExpenseBtn
     addBtn: "w-[100px] h-[44px] rounded-[22px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-sm text-[#E1E3F8] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95",
     addBtnWrapper: "flex",
-    addBtnGap: '30px', // marginTop from labelRow (or items) to addBtn
-
-    // Expense items — same as resident card items
+    addBtnGap: '30px',
     itemsWrapper: "flex flex-col",
-    itemRow: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-[rgba(255,255,255,0.03)]",
-    itemRowDivider: "border-t-2 border-solid border-[rgba(225,227,248,0.3)]",
+    itemRow: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
+    itemRowDivider: "border-t border-solid border-white/30",
     itemLeft: "flex items-center min-w-0 gap-3 pointer-events-none",
     itemIconArea: "shrink-0 h-5 flex items-center pointer-events-none",
     itemDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? 'text-[#9CE66B]' : 'text-[#E1E3F8]'}`,
     itemAmount: (isPaid) => `font-semibold shrink-0 text-lg pointer-events-none ${isPaid ? 'text-[#9CE66B]' : 'text-[#E1E3F8]'}`,
     itemCurrencyMod: "text-[0.7em] mr-0.5 font-semibold",
-
-    // Card-like container for current and previous sections
     cardContainer: "bg-[#333355] rounded-[12px] overflow-hidden px-4",
-    cardContainerGap: '16px', // gap between current card and prev card
-
+    cardContainerGap: '16px',
     prevLabel: "font-light text-[14px] text-[#E1E3F8]",
     prevLabelWrapper: "flex items-center justify-between w-full",
   },
