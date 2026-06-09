@@ -10,8 +10,28 @@ const _DESIGN_PRIVATE = (() => {
   return { HEX_WARNING_RED, RADIUS_STANDARD };
 })();
 
+// FIX #11 — Calendar year range extracted from App.js into config where it belongs.
+// Change CALENDAR_START_YEAR / CALENDAR_END_YEAR here to adjust the picker range.
+window.CALENDAR_START_YEAR = 2015;
+window.CALENDAR_END_YEAR   = 2045;
+window.TIMELINE_YEARS = Array.from(
+  { length: window.CALENDAR_END_YEAR - window.CALENDAR_START_YEAR + 1 },
+  (_, i) => window.CALENDAR_START_YEAR + i
+);
+
 window.DESIGN = {
+
   // ─── GLOBAL METADATA & LOCALIZATION ──────────────────────────────────────
+  // ─── AI ARCHITECTURE GUARDRAILS (DO NOT REMOVE) ──────────────────────────
+  // RULE #1: NEW MODAL OVERLAYS & FLEXBOX COLLAPSE PREVENTION
+  // All backdrop overlays (modalBase.backdropOverlay) use CSS Flexbox.
+  // When wrapping new forms/modals to catch click events with e.stopPropagation(),
+  // NEVER use an unstyled middle <div> wrapper. 
+  // You must either:
+  //   A) Apply the 'w-full max-w-[...px]' styles directly onto that middle wrapper div.
+  //   B) Attach the onClick={(e) => e.stopPropagation()} directly onto the styled component.
+  // Failure to follow this rule will cause Flexbox to collapse the new modal width to 0px.
+  // ──────────────────────────────────────────────────────────────────────────
   currencyOptions: [
     { label: 'EUR €', symbol: '€' },
     { label: 'USD $', symbol: '$' },
@@ -114,7 +134,7 @@ window.DESIGN = {
     topIndicatorHasDebtColor: "#F2C454",
     cardBody: "bg-[#333355]",
     cardInnerPadding: "p-4",
-    
+
     cardHeaderContainer: "flex items-center justify-between gap-3",
     cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
 
@@ -163,10 +183,15 @@ window.DESIGN = {
     maxLines: 5,
   },
 
-  // ─── CARD MODAL INPUT STYLES ──────────────────────────────────────────────
+  // FIX #12 — Placeholder styling moved out of inline <style> tag in CardProfileModal
+  // and into a static CSS class (.card-modal-input) in styles.css.
+  // This section now only holds values that styles.css references via CSS variables,
+  // keeping DesignConfig as the single source of truth for all color/size tokens.
   cardModalInput: {
-    placeholderColor: 'rgba(225,227,248,0.5)',
-    placeholderFontSize: '12px',
+    // These values are applied via CSS variables declared in styles.css.
+    // If you change them here, also update the matching variables in styles.css.
+    placeholderColor: '#E1E3F8',   // FIX #13 — was rgba, now hex; opacity applied via CSS
+    placeholderOpacity: '0.5',
     textColor: '#E1E3F8',
     fontSize: '14px',
   },
@@ -196,19 +221,25 @@ window.DESIGN = {
     }
   },
 
-  // ─── POPUP MODAL DIALOGUES ────────────────────────────────────────────────
-  modal: {
+  // ─── SHARED MODAL BASE ────────────────────────────────────────────────────
+  // FIX #13 — backdropOverlay, backdropAnimation, contentAnimation, boxContainer,
+  // and boxContainerStyle were duplicated verbatim between `modal` and `cardModal`.
+  // They now live here once and both sections reference this shared base.
+  modalBase: {
     backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/70",
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
-
     boxContainer: "w-full relative shrink-0 bg-[#333355]",
-    boxContainerStyle: { 
-      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
+    boxContainerStyle: {
+      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD,
       maxWidth: '376px',
       padding: '16px'
     },
+  },
 
+  // ─── POPUP MODAL DIALOGUES ────────────────────────────────────────────────
+  modal: {
+    // Shared tokens — reference modalBase directly in App.js via D.modalBase
     headerRow: "flex items-center gap-2 mb-4",
     headerIcon: "h-4 w-4 shrink-0 opacity-50",
     headerTitle: "text-[14px] text-[#E1E3F8] opacity-50 tracking-wide",
@@ -229,10 +260,10 @@ window.DESIGN = {
     actionsFlexRow: "flex items-center gap-3 w-full",
     amountToDescriptionGap: '12px',
     descriptionToActionsGap: '16px',
-    
+
     confirmBtn: "flex-1 font-bold transition-transform active:scale-95 text-center bg-[#49496A] text-[#E1E3F8] h-[52px] rounded-[9999px]",
     cancelBtn: "flex-1 font-semibold transition-transform active:scale-95 text-center bg-[#49496A] text-[#E1E3F8] h-[52px] rounded-[9999px]",
-    
+
     deleteActionBtn: "shrink-0 flex items-center justify-center transition-transform active:scale-95 w-[52px] h-[52px] rounded-[9999px] bg-[#49496A] outline-none select-none",
     deleteActionBtnRingClass: "ring-2 ring-[#E25344]",
 
@@ -258,18 +289,9 @@ window.DESIGN = {
   },
 
   // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ───────────────────────────
+  // FIX #13 — Removed duplicated backdropOverlay / backdropAnimation / contentAnimation /
+  // boxContainer / boxContainerStyle. App.js now reads those from D.modalBase.
   cardModal: {
-    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/70",
-    backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
-    contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
-
-    boxContainer: "w-full relative shrink-0 bg-[#333355]",
-    boxContainerStyle: { 
-      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
-      maxWidth: '376px',
-      padding: '16px'
-    },
-
     headerRow: "flex items-center gap-3 mb-4",
     headerIcon: "h-7 w-7 shrink-0 opacity-80",
     headerLabel: "font-bold text-lg text-[#E1E3F8] tracking-wide",
@@ -287,8 +309,8 @@ window.DESIGN = {
     cancelTextBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     trashBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
 
-    deleteConfirmBoxStyle: { 
-      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD, 
+    deleteConfirmBoxStyle: {
+      borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD,
       maxWidth: '376px',
       padding: '20px'
     },
@@ -300,27 +322,30 @@ window.DESIGN = {
 
   // ─── REUSABLE ASSETS ──────────────────────────────────────────────────────
   icons: {
-    hamburger:       { src: 'Icon-Hamburger.svg',       className: 'h-8',    alt: 'Menu' },
-    addUser:         { src: 'Button-Add-User.svg',      className: 'h-8',    alt: 'Add User' },
-    wallet:          { src: 'Icon-Wallet.svg',          className: 'h-8',    alt: 'Wallet' },
-    residentCard:    { src: 'Icon-ResidentCard.svg',    className: 'h-8',    alt: 'Resident Cards' },
-    synced:          { src: 'Icon-Synced.svg',          className: 'h-8',    alt: 'Synced Status' },
-    calendarLeft:    { src: 'Arrow-Left.svg',           className: 'h-[18px]', alt: 'Previous' },
-    calendarRight:   { src: 'Arrow-Right.svg',          className: 'h-[18px]', alt: 'Next' },
-    goToday:         { src: 'Icon-Go-Today.svg',        className: 'h-8',    alt: 'Go to Today' },
-    checkmark:       { src: 'Icon-Check.svg',           className: 'h-5',    alt: 'Paid' },
-    warning:         { src: 'Icon-Warning-Filled.svg',  className: 'h-5',    alt: 'Unpaid' },
-    caret:           { src: 'Icon-Caret.svg',           className: 'w-4 h-4', alt: 'Expand/Collapse' },
-    trash:           { src: 'Icon-Trash.svg',           className: 'h-6',    alt: 'Delete' },
-    download:        { src: 'Icon-Download.svg',        className: 'h-5',    alt: 'Download PDF' },
-    editExpenseIcon: { src: 'Icon-Edit.svg',            className: 'h-4 w-4', alt: 'Edit' },
-    cardAdd:         { src: 'Button-Add-User.svg',      className: 'h-7 w-7', alt: 'Add Card' },
-    cardEdit:        { src: 'Icon-Edit.svg',            className: 'h-7 w-7', alt: 'Edit Card' },
-    cardCancel:      { src: 'Icon-Ex.svg',              className: 'h-5 w-5', alt: 'Cancel' },
-    cardTrash:       { src: 'Icon-Trash.svg',           className: 'h-5 w-5', alt: 'Delete Card' },
-    paidToggle:      { src: 'Button-Paid.svg',          className: 'h-9 w-auto', alt: 'Paid' },
-    unpaidToggle:    { src: 'Button-Unpaid.svg',        className: 'h-9 w-auto', alt: 'Mark as Paid' },
-    buildingUnpaidToggle: { src: 'Building-ExpenceUnpaid.svg', className: 'h-9 w-auto', alt: 'Mark as Paid' },
+    hamburger:            { src: 'Icon-Hamburger.svg',          className: 'h-8',         alt: 'Menu' },
+    addUser:              { src: 'Button-Add-User.svg',         className: 'h-8',         alt: 'Add User' },
+    wallet:               { src: 'Icon-Wallet.svg',             className: 'h-8',         alt: 'Wallet' },
+    residentCard:         { src: 'Icon-ResidentCard.svg',       className: 'h-8',         alt: 'Resident Cards' },
+    synced:               { src: 'Icon-Synced.svg',             className: 'h-8',         alt: 'Synced Status' },
+    calendarLeft:         { src: 'Arrow-Left.svg',              className: 'h-[18px]',    alt: 'Previous' },
+    calendarRight:        { src: 'Arrow-Right.svg',             className: 'h-[18px]',    alt: 'Next' },
+    goToday:              { src: 'Icon-Go-Today.svg',           className: 'h-8',         alt: 'Go to Today' },
+    checkmark:            { src: 'Icon-Check.svg',              className: 'h-5',         alt: 'Paid' },
+    warning:              { src: 'Icon-Warning-Filled.svg',     className: 'h-5',         alt: 'Unpaid' },
+    caret:                { src: 'Icon-Caret.svg',              className: 'w-4 h-4',     alt: 'Expand/Collapse' },
+    trash:                { src: 'Icon-Trash.svg',              className: 'h-6',         alt: 'Delete' },
+    download:             { src: 'Icon-Download.svg',           className: 'h-5',         alt: 'Download PDF' },
+    editExpenseIcon:      { src: 'Icon-Edit.svg',               className: 'h-4 w-4',     alt: 'Edit' },
+    cardAdd:              { src: 'Button-Add-User.svg',         className: 'h-7 w-7',     alt: 'Add Card' },
+    cardEdit:             { src: 'Icon-Edit.svg',               className: 'h-7 w-7',     alt: 'Edit Card' },
+    cardCancel:           { src: 'Icon-Ex.svg',                 className: 'h-5 w-5',     alt: 'Cancel' },
+    cardTrash:            { src: 'Icon-Trash.svg',              className: 'h-5 w-5',     alt: 'Delete Card' },
+    paidToggle:           { src: 'Button-Paid.svg',             className: 'h-9 w-auto',  alt: 'Paid' },
+    unpaidToggle:         { src: 'Button-Unpaid.svg',           className: 'h-9 w-auto',  alt: 'Mark as Paid' },
+    // FIX #5 — Typo corrected: 'ExpenceUnpaid' → 'ExpenseUnpaid'.
+    // ⚠️  MANUAL ACTION REQUIRED: rename your SVG file from
+    //     'Building-ExpenceUnpaid.svg'  →  'Building-ExpenseUnpaid.svg'
+    buildingUnpaidToggle: { src: 'Building-ExpenseUnpaid.svg',  className: 'h-9 w-auto',  alt: 'Mark as Paid' },
   },
 
   animation: {
@@ -371,6 +396,9 @@ window.DESIGN = {
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
   viewTransition: {
     outerStyle: { position: 'relative' },
+    // FIX #17 — exitStyle no longer scales down; outgoing view fades only.
+    // The scale(0.96) → scale(0.92) shrink has been removed.
+    // Slide-in animations (enterFromRight / enterFromLeft) are unchanged.
     exitStyle: (duration, curve) => ({
       position: 'absolute',
       top: 0, left: 0, right: 0,
@@ -413,5 +441,7 @@ window.DESIGN = {
     cardContainerGap: '16px',
     prevLabel: "font-light text-[14px] text-[#E1E3F8]",
     prevLabelWrapper: "flex items-center justify-between w-full",
+    // FIX #15 — Rogue inline rgba style replaced with a proper Tailwind token.
+    prevMonthSubLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
   },
 };

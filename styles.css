@@ -15,6 +15,19 @@ body {
   mix-blend-mode: normal !important;
 }
 
+/* FIX #12 — CardProfileModal placeholder styles moved here from the inline
+   <style> tag that was injected inside the component on every render.
+   Colors match the cardModalInput tokens in DesignConfig.js. */
+.card-modal-input::placeholder {
+  color: #E1E3F8;
+  opacity: 0.5;
+  font-size: 12px;
+}
+.card-modal-input {
+  color: #E1E3F8;
+  font-size: 14px;
+}
+
 /* Native CSS Animations for high performance WebViews */
 @keyframes modalBackdropIn {
   from { opacity: 0; }
@@ -36,20 +49,21 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Outgoing view: recedes (shrinks + fades) while incoming slides over it */
+/* FIX #17 — viewExitRecede no longer scales down.
+   The outgoing view now fades out cleanly in place while the
+   incoming view slides over it. Scale was removed entirely. */
 @keyframes viewExitRecede {
-  0%   { opacity: 1;   transform: scale(1);    }
-  40%  { opacity: 0.4; transform: scale(0.96); }
-  100% { opacity: 0;   transform: scale(0.92); }
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
-/* Incoming view slides in from right (cards → building) */
+/* Incoming view slides in from right (cards → building) — unchanged */
 @keyframes viewEnterFromRight {
   from { opacity: 0; transform: translateX(60px); }
   to   { opacity: 1; transform: translateX(0);    }
 }
 
-/* Incoming view slides in from left (building → cards) */
+/* Incoming view slides in from left (building → cards) — unchanged */
 @keyframes viewEnterFromLeft {
   from { opacity: 0; transform: translateX(-60px); }
   to   { opacity: 1; transform: translateX(0);     }
