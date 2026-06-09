@@ -604,47 +604,60 @@ window.App = function App() {
     return listCopy;
   }, [residents, currentSortBy]);
 
-  // FIXED: togglePreviousDrawer now expands collapsed cards
+  // Shared two-phase scroll helper.
+  // Phase 1: expansion is already triggered by the caller (state set before calling this).
+  // Phase 2: after the drawer finishes animating, check whether the card top is already
+  //          sitting at least (headerHeight + gapPx) below the viewport top. If it is,
+  //          the card is fully visible and we do nothing. If not, we scroll so its top
+  //          lands exactly gapPx (16px) below the sticky header — using native smooth
+  //          scroll which is compositor-driven and costs nothing extra.
+  const scrollCardIntoViewAfterExpand = (residentId) => {
+    const drawerDurationMs = parseFloat(A.drawerDuration) * 1000;
+    setTimeout(() => {
+      const cardEl = cardRefs.current[residentId];
+      if (!cardEl) return;
+      const headerHeight = headerRef.current?.offsetHeight ?? 90;
+      const gapPx        = parseInt(D.spacing.headerToListGap); // 16
+      const cardTopInViewport = cardEl.getBoundingClientRect().top;
+      const idealOffset = headerHeight + gapPx; // how far from viewport top the card top should be
+      // Only scroll if the card top is above the ideal position (hidden behind header or too close)
+      if (cardTopInViewport < idealOffset) {
+        const cardTopAbsolute = cardEl.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: cardTopAbsolute - idealOffset, behavior: 'smooth' });
+      }
+    }, drawerDurationMs);
+  };
+
+  // When the user taps the drawer toggle bar (left side of card):
+  // - If card is collapsed → expand it (Phase 1) then scroll after drawer settles (Phase 2)
+  // - If card is already expanded → just toggle the historical "previous months" drawer
   const togglePreviousDrawer = (residentId) => {
-    // If card is collapsed, expand it first
     if (expandedResident !== residentId) {
+      // Phase 1: expand in place immediately
       setExpandedResident(residentId);
       setOpenPreviousDrawer({});
-
-      requestAnimationFrame(() => {
-        const cardEl = cardRefs.current[residentId];
-        if (!cardEl) return;
-        const headerHeight = headerRef.current?.offsetHeight ?? 90;
-        const gapPx = parseInt(D.spacing.headerToListGap);
-        const cardTop = cardEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: cardTop - headerHeight - gapPx, behavior: 'smooth' });
-      });
+      // Phase 2: scroll after drawer animation finishes
+      scrollCardIntoViewAfterExpand(residentId);
     } else {
-      // Card is already expanded, just toggle the historical drawer
+      // Card already expanded — just toggle the history drawer, no scroll needed
       setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: !prev[residentId] }));
     }
   };
 
-  // FIX #16 — Card expand now scrolls the card top into view, offset by the
-  // measured sticky header height plus the design-system headerToListGap token.
+  // When the user taps the main card header area (right side):
+  // - Collapsing: just collapse, no scroll
+  // - Expanding: Phase 1 expand in place, Phase 2 scroll after drawer settles
   const handleResidentHeaderClick = (residentId) => {
-    const isCurrentlyExpanded = expandedResident === residentId;
-
-    if (isCurrentlyExpanded) {
+    if (expandedResident === residentId) {
+      // Collapsing — no scroll needed
       setExpandedResident(null);
       setOpenPreviousDrawer({});
     } else {
+      // Phase 1: expand in place immediately
       setExpandedResident(residentId);
       setOpenPreviousDrawer({});
-
-      requestAnimationFrame(() => {
-        const cardEl    = cardRefs.current[residentId];
-        if (!cardEl) return;
-        const headerHeight = headerRef.current?.offsetHeight ?? 90;
-        const gapPx        = parseInt(D.spacing.headerToListGap); // 16
-        const cardTop      = cardEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: cardTop - headerHeight - gapPx, behavior: 'smooth' });
-      });
+      // Phase 2: scroll after drawer animation finishes
+      scrollCardIntoViewAfterExpand(residentId);
     }
   };
 
