@@ -509,10 +509,12 @@ window.App = function App() {
 
   const handleToggleView = useCallback(() => {
     const duration = parseFloat(A.viewTransitionDuration) * 1000;
-
+  
+    window.scrollTo({ top: 0 });
+  
     setExpandedResident(null);
     setOpenPreviousDrawer({});
-
+  
     setBuildingViewAnimState('transitioning');
     setTimeout(() => { setBuildingViewAnimState('idle'); }, duration);
     setIsBuildingView(prev => !prev);
