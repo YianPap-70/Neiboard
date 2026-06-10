@@ -52,7 +52,7 @@ function generateInitialResidents(D) {
       expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: false, month: pick(pastMonths) });
     });
 
-    residents.push({ id: `R${i}`, name: `${surname} Family`, apartment: `Apt ${apt}`, avatar: 'Avatar-Resident.svg', notes: '', expenses });
+    residents.push({ id: `R${i}`, name: `${surname} Family`, apartment: `Apt ${apt}`, notes: '', expenses });
   }
   return residents;
 }
@@ -849,7 +849,6 @@ window.App = function App() {
     id: 'R-' + Date.now(),
     name: name || 'New Resident',
     apartment: apartment || '—',
-    avatar: 'Avatar-Resident.svg',
     notes: notes || '',
     expenses: [],
   });
@@ -998,8 +997,6 @@ window.App = function App() {
                     style={DRW.cardRoundingContainerStyle(hasPastUnpaidItems)}
                     className={CARD.cardWrapper}
                   >
-                    <div style={{ backgroundColor: totalResidentDebt > 0 ? CARD.topIndicatorHasDebtColor : CARD.topIndicatorNoDebtColor }} className={CARD.topIndicatorLine} />
-
                     <div className={CARD.cardBody}>
                       <div className={CARD.cardInnerPadding}>
 
@@ -1009,13 +1006,9 @@ window.App = function App() {
                             onClick={(e) => handleOpenEditCard(resident.id, e)}
                           >
                             <img
-                              src={`./SVG/${resident.avatar}`}
+                              src={`./SVG/${totalResidentDebt > 0 ? 'Avatar-Debt.svg' : 'Avatar-NoDebt.svg'}`}
                               alt="Avatar"
                               className={CARD.avatarImg}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = D.avatarFallback;
-                              }}
                             />
                           </button>
 

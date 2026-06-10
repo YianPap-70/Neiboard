@@ -39,7 +39,6 @@ window.DESIGN = {
     { label: 'Yen ¥', symbol: '¥' },
     { label: 'None', symbol: '' }
   ],
-  avatarFallback: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23123D63'/%3E%3Ccircle cx='24' cy='18' r='8' fill='%23A7ECF3'/%3E%3Cellipse cx='24' cy='38' rx='13' ry='9' fill='%23A7ECF3'/%3E%3C/svg%3E",
   fontFamily: "'Open Sans', sans-serif",
   monthNames: [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -129,9 +128,6 @@ window.DESIGN = {
   residentCard: {
     cardListContainer: "flex flex-col gap-4",
     cardWrapper: "flex flex-col overflow-hidden",
-    topIndicatorLine: "w-full h-[2px]",
-    topIndicatorNoDebtColor: "#9CE66B",
-    topIndicatorHasDebtColor: "#F2C454",
     cardBody: "bg-[#333355]",
     cardInnerPadding: "p-4",
 
@@ -140,7 +136,7 @@ window.DESIGN = {
 
     profileArea: "flex items-center min-w-0 gap-3",
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-    avatarImg: "object-contain h-[46px] w-[46px] opacity-50 pointer-events-none",
+    avatarImg: "object-contain h-[46px] w-[46px] pointer-events-none",
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
     apartmentNumber: "font-medium truncate text-sm text-[#E1E3F8] opacity-50",
