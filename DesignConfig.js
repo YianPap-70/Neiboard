@@ -76,7 +76,8 @@ window.DESIGN = {
     navPillLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/10 transition-colors",
     navPillRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/10 transition-colors",
 
-    goTodayFloatBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity ml-1",
+    monthTextBtnCurrentColor: '#E1E3F8',
+    monthTextBtnOtherColor: '#F2C454',
     goTodayActiveOpacity: 1.0,
     goTodayInactiveOpacity: 0.3,
   },
@@ -144,6 +145,7 @@ window.DESIGN = {
     balanceArea: "flex items-center shrink-0 gap-3",
     totalDebtText: "font-bold text-[22px] text-[#F2C454]",
     totalDebtCurrencyMod: "text-[0.7em] mr-0.5 font-bold",
+    noDebtText: "font-normal text-[22px] text-[#E1E3F8]",
 
     caretRotationStyle: (isExpanded, A) => ({
       display: 'inline-block',

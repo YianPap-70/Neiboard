@@ -932,7 +932,7 @@ window.App = function App() {
           <div className={HDR.bottomRow}>
             <button
               className={HDR.monthTextBtn}
-              style={{ color: isFilteredAwayFromToday ? '#F2C454' : '#E1E3F8' }}
+              style={{ color: isFilteredAwayFromToday ? HDR.monthTextBtnOtherColor : HDR.monthTextBtnCurrentColor }}
               onClick={() => openModal('calendar', null)}
             >
               {currentMonthString}
@@ -1025,9 +1025,13 @@ window.App = function App() {
                               <p className={CARD.apartmentNumber}>{resident.apartment}</p>
                             </div>
                             <div className={CARD.balanceArea}>
-                              <span className={CARD.totalDebtText}>
-                                <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
-                              </span>
+                              {totalResidentDebt > 0 ? (
+                                <span className={CARD.totalDebtText}>
+                                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
+                                </span>
+                              ) : (
+                                <span className={CARD.noDebtText}>No debt</span>
+                              )}
                               <span style={CARD.caretRotationStyle(isExpanded, A)}>
                                 <Icon name="caret" />
                               </span>
