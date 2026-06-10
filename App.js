@@ -930,7 +930,11 @@ window.App = function App() {
           </div>
 
           <div className={HDR.bottomRow}>
-            <button className={HDR.monthTextBtn} onClick={() => openModal('calendar', null)}>
+            <button
+              className={HDR.monthTextBtn}
+              style={{ color: isFilteredAwayFromToday ? '#F2C454' : '#E1E3F8' }}
+              onClick={() => openModal('calendar', null)}
+            >
               {currentMonthString}
             </button>
 

@@ -69,7 +69,7 @@ window.DESIGN = {
     syncIconWrapper: "ml-2",
 
     bottomRow: "flex items-center pl-[2px] pr-[2px] w-full",
-    monthTextBtn: "font-extralight tracking-wide text-left text-2xl text-[#F2C454] hover:opacity-80 transition-opacity select-none truncate pr-2",
+    monthTextBtn: "font-extralight tracking-wide text-left text-2xl hover:opacity-80 transition-opacity select-none truncate pr-2",
 
     navPillContainer: "w-[100px] h-[44px] bg-[#49496A] rounded-[22px] flex items-center justify-between ml-auto select-none relative overflow-hidden shrink-0",
     navPillIconArea: "w-[50px] h-11 flex items-center justify-center pointer-events-none text-[#E1E3F8]",
