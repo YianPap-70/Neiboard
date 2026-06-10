@@ -226,7 +226,7 @@ window.DESIGN = {
   // and boxContainerStyle were duplicated verbatim between `modal` and `cardModal`.
   // They now live here once and both sections reference this shared base.
   modalBase: {
-    backdropOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/70",
+    backdropOverlay: "fixed inset-0 flex items-start justify-center pt-4 px-4 z-50 bg-black/70",
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
     contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
     boxContainer: "w-full relative shrink-0 bg-[#333355]",
