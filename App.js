@@ -11,9 +11,8 @@ const { useState, useCallback, useMemo, useRef, useEffect } = React;
 const systemDate = new Date();
 
 // ─── TEST DATA GENERATOR ──────────────────────────────────────────────────
-// FIX #9 — Converted from a self-executing window-mutating IIFE to a plain
-// lazy initialiser function called directly inside useState(() => ...).
-// Load-order dependency on window.DESIGN is now explicit via the argument.
+// Lazy initialiser called inside useState(() => ...) so it runs once on mount.
+// Receives the DESIGN config as an argument to avoid a hidden global dependency.
 function generateInitialResidents(D) {
   const SURNAMES = ['Ramirez', 'Chen', 'Marcus', 'Patel', 'Kowalski', 'Nguyen', 'Ferreira', 'Schmidt', 'Okafor', 'Petrov'];
   const EXPENSE_NAMES = ['Monthly Maintenance', 'Heating Oil', 'Elevator Repair', 'Water Balance', 'Shared Repairs', 'Stairwell Lighting'];
@@ -162,9 +161,9 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
     onConfirm({ name: name.trim(), apartment: apartment.trim(), notes: notes.trim() });
   };
 
-  // FIX #7 — handleNext no longer duplicates the resident-creation logic.
-  // It calls onConfirm with closeAfter=false by resetting fields locally;
-  // the parent distinguishes "OK" vs "+ Next" via the onNext prop.
+  // Saves the current fields as a new resident and resets the form so the
+  // user can immediately enter another. The parent distinguishes "OK" (close)
+  // from "+ Next" (stay open) via separate onConfirm / onNext props.
   const handleNext = () => {
     onNext({ name: name.trim(), apartment: apartment.trim(), notes: notes.trim() });
     setName('');
@@ -175,9 +174,8 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
   const isAdd = mode === 'add';
 
   return (
-    // FIX #12 — Removed the inline <style> tag that was injecting
-    // .card-modal-input placeholder rules on every render.
-    // Those styles now live statically in styles.css.
+    // Placeholder and input text styles are defined statically in styles.css
+    // via the .card-modal-input class, keeping style injection out of render.
     <div
       style={{ ...MB.boxContainerStyle, ...animStyle }}
       className={MB.boxContainer}
@@ -292,10 +290,9 @@ function WalletFlipButton({ onToggle }) {
   );
 }
 
-// FIX #6 — Shared ExpenseModal component replaces the two identical blocks of
-// modal JSX that previously existed separately for resident expenses and
-// building expenses. The only behavioural difference (unpaidToggle icon) is
-// passed via the `unpaidIconName` prop.
+// Shared modal used by both resident expenses and building expenses.
+// The only behavioural difference between the two contexts is which
+// "unpaid" icon to show, passed via the `unpaidIconName` prop.
 function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconName }) {
   const MDL = window.DESIGN.modal;
   const MB  = window.DESIGN.modalBase;
@@ -378,8 +375,8 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
 }
 
 function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeCurrencySymbol, openBuildingModal }) {
-  // FIX #16 — Removed unused `setExpenses` prop. All mutations go through
-  // openBuildingModal → handleConfirmBuildingModal in App, which holds setBuildingExpenses.
+  // All mutations are handled by openBuildingModal → handleConfirmBuildingModal in App,
+  // which owns the setBuildingExpenses setter. This component is display + event delegation only.
   const BE   = window.DESIGN.buildingExpenses;
 
   const currentExpenses    = expenses.filter(exp => exp.month === currentMonthString);
@@ -462,7 +459,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                     <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
-                    {/* FIX #15 — Replaced hardcoded inline rgba style with design token */}
+                    {/* Month sub-label shown beneath the expense description in previous-months rows */}
                     <span className={BE.prevMonthSubLabel}>{exp.month}</span>
                   </div>
                 </div>
@@ -493,7 +490,8 @@ window.App = function App() {
   const CM     = D.cardModal;
   const SPC    = D.spacing;
 
-  // FIX #16 — headerRef added to measure actual sticky header height for scroll offset.
+  // Ref attached to the sticky header so its rendered height can be measured
+  // when calculating scroll offsets after a card expands.
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -520,8 +518,8 @@ window.App = function App() {
     setIsBuildingView(prev => !prev);
   }, [A.viewTransitionDuration]);
 
-  // FIX #2 — currentLanguage wired up. Currently only the state is tracked;
-  // plug into a localisation map when translations are ready.
+  // Language preference — currently controls UI state only.
+  // Wire into a localisation map when translations are ready.
   const [currentLanguage, setCurrentLanguage] = useState('EN');
   const [currentSortBy, setCurrentSortBy]     = useState('Tag');
   const [currencyIndex, setCurrencyIndex]     = useState(0);
@@ -541,12 +539,12 @@ window.App = function App() {
   const [tempYear, setTempYear]           = useState(systemDate.getFullYear());
   const [tempMonthIdx, setTempMonthIdx]   = useState(systemDate.getMonth());
 
-  // FIX #9 — residents initialised via lazy function, no window mutation.
+  // Resident list seeded with test data on first mount via lazy initialiser.
   const [residents, setResidents]                     = useState(() => generateInitialResidents(D));
   const [expandedResident, setExpandedResident]       = useState(null);
   const [openPreviousDrawer, setOpenPreviousDrawer]   = useState({});
 
-  // FIX #16 — cardRefs map for scroll-into-view on card expand.
+  // Map of residentId → DOM node, used to scroll a card into view after it expands.
   const cardRefs = useRef({});
 
   const [modal, setModal] = useState({
@@ -777,7 +775,7 @@ window.App = function App() {
     setModal({ type: 'calendar', residentId: null, expenseId: null, amount: '', description: '', paid: false });
   };
 
-  // FIX #11 — TIMELINE_YEARS now lives in DesignConfig.js as window.TIMELINE_YEARS.
+  // Derives the scroll index for the year roller from the currently selected year.
   const currentTimelineIndex = useMemo(() => {
     const foundIdx = window.TIMELINE_YEARS.indexOf(tempYear);
     return foundIdx !== -1 ? foundIdx : 11;
@@ -792,8 +790,7 @@ window.App = function App() {
     });
   };
 
-  // FIX #8 — isDeleteRangeActive was a useMemo wrapping a trivial boolean expression.
-  // Replaced with a plain derived value; zero memoization overhead needed here.
+  // Delete range is active only when both endpoints have been chosen.
   const isDeleteRangeActive = fromMonth !== '' && toMonth !== '';
 
   const handleDeleteSelectedRangeData = () => {
@@ -846,9 +843,8 @@ window.App = function App() {
     setCardModal({ type: null, residentId: null });
   };
 
-  // FIX #7 — createResident extracted to avoid duplication between
-  // handleConfirmAddCard and handleNextAddCard. Both call the same builder;
-  // only the close behaviour differs.
+  // Builds a new resident object from form fields.
+  // Used by both "OK" (close modal) and "+ Next" (keep modal open) flows.
   const createResident = ({ name, apartment, notes }) => ({
     id: 'R-' + Date.now(),
     name: name || 'New Resident',
@@ -906,7 +902,7 @@ window.App = function App() {
     <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
       <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
 
-        {/* FIX #16 — headerRef attached for measuring sticky header height */}
+        {/* Sticky header — ref measured to compute accurate scroll offsets */}
         <header ref={headerRef} style={HDR.stickyContainerStyle} className={HDR.stickyContainer}>
           <div className={HDR.topRow}>
             <div className={HDR.leftActionGroup}>
@@ -926,8 +922,7 @@ window.App = function App() {
               </span>
             </div>
 
-            {/* FIX #3 — Sync button stub kept visible but clearly inert until
-                backend sync is implemented. Remove or connect when ready. */}
+            {/* Sync button — visible but inert until backend sync is implemented */}
             <div className={HDR.syncIconWrapper}>
               <button className={HDR.touchTargetBtn} onClick={() => { /* TODO: implement sync */ }}>
                 <Icon name="synced" />
@@ -983,13 +978,11 @@ window.App = function App() {
                 const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
 
                 const currentMonthExpenses = resident.expenses.filter(exp => exp.month === currentMonthString);
-                // FIX #4 — pastUnpaidExpenses computed once and reused for both
-                // hasPastUnpaidItems check and the drawer list. Previously the filter
-                // ran twice on the same array.
+                // Filtered once and reused for both the hasPastUnpaidItems guard and the drawer list.
                 const pastUnpaidExpenses   = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
 
                 const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
-                // FIX #4 — pastUnpaidTotal now derived from the already-filtered array.
+                // pastUnpaidTotal derived from the already-filtered pastUnpaidExpenses array.
                 const pastUnpaidTotal    = pastUnpaidExpenses.reduce((sum, exp) => sum + exp.amount, 0);
                 const totalResidentDebt  = currentUnpaidTotal + pastUnpaidTotal;
 
@@ -997,7 +990,8 @@ window.App = function App() {
                 const hasPastUnpaidItems      = pastUnpaidExpenses.length > 0;
 
                 return (
-                  // FIX #16 — ref callback stores each card's DOM node by residentId.
+                  // Ref callback stores each card's DOM node keyed by residentId,
+                  // enabling targeted scroll-into-view after the drawer expands.
                   <div
                     key={resident.id}
                     ref={el => cardRefs.current[resident.id] = el}
@@ -1169,8 +1163,7 @@ window.App = function App() {
               <div className={MNU.sectionRow}>
                 <span className={MNU.sectionLabelLeft}>Language</span>
                 <div className={MNU.optionsRightGroup}>
-                  {/* FIX #2 — Language buttons now actually update currentLanguage state.
-                      Wire into a localisation map when translations are available. */}
+                  {/* Language selector — wire into a localisation map when translations are available */}
                   <button onClick={() => setCurrentLanguage('EN')} className={`${MNU.pillButton} ${currentLanguage === 'EN' ? MNU.activeRingClass : ''}`}>EN</button>
                   <button onClick={() => setCurrentLanguage('GR')} className={`${MNU.pillButton} ${currentLanguage === 'GR' ? MNU.activeRingClass : ''}`}>GR</button>
                 </div>
@@ -1231,7 +1224,7 @@ window.App = function App() {
               </div>
 
               <div className={MNU.footerRow}>
-                {/* FIX #3 — PDF export stub; console.log removed. TODO: implement. */}
+                {/* PDF export button — stub until export logic is implemented */}
                 <button className={MNU.actionBtn} onClick={() => { /* TODO: implement PDF export */ }}>
                   <Icon name="download" /> PDF
                 </button>
@@ -1289,7 +1282,7 @@ window.App = function App() {
               </div>
             )}
 
-            {/* FIX #6 — Resident expense modal now uses shared ExpenseModal component. */}
+            {/* Expense modal — handles add / edit / delete for resident expenses */}
             {(modal.type === 'add' || modal.type === 'edit' || modal.type === 'delete') && (
               <ExpenseModal
                 modalState={modal}
@@ -1309,7 +1302,8 @@ window.App = function App() {
     className={MB.backdropOverlay}
     onClick={closeCardModal}
   >
-    {/* By adding w-full and max-w-[376px], the container expands correctly */}
+    {/* Width wrapper prevents Flexbox from collapsing the modal to 0px.
+        See the architectural guardrail note in DesignConfig.js for details. */}
     <div className="w-full max-w-[376px]" onClick={(e) => e.stopPropagation()}>
       {cardModal.type === 'addCard' && (
         <CardProfileModal
@@ -1345,7 +1339,7 @@ window.App = function App() {
   </div>
 )}
 
-        {/* FIX #6 — Building expense modal now uses shared ExpenseModal component. */}
+        {/* Expense modal — handles add / edit / delete for building expenses */}
         {(buildingModal.type === 'add' || buildingModal.type === 'edit' || buildingModal.type === 'buildingDelete') && (
           <ExpenseModal
             modalState={buildingModal}

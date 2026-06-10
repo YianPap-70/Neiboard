@@ -10,8 +10,8 @@ const _DESIGN_PRIVATE = (() => {
   return { HEX_WARNING_RED, RADIUS_STANDARD };
 })();
 
-// FIX #11 — Calendar year range extracted from App.js into config where it belongs.
-// Change CALENDAR_START_YEAR / CALENDAR_END_YEAR here to adjust the picker range.
+// Calendar year range for the year-picker roller.
+// Adjust CALENDAR_START_YEAR / CALENDAR_END_YEAR here to change the selectable range.
 window.CALENDAR_START_YEAR = 2015;
 window.CALENDAR_END_YEAR   = 2045;
 window.TIMELINE_YEARS = Array.from(
@@ -183,14 +183,11 @@ window.DESIGN = {
     maxLines: 5,
   },
 
-  // FIX #12 — Placeholder styling moved out of inline <style> tag in CardProfileModal
-  // and into a static CSS class (.card-modal-input) in styles.css.
-  // This section now only holds values that styles.css references via CSS variables,
-  // keeping DesignConfig as the single source of truth for all color/size tokens.
+  // Input field tokens for card profile modals.
+  // The .card-modal-input class in styles.css reads these values; if you change
+  // them here, update the matching declarations in styles.css as well.
   cardModalInput: {
-    // These values are applied via CSS variables declared in styles.css.
-    // If you change them here, also update the matching variables in styles.css.
-    placeholderColor: '#E1E3F8',   // FIX #13 — was rgba, now hex; opacity applied via CSS
+    placeholderColor: '#E1E3F8',   // opacity is applied separately via CSS
     placeholderOpacity: '0.5',
     textColor: '#E1E3F8',
     fontSize: '14px',
@@ -222,9 +219,9 @@ window.DESIGN = {
   },
 
   // ─── SHARED MODAL BASE ────────────────────────────────────────────────────
-  // FIX #13 — backdropOverlay, backdropAnimation, contentAnimation, boxContainer,
-  // and boxContainerStyle were duplicated verbatim between `modal` and `cardModal`.
-  // They now live here once and both sections reference this shared base.
+  // Backdrop overlay, entrance animation, box container shape, and padding are
+  // shared across all modal types. Each modal section references these rather
+  // than redeclaring them.
   modalBase: {
     backdropOverlay: "fixed inset-0 flex items-start justify-center px-4 z-50 bg-black/70 modal-safe-top",
     backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
@@ -289,8 +286,7 @@ window.DESIGN = {
   },
 
   // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ───────────────────────────
-  // FIX #13 — Removed duplicated backdropOverlay / backdropAnimation / contentAnimation /
-  // boxContainer / boxContainerStyle. App.js now reads those from D.modalBase.
+  // Backdrop, animation, and box container tokens are inherited from modalBase.
   cardModal: {
     headerRow: "flex items-center gap-3 mb-4",
     headerIcon: "h-7 w-7 shrink-0 opacity-80",
@@ -342,9 +338,6 @@ window.DESIGN = {
     cardTrash:            { src: 'Icon-Trash.svg',              className: 'h-5 w-5',     alt: 'Delete Card' },
     paidToggle:           { src: 'Button-Paid.svg',             className: 'h-9 w-auto',  alt: 'Paid' },
     unpaidToggle:         { src: 'Button-Unpaid.svg',           className: 'h-9 w-auto',  alt: 'Mark as Paid' },
-    // FIX #5 — Typo corrected: 'ExpenceUnpaid' → 'ExpenseUnpaid'.
-    // ⚠️  MANUAL ACTION REQUIRED: rename your SVG file from
-    //     'Building-ExpenceUnpaid.svg'  →  'Building-ExpenseUnpaid.svg'
     buildingUnpaidToggle: { src: 'Building-ExpenseUnpaid.svg',  className: 'h-9 w-auto',  alt: 'Mark as Paid' },
   },
 
@@ -396,9 +389,7 @@ window.DESIGN = {
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
   viewTransition: {
     outerStyle: { position: 'relative' },
-    // FIX #17 — exitStyle no longer scales down; outgoing view fades only.
-    // The scale(0.96) → scale(0.92) shrink has been removed.
-    // Slide-in animations (enterFromRight / enterFromLeft) are unchanged.
+    // Outgoing view fades out in place while the incoming view slides over it.
     exitStyle: (duration, curve) => ({
       position: 'absolute',
       top: 0, left: 0, right: 0,
@@ -441,7 +432,7 @@ window.DESIGN = {
     cardContainerGap: '16px',
     prevLabel: "font-light text-[14px] text-[#E1E3F8]",
     prevLabelWrapper: "flex items-center justify-between w-full",
-    // FIX #15 — Rogue inline rgba style replaced with a proper Tailwind token.
+    // Sub-label showing the originating month beneath an expense description in previous-months rows.
     prevMonthSubLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
   },
 };
