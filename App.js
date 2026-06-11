@@ -59,26 +59,42 @@ function generateInitialResidents(D) {
 
 function formatAmount(amount) {
   const num = parseFloat(amount);
-  // If it's a whole number, show without decimals
-  if (num % 1 === 0) {
-    return num.toString();
-  }
-  // Otherwise show up to 2 decimals, trimming trailing zeros
+  if (num % 1 === 0) return num.toString();
   return num.toFixed(2).replace(/\.?0+$/, '');
 }
 
-function Icon({ name, className = '' }) {
-  const iconConfig = window.DESIGN?.icons?.[name];
-  if (!iconConfig) return null;
-
+// ─── SPRITE ICON COMPONENT ────────────────────────────────────────────────
+// Single source of truth for all icon rendering.
+// - id: the symbol id from icons.svg (e.g. "icon-caret")
+// - className: Tailwind size + color classes (e.g. "w-6 h-6 text-gray-400")
+// - style: optional React style object for CSS variable overrides on multi-color icons
+function SpriteIcon({ id, className = '', style }) {
   return (
-    <img
-      src={`./SVG/${iconConfig.src}`}
-      className={`keep-raw-colors ${iconConfig.className} ${className}`}
-      alt={iconConfig.alt}
-    />
+    <svg className={className} style={style} aria-hidden="true" focusable="false">
+      <use href={`#${id}`} />
+    </svg>
   );
 }
+
+// ─── MULTI-COLOR ICON CSS VARIABLE PALETTES ───────────────────────────────
+// Each multi-color icon needs --accent-color-1 and --accent-color-2 injected
+// as CSS variables on the <svg> element. Define them here, not at call sites.
+const ICON_COLORS = {
+  // icon-warning-filled: accent-1 = gold
+  warningFilled:         { '--accent-color-1': '#F2C454' },
+  // icon-check: accent-1 = green
+  check:                 { '--accent-color-1': '#9CE66B' },
+  // icon-button-paid: accent-1 = green
+  buttonPaid:            { '--accent-color-1': '#9CE66B' },
+  // icon-button-unpaid: accent-1 = red (X over avatar), accent-2 = lavender (hand/badge)
+  buttonUnpaid:          { '--accent-color-1': '#E25344', '--accent-color-2': '#E1E3F8' },
+  // icon-building-expenseunpaid: accent-1 = red (X mark), accent-2 = lavender (wallet)
+  buildingExpenseUnpaid: { '--accent-color-1': '#E25344', '--accent-color-2': '#E1E3F8' },
+  // icon-avatar-debt: accent-1 = gold (badge), accent-2 = lavender (body)
+  avatarDebt:            { '--accent-color-1': '#F2C454', '--accent-color-2': '#E1E3F8' },
+  // icon-synced: accent-1 = green (cloud checkmark)
+  synced:                { '--accent-color-1': '#9CE66B' },
+};
 
 function CurrencySymbol({ activeSymbol, className = '' }) {
   if (activeSymbol === '') return null;
@@ -182,7 +198,10 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
     >
       {/* HEADER ROW */}
       <div className={CM.headerRow}>
-        <Icon name={isAdd ? 'cardAdd' : 'cardEdit'} className={CM.headerIcon} />
+        <SpriteIcon
+          id={isAdd ? 'icon-button-add-user' : 'icon-edit'}
+          className={CM.headerIcon}
+        />
         <span className={CM.headerLabel}>{isAdd ? 'Add Card' : 'Edit Card'}</span>
       </div>
 
@@ -225,7 +244,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
             <button className={CM.okBtn} onClick={handleNext}>+ Next</button>
             <button className={CM.cancelIconBtn} onClick={onCancel}>
-              <Icon name="cardCancel" />
+              <SpriteIcon id="icon-ex" className={CM.cancelIconSize} />
             </button>
           </>
         ) : (
@@ -233,7 +252,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
             <button className={CM.okBtn} onClick={handleConfirm}>OK</button>
             <button className={CM.cancelTextBtn} onClick={onCancel}>Cancel</button>
             <button className={CM.trashBtn} onClick={onDeleteRequest}>
-              <Icon name="cardTrash" />
+              <SpriteIcon id="icon-trash" className={CM.trashIconSize} />
             </button>
           </>
         )}
@@ -279,11 +298,11 @@ function WalletFlipButton({ onToggle }) {
       <div style={WFB.flipperStyle(isFlipped, A.coinFlipDuration)}>
         {/* Front face: Wallet */}
         <div style={WFB.faceBase}>
-          <Icon name="wallet" />
+          <SpriteIcon id="icon-wallet" className={WFB.faceIconSize} />
         </div>
         {/* Back face: ResidentCard */}
         <div style={WFB.backFaceStyle}>
-          <Icon name="residentCard" />
+          <SpriteIcon id="icon-residentcard" className={WFB.faceIconSize} />
         </div>
       </div>
     </button>
@@ -292,8 +311,8 @@ function WalletFlipButton({ onToggle }) {
 
 // Shared modal used by both resident expenses and building expenses.
 // The only behavioural difference between the two contexts is which
-// "unpaid" icon to show, passed via the `unpaidIconName` prop.
-function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconName }) {
+// "unpaid" icon to show, passed via the `unpaidIconId` prop.
+function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconId, unpaidIconColors }) {
   const MDL = window.DESIGN.modal;
   const MB  = window.DESIGN.modalBase;
 
@@ -309,7 +328,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
         <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(window.DESIGN.animation) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
 
           <div className={MDL.headerRow}>
-            <Icon name="editExpenseIcon" />
+            <SpriteIcon id="icon-edit" className={MDL.headerIcon} />
             <span className={MDL.headerTitle}>
               {modalState.type === 'add' ? 'Add expense' : 'Edit expense'}
             </span>
@@ -329,7 +348,11 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
               />
             </div>
             <button onClick={() => setModalState(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
-              <Icon name={modalState.paid ? 'paidToggle' : unpaidIconName} className={MDL.paidStateToggleImg} />
+              {modalState.paid ? (
+                <SpriteIcon id="icon-button-paid" className={MDL.paidToggleIcon} style={ICON_COLORS.buttonPaid} />
+              ) : (
+                <SpriteIcon id={unpaidIconId} className={MDL.paidToggleIcon} style={unpaidIconColors} />
+              )}
             </button>
           </div>
 
@@ -350,10 +373,10 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
             <button onClick={onClose} className={MDL.cancelBtn}>Cancel</button>
             {modalState.type === 'edit' && (
               <button
-                onClick={() => setModalState(m => ({ ...m, type: isDelete ? m.type : (unpaidIconName === 'unpaidToggle' ? 'delete' : 'buildingDelete') }))}
+                onClick={() => setModalState(m => ({ ...m, type: isDelete ? m.type : (unpaidIconId === 'icon-button-unpaid' ? 'delete' : 'buildingDelete') }))}
                 className={`${MDL.deleteActionBtn} ${MDL.deleteActionBtnRingClass}`}
               >
-                <Icon name="trash" />
+                <SpriteIcon id="icon-trash" className={MDL.deleteActionIcon} />
               </button>
             )}
           </div>
@@ -375,9 +398,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
 }
 
 function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeCurrencySymbol, openBuildingModal }) {
-  // All mutations are handled by openBuildingModal → handleConfirmBuildingModal in App,
-  // which owns the setBuildingExpenses setter. This component is display + event delegation only.
-  const BE   = window.DESIGN.buildingExpenses;
+  const BE = window.DESIGN.buildingExpenses;
 
   const currentExpenses    = expenses.filter(exp => exp.month === currentMonthString);
   const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
@@ -419,7 +440,10 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
               >
                 <div className={BE.itemLeft}>
                   <div className={BE.itemIconArea}>
-                    {exp.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                    {exp.paid
+                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
+                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
+                    }
                   </div>
                   <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
                 </div>
@@ -455,7 +479,10 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
               >
                 <div className={BE.itemLeft}>
                   <div className={BE.itemIconArea}>
-                    {exp.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                    {exp.paid
+                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
+                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
+                    }
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                     <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
@@ -512,12 +539,12 @@ window.App = function App() {
 
   const handleToggleView = useCallback(() => {
     const duration = parseFloat(A.viewTransitionDuration) * 1000;
-  
+
     window.scrollTo({ top: 0 });
-  
+
     setExpandedResident(null);
     setOpenPreviousDrawer({});
-  
+
     setBuildingViewAnimState('transitioning');
     setTimeout(() => { setBuildingViewAnimState('idle'); }, duration);
     setIsBuildingView(prev => !prev);
@@ -617,10 +644,9 @@ window.App = function App() {
       const cardEl = cardRefs.current[residentId];
       if (!cardEl) return;
       const headerHeight = headerRef.current?.offsetHeight ?? 90;
-      const gapPx        = parseInt(D.spacing.headerToListGap); // 16
+      const gapPx        = parseInt(D.spacing.headerToListGap);
       const cardTopInViewport = cardEl.getBoundingClientRect().top;
-      const idealOffset = headerHeight + gapPx; // how far from viewport top the card top should be
-      // Only scroll if the card top is above the ideal position (hidden behind header or too close)
+      const idealOffset = headerHeight + gapPx;
       if (cardTopInViewport < idealOffset) {
         const cardTopAbsolute = cardEl.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top: cardTopAbsolute - idealOffset, behavior: 'smooth' });
@@ -633,13 +659,10 @@ window.App = function App() {
   // - If card is already expanded → just toggle the historical "previous months" drawer
   const togglePreviousDrawer = (residentId) => {
     if (expandedResident !== residentId) {
-      // Phase 1: expand in place immediately
       setExpandedResident(residentId);
       setOpenPreviousDrawer({});
-      // Phase 2: scroll after drawer animation finishes
       scrollCardIntoViewAfterExpand(residentId);
     } else {
-      // Card already expanded — just toggle the history drawer, no scroll needed
       setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: !prev[residentId] }));
     }
   };
@@ -649,14 +672,11 @@ window.App = function App() {
   // - Expanding: Phase 1 expand in place, Phase 2 scroll after drawer settles
   const handleResidentHeaderClick = (residentId) => {
     if (expandedResident === residentId) {
-      // Collapsing — no scroll needed
       setExpandedResident(null);
       setOpenPreviousDrawer({});
     } else {
-      // Phase 1: expand in place immediately
       setExpandedResident(residentId);
       setOpenPreviousDrawer({});
-      // Phase 2: scroll after drawer animation finishes
       scrollCardIntoViewAfterExpand(residentId);
     }
   };
@@ -906,10 +926,10 @@ window.App = function App() {
           <div className={HDR.topRow}>
             <div className={HDR.leftActionGroup}>
               <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
-                <Icon name="hamburger" />
+                <SpriteIcon id="icon-hamburger" className="w-8 h-8 text-[#E1E3F8]" />
               </button>
               <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
-                <Icon name="addUser" />
+                <SpriteIcon id="icon-button-add-user" className="w-8 h-8 text-[#E1E3F8]" />
               </button>
               <WalletFlipButton onToggle={handleToggleView} />
             </div>
@@ -924,7 +944,7 @@ window.App = function App() {
             {/* Sync button — visible but inert until backend sync is implemented */}
             <div className={HDR.syncIconWrapper}>
               <button className={HDR.touchTargetBtn} onClick={() => { /* TODO: implement sync */ }}>
-                <Icon name="synced" />
+                <SpriteIcon id="icon-synced" className="w-8 h-8" style={ICON_COLORS.synced} />
               </button>
             </div>
           </div>
@@ -940,10 +960,10 @@ window.App = function App() {
 
             <div className={HDR.navPillContainer}>
               <div className={HDR.navPillIconArea}>
-                <Icon name="calendarLeft" />
+                <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
               </div>
               <div className={HDR.navPillIconArea}>
-                <Icon name="calendarRight" />
+                <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
               </div>
               <div className={HDR.navPillLeftTapZone} onClick={handlePrevMonth} />
               <div className={HDR.navPillRightTapZone} onClick={handleNextMonth} />
@@ -954,7 +974,7 @@ window.App = function App() {
               className={HDR.goTodayFloatBtn}
               style={{ opacity: isFilteredAwayFromToday ? HDR.goTodayActiveOpacity : HDR.goTodayInactiveOpacity }}
             >
-              <Icon name="goToday" />
+              <SpriteIcon id="icon-go-today" className="w-8 h-8 text-[#E1E3F8]" />
             </button>
           </div>
         </header>
@@ -985,7 +1005,6 @@ window.App = function App() {
                 const pastUnpaidExpenses   = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
 
                 const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
-                // pastUnpaidTotal derived from the already-filtered pastUnpaidExpenses array.
                 const pastUnpaidTotal    = pastUnpaidExpenses.reduce((sum, exp) => sum + exp.amount, 0);
                 const totalResidentDebt  = currentUnpaidTotal + pastUnpaidTotal;
 
@@ -1009,11 +1028,18 @@ window.App = function App() {
                             className={CARD.avatarBtn}
                             onClick={(e) => handleOpenEditCard(resident.id, e)}
                           >
-                            <img
-                              src={`./SVG/${totalResidentDebt > 0 ? 'Avatar-Debt.svg' : 'Avatar-NoDebt.svg'}`}
-                              alt="Avatar"
-                              className={CARD.avatarImg}
-                            />
+                            {totalResidentDebt > 0 ? (
+                              <SpriteIcon
+                                id="icon-avatar-debt"
+                                className={CARD.avatarIcon}
+                                style={ICON_COLORS.avatarDebt}
+                              />
+                            ) : (
+                              <SpriteIcon
+                                id="icon-avatar-nodebt"
+                                className={`${CARD.avatarIcon} text-[#E1E3F8]`}
+                              />
+                            )}
                           </button>
 
                           <div
@@ -1033,7 +1059,7 @@ window.App = function App() {
                                 <span className={CARD.noDebtText}>No debt</span>
                               )}
                               <span style={CARD.caretRotationStyle(isExpanded, A)}>
-                                <Icon name="caret" />
+                                <SpriteIcon id="icon-caret" className="w-4 h-4 text-[#E1E3F8]" />
                               </span>
                             </div>
                           </div>
@@ -1065,7 +1091,10 @@ window.App = function App() {
                                   >
                                     <div className={CARD.interactiveIconArea}>
                                       <div className={CARD.iconStateBtn}>
-                                        {expense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                                        {expense.paid
+                                          ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
+                                          : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
+                                        }
                                       </div>
                                       <span className={CARD.expenseDescription(expense.paid)}>
                                         {expense.description}
@@ -1095,7 +1124,10 @@ window.App = function App() {
                               >
                                 <div className={CARD.interactiveIconArea}>
                                   <div className={CARD.iconStateBtn}>
-                                    {pastExpense.paid ? <Icon name="checkmark" /> : <Icon name="warning" />}
+                                    {pastExpense.paid
+                                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
+                                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
+                                    }
                                   </div>
                                   <div className={DRW.metaSubTextGroup}>
                                     <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
@@ -1112,7 +1144,7 @@ window.App = function App() {
 
                         <div onClick={() => togglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
                           <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
-                            <Icon name="caret" />
+                            <SpriteIcon id="icon-caret" className="w-4 h-4 text-[#E1E3F8]" />
                           </span>
                           <div className={DRW.toggleBarLabelArea}>
                             <span className={DRW.toggleBarText}>
@@ -1182,7 +1214,9 @@ window.App = function App() {
                 <span className={MNU.sectionLabelLeft}>Symbol</span>
                 <div className={MNU.optionsRightGroup}>
                   <div className={MNU.symbolPill}>
-                    <div className={MNU.symbolIconArea}><Icon name="calendarLeft" /></div>
+                    <div className={MNU.symbolIconArea}>
+                      <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
+                    </div>
                     <div className={MNU.symbolRollWrapper}>
                       <div
                         className={MNU.symbolRollContainer}
@@ -1198,7 +1232,9 @@ window.App = function App() {
                         ))}
                       </div>
                     </div>
-                    <div className={MNU.symbolIconArea}><Icon name="calendarRight" /></div>
+                    <div className={MNU.symbolIconArea}>
+                      <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
+                    </div>
                     <div className={MNU.symbolLeftTapZone} onClick={() => cycleCurrency(-1)} />
                     <div className={MNU.symbolRightTapZone} onClick={() => cycleCurrency(1)} />
                   </div>
@@ -1219,7 +1255,7 @@ window.App = function App() {
                   disabled={!isDeleteRangeActive}
                   className={`${MNU.deleteBtn} ${isDeleteRangeActive ? MNU.deleteActiveRingClass : ''}`}
                 >
-                  <Icon name="trash" className={MNU.deleteIconClass(isDeleteRangeActive)} />
+                  <SpriteIcon id="icon-trash" className={MNU.deleteIconClass(isDeleteRangeActive)} />
                   <span className={MNU.deleteText(isDeleteRangeActive)}>Delete data</span>
                 </button>
               </div>
@@ -1227,7 +1263,7 @@ window.App = function App() {
               <div className={MNU.footerRow}>
                 {/* PDF export button — stub until export logic is implemented */}
                 <button className={MNU.actionBtn} onClick={() => { /* TODO: implement PDF export */ }}>
-                  <Icon name="download" /> PDF
+                  <SpriteIcon id="icon-download" className="w-5 h-5 text-[#E1E3F8]" /> PDF
                 </button>
                 <button className={MNU.actionBtn} onClick={() => setIsMainMenuOpen(false)}>
                   Exit
@@ -1244,7 +1280,9 @@ window.App = function App() {
             {modal.type === 'calendar' && (
               <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
                 <div className={CAL.yearPill}>
-                  <div className={CAL.yearIconArea}><Icon name="calendarLeft" /></div>
+                  <div className={CAL.yearIconArea}>
+                    <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
+                  </div>
                   <div className={CAL.yearRollWrapper}>
                     <div
                       className={CAL.yearRollContainer}
@@ -1260,7 +1298,9 @@ window.App = function App() {
                       ))}
                     </div>
                   </div>
-                  <div className={CAL.yearIconArea}><Icon name="calendarRight" /></div>
+                  <div className={CAL.yearIconArea}>
+                    <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
+                  </div>
                   <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(window.TIMELINE_YEARS[0], y - 1))} />
                   <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(window.TIMELINE_YEARS[window.TIMELINE_YEARS.length - 1], y + 1))} />
                 </div>
@@ -1291,54 +1331,55 @@ window.App = function App() {
                 onConfirm={handleConfirmModal}
                 onClose={closeModal}
                 onDelete={handleDeleteExpense}
-                unpaidIconName="unpaidToggle"
+                unpaidIconId="icon-button-unpaid"
+                unpaidIconColors={ICON_COLORS.buttonUnpaid}
               />
             )}
           </div>
         )}
 
-{cardModal.type && (
-  <div
-    style={cardModalBackdropAnim}
-    className={MB.backdropOverlay}
-    onClick={closeCardModal}
-  >
-    {/* Width wrapper prevents Flexbox from collapsing the modal to 0px.
-        See the architectural guardrail note in DesignConfig.js for details. */}
-    <div className="w-full max-w-[376px]" onClick={(e) => e.stopPropagation()}>
-      {cardModal.type === 'addCard' && (
-        <CardProfileModal
-          mode="add"
-          residentData={null}
-          onConfirm={handleConfirmAddCard}
-          onNext={handleNextAddCard}
-          onCancel={closeCardModal}
-          animStyle={cardModalContentAnim}
-        />
-      )}
+        {cardModal.type && (
+          <div
+            style={cardModalBackdropAnim}
+            className={MB.backdropOverlay}
+            onClick={closeCardModal}
+          >
+            {/* Width wrapper prevents Flexbox from collapsing the modal to 0px.
+                See the architectural guardrail note in DesignConfig.js for details. */}
+            <div className="w-full max-w-[376px]" onClick={(e) => e.stopPropagation()}>
+              {cardModal.type === 'addCard' && (
+                <CardProfileModal
+                  mode="add"
+                  residentData={null}
+                  onConfirm={handleConfirmAddCard}
+                  onNext={handleNextAddCard}
+                  onCancel={closeCardModal}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
 
-      {cardModal.type === 'editCard' && editingResident && (
-        <CardProfileModal
-          mode="edit"
-          residentData={editingResident}
-          onConfirm={handleConfirmEditCard}
-          onNext={null}
-          onCancel={closeCardModal}
-          onDeleteRequest={handleDeleteCardRequest}
-          animStyle={cardModalContentAnim}
-        />
-      )}
+              {cardModal.type === 'editCard' && editingResident && (
+                <CardProfileModal
+                  mode="edit"
+                  residentData={editingResident}
+                  onConfirm={handleConfirmEditCard}
+                  onNext={null}
+                  onCancel={closeCardModal}
+                  onDeleteRequest={handleDeleteCardRequest}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
 
-      {cardModal.type === 'deleteCard' && (
-        <DeleteCardConfirmModal
-          onConfirm={handleConfirmDeleteCard}
-          onCancel={handleCancelDeleteCard}
-          animStyle={cardModalContentAnim}
-        />
-      )}
-    </div>
-  </div>
-)}
+              {cardModal.type === 'deleteCard' && (
+                <DeleteCardConfirmModal
+                  onConfirm={handleConfirmDeleteCard}
+                  onCancel={handleCancelDeleteCard}
+                  animStyle={cardModalContentAnim}
+                />
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Expense modal — handles add / edit / delete for building expenses */}
         {(buildingModal.type === 'add' || buildingModal.type === 'edit' || buildingModal.type === 'buildingDelete') && (
@@ -1348,7 +1389,8 @@ window.App = function App() {
             onConfirm={handleConfirmBuildingModal}
             onClose={closeBuildingModal}
             onDelete={handleDeleteBuildingExpense}
-            unpaidIconName="buildingUnpaidToggle"
+            unpaidIconId="icon-building-expenseunpaid"
+            unpaidIconColors={ICON_COLORS.buildingExpenseUnpaid}
           />
         )}
 

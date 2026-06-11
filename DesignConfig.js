@@ -26,7 +26,7 @@ window.DESIGN = {
   // RULE #1: NEW MODAL OVERLAYS & FLEXBOX COLLAPSE PREVENTION
   // All backdrop overlays (modalBase.backdropOverlay) use CSS Flexbox.
   // When wrapping new forms/modals to catch click events with e.stopPropagation(),
-  // NEVER use an unstyled middle <div> wrapper. 
+  // NEVER use an unstyled middle <div> wrapper.
   // You must either:
   //   A) Apply the 'w-full max-w-[...px]' styles directly onto that middle wrapper div.
   //   B) Attach the onClick={(e) => e.stopPropagation()} directly onto the styled component.
@@ -120,7 +120,7 @@ window.DESIGN = {
     deleteBtn: "w-full h-[48px] rounded-[24px] bg-[#3D3D5F] border-none text-base font-bold flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none",
     deleteActiveRingClass: "ring-2 ring-[#E25344]",
     deleteText: (isActive) => isActive ? "text-[#E1E3F8]" : "text-[#E1E3F8] opacity-40",
-    deleteIconClass: (isActive) => isActive ? "" : "opacity-40",
+    deleteIconClass: (isActive) => isActive ? "w-6 h-6 text-[#E1E3F8]" : "w-6 h-6 text-[#E1E3F8] opacity-40",
 
     footerRow: "w-full flex items-center gap-3 pt-1",
     actionBtn: "flex-1 h-[48px] rounded-[24px] bg-[#3D3D5F] text-[#E1E3F8] text-base font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 outline-none"
@@ -137,8 +137,12 @@ window.DESIGN = {
     cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
 
     profileArea: "flex items-center min-w-0 gap-3",
+
+    // Avatar button — wraps the sprite icon, sized to match original 46×46px avatar
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-    avatarImg: "object-contain h-[46px] w-[46px] pointer-events-none",
+    // Avatar icon — sprite SVG sized to fill the button
+    avatarIcon: "w-[46px] h-[46px] pointer-events-none",
+
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
     apartmentNumber: "font-medium truncate text-sm text-[#E1E3F8] opacity-50",
@@ -186,7 +190,7 @@ window.DESIGN = {
   // The .card-modal-input class in styles.css reads these values; if you change
   // them here, update the matching declarations in styles.css as well.
   cardModalInput: {
-    placeholderColor: '#E1E3F8',   // opacity is applied separately via CSS
+    placeholderColor: '#E1E3F8',
     placeholderOpacity: '0.5',
     textColor: '#E1E3F8',
     fontSize: '14px',
@@ -235,9 +239,8 @@ window.DESIGN = {
 
   // ─── POPUP MODAL DIALOGUES ────────────────────────────────────────────────
   modal: {
-    // Shared tokens — reference modalBase directly in App.js via D.modalBase
     headerRow: "flex items-center gap-2 mb-4",
-    headerIcon: "h-4 w-4 shrink-0 opacity-50",
+    headerIcon: "w-4 h-4 shrink-0 opacity-50 text-[#E1E3F8]",
     headerTitle: "text-[14px] text-[#E1E3F8] opacity-50 tracking-wide",
 
     amountInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
@@ -246,7 +249,8 @@ window.DESIGN = {
     amountPlaceholderStyle: { fontSize: '14px', color: '#E1E3F8', opacity: 0.5, fontWeight: 'normal' },
 
     paidStateToggleBtn: "shrink-0 w-[52px] h-[52px] flex items-center justify-center transition-transform active:scale-95",
-    paidStateToggleImg: "h-9 w-auto",
+    // Paid/unpaid toggle icons — sized to match original h-9 w-auto proportion
+    paidToggleIcon: "w-9 h-9",
 
     descriptionInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
     descriptionInputBoxStyle: { height: '44px' },
@@ -262,6 +266,7 @@ window.DESIGN = {
 
     deleteActionBtn: "shrink-0 flex items-center justify-center transition-transform active:scale-95 w-[52px] h-[52px] rounded-[9999px] bg-[#49496A] outline-none select-none",
     deleteActionBtnRingClass: "ring-2 ring-[#E25344]",
+    deleteActionIcon: "w-6 h-6 text-[#E1E3F8]",
 
     deletePromptTitle: "font-bold mb-6 text-xl text-[#E1E3F8] text-center",
     deleteYesBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] text-[#E1E3F8]",
@@ -288,7 +293,7 @@ window.DESIGN = {
   // Backdrop, animation, and box container tokens are inherited from modalBase.
   cardModal: {
     headerRow: "flex items-center gap-3 mb-4",
-    headerIcon: "h-7 w-7 shrink-0 opacity-80",
+    headerIcon: "w-7 h-7 shrink-0 opacity-80 text-[#E1E3F8]",
     headerLabel: "font-bold text-lg text-[#E1E3F8] tracking-wide",
 
     fieldWrapper: "bg-[#49496A] rounded-[12px] px-4 flex items-start w-full",
@@ -303,6 +308,9 @@ window.DESIGN = {
     cancelIconBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     cancelTextBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     trashBtn: "w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
+    // Inline icon sizes for card modal buttons
+    cancelIconSize: "w-5 h-5 text-[#E1E3F8]",
+    trashIconSize: "w-5 h-5 text-[#E1E3F8]",
 
     deleteConfirmBoxStyle: {
       borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD,
@@ -313,31 +321,6 @@ window.DESIGN = {
     deleteConfirmRow: "flex items-center gap-4",
     deleteConfirmYesBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#E25344] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
     deleteConfirmNoBtn: "flex-1 h-[44px] rounded-[9999px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-[#E1E3F8] flex items-center justify-center transition-transform active:scale-95 outline-none select-none",
-  },
-
-  // ─── REUSABLE ASSETS ──────────────────────────────────────────────────────
-  icons: {
-    hamburger:            { src: 'Icon-Hamburger.svg',          className: 'h-8',         alt: 'Menu' },
-    addUser:              { src: 'Button-Add-User.svg',         className: 'h-8',         alt: 'Add User' },
-    wallet:               { src: 'Icon-Wallet.svg',             className: 'h-8',         alt: 'Wallet' },
-    residentCard:         { src: 'Icon-ResidentCard.svg',       className: 'h-8',         alt: 'Resident Cards' },
-    synced:               { src: 'Icon-Synced.svg',             className: 'h-8',         alt: 'Synced Status' },
-    calendarLeft:         { src: 'Arrow-Left.svg',              className: 'h-[18px]',    alt: 'Previous' },
-    calendarRight:        { src: 'Arrow-Right.svg',             className: 'h-[18px]',    alt: 'Next' },
-    goToday:              { src: 'Icon-Go-Today.svg',           className: 'h-8',         alt: 'Go to Today' },
-    checkmark:            { src: 'Icon-Check.svg',              className: 'h-5',         alt: 'Paid' },
-    warning:              { src: 'Icon-Warning-Filled.svg',     className: 'h-5',         alt: 'Unpaid' },
-    caret:                { src: 'Icon-Caret.svg',              className: 'w-4 h-4',     alt: 'Expand/Collapse' },
-    trash:                { src: 'Icon-Trash.svg',              className: 'h-6',         alt: 'Delete' },
-    download:             { src: 'Icon-Download.svg',           className: 'h-5',         alt: 'Download PDF' },
-    editExpenseIcon:      { src: 'Icon-Edit.svg',               className: 'h-4 w-4',     alt: 'Edit' },
-    cardAdd:              { src: 'Button-Add-User.svg',         className: 'h-7 w-7',     alt: 'Add Card' },
-    cardEdit:             { src: 'Icon-Edit.svg',               className: 'h-7 w-7',     alt: 'Edit Card' },
-    cardCancel:           { src: 'Icon-Ex.svg',                 className: 'h-5 w-5',     alt: 'Cancel' },
-    cardTrash:            { src: 'Icon-Trash.svg',              className: 'h-5 w-5',     alt: 'Delete Card' },
-    paidToggle:           { src: 'Button-Paid.svg',             className: 'h-9 w-auto',  alt: 'Paid' },
-    unpaidToggle:         { src: 'Button-Unpaid.svg',           className: 'h-9 w-auto',  alt: 'Mark as Paid' },
-    buildingUnpaidToggle: { src: 'Building-ExpenseUnpaid.svg',  className: 'h-9 w-auto',  alt: 'Mark as Paid' },
   },
 
   animation: {
@@ -358,7 +341,6 @@ window.DESIGN = {
   walletFlipBtn: {
     container: "w-[44px] h-[44px] flex items-center justify-center shrink-0",
     containerStyle: { perspective: '200px' },
-    flipperBase: "w-[44px] h-[44px] relative flex items-center justify-center",
     flipperStyle: (isBuilding, duration) => ({
       transition: `transform ${duration} cubic-bezier(0.25, 1, 0.5, 1)`,
       transform: isBuilding ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -383,12 +365,13 @@ window.DESIGN = {
       WebkitBackfaceVisibility: 'hidden',
       transform: 'rotateY(180deg)',
     },
+    // Icon size for wallet/resident-card face icons
+    faceIconSize: "w-8 h-8 text-[#E1E3F8]",
   },
 
   // ─── VIEW TRANSITION (cards ↔ building expenses) ──────────────────────────
   viewTransition: {
     outerStyle: { position: 'relative' },
-    // Outgoing view fades out in place while the incoming view slides over it.
     exitStyle: (duration, curve) => ({
       position: 'absolute',
       top: 0, left: 0, right: 0,
@@ -431,7 +414,6 @@ window.DESIGN = {
     cardContainerGap: '16px',
     prevLabel: "font-light text-[14px] text-[#E1E3F8]",
     prevLabelWrapper: "flex items-center justify-between w-full",
-    // Sub-label showing the originating month beneath an expense description in previous-months rows.
     prevMonthSubLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
     sectionPaddingTop: '16px',
     sectionPaddingBottom: '16px',

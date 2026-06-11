@@ -10,14 +10,24 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+  <script>
+    // Fetches icons.svg and injects it into the DOM before React mounts,
+    // so all <use href="#icon-..."> references resolve immediately.
+    fetch('./icons.svg')
+      .then(r => r.text())
+      .then(svg => {
+        const div = document.createElement('div');
+        div.style.display = 'none';
+        div.setAttribute('aria-hidden', 'true');
+        div.innerHTML = svg;
+        document.body.insertBefore(div, document.body.firstChild);
+      });
+  </script>
   <script src="./DesignConfig.js"></script>
   <script type="text/babel" src="./App.js"></script>
 </head>
 <body>
-
   <div id="root"></div>
-
   <script type="text/babel">
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<window.App />);
