@@ -396,7 +396,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
       <div className={BE.cardContainer} style={{ marginBottom: hasPast ? BE.cardContainerGap : undefined }}>
 
         {/* Label row */}
-        <div className={BE.labelRow} style={{ paddingTop: '16px', marginBottom: hasCurrent ? '0px' : BE.addBtnGap }}>
+        <div className={BE.labelRow} style={{ paddingTop: BE.sectionPaddingTop, marginBottom: hasCurrent ? '0px' : BE.addBtnGap }}>
           <span className={BE.sectionLabel}>
             {hasCurrent ? 'Expenses' : 'No expenses for this month'}
           </span>
@@ -432,7 +432,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
         )}
 
         {/* +Add button */}
-        <div className={BE.addBtnWrapper} style={{ paddingBottom: '16px' }}>
+        <div className={BE.addBtnWrapper} style={{ paddingBottom: BE.sectionPaddingBottom }}>
           <button className={BE.addBtn} onClick={() => openBuildingModal('add')}>
             + Add
           </button>
@@ -443,10 +443,10 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
       {/* ── PREVIOUS MONTHS SECTION ── */}
       {hasPast && (
         <div className={BE.cardContainer}>
-          <div className={BE.prevLabelWrapper} style={{ paddingTop: '16px', marginBottom: '0px' }}>
+          <div className={BE.prevLabelWrapper} style={{ paddingTop: BE.sectionPaddingTop, marginBottom: '0px' }}>
             <span className={BE.prevLabel}>Unpaid from previous months</span>
           </div>
-          <div className={BE.itemsWrapper} style={{ paddingBottom: '16px' }}>
+          <div className={BE.itemsWrapper} style={{ paddingBottom: BE.sectionPaddingBottom }}>
             {pastUnpaidExpenses.map((exp, idx) => (
               <div
                 key={exp.id}
@@ -505,6 +505,11 @@ window.App = function App() {
   const [buildingExpenses, setBuildingExpenses] = useState([]);
   const [buildingViewAnimState, setBuildingViewAnimState] = useState('idle');
 
+  // Resident list seeded with test data on first mount via lazy initialiser.
+  const [residents, setResidents]                     = useState(() => generateInitialResidents(D));
+  const [expandedResident, setExpandedResident]       = useState(null);
+  const [openPreviousDrawer, setOpenPreviousDrawer]   = useState({});
+
   const handleToggleView = useCallback(() => {
     const duration = parseFloat(A.viewTransitionDuration) * 1000;
   
@@ -538,11 +543,6 @@ window.App = function App() {
 
   const [tempYear, setTempYear]           = useState(systemDate.getFullYear());
   const [tempMonthIdx, setTempMonthIdx]   = useState(systemDate.getMonth());
-
-  // Resident list seeded with test data on first mount via lazy initialiser.
-  const [residents, setResidents]                     = useState(() => generateInitialResidents(D));
-  const [expandedResident, setExpandedResident]       = useState(null);
-  const [openPreviousDrawer, setOpenPreviousDrawer]   = useState({});
 
   // Map of residentId → DOM node, used to scroll a card into view after it expands.
   const cardRefs = useRef({});

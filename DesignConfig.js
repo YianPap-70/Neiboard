@@ -80,6 +80,7 @@ window.DESIGN = {
     monthTextBtnOtherColor: '#F2C454',
     goTodayActiveOpacity: 1.0,
     goTodayInactiveOpacity: 0.3,
+    goTodayFloatBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 transition-opacity hover:opacity-80 outline-none select-none",
   },
 
   // ─── GLOBAL LAYOUT SPACING ────────────────────────────────────────────────
@@ -241,7 +242,7 @@ window.DESIGN = {
 
     amountInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
     amountInputBoxStyle: { height: '52px' },
-    amountInputField: "bg-transparent font-bold w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[26px] text-[#333355]",
+    amountInputField: "bg-transparent font-bold w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[26px] text-[#E1E3F8]",
     amountPlaceholderStyle: { fontSize: '14px', color: '#E1E3F8', opacity: 0.5, fontWeight: 'normal' },
 
     paidStateToggleBtn: "shrink-0 w-[52px] h-[52px] flex items-center justify-center transition-transform active:scale-95",
@@ -249,7 +250,7 @@ window.DESIGN = {
 
     descriptionInputBox: "px-3 flex items-center bg-[#49496A] rounded-[12px] w-full",
     descriptionInputBoxStyle: { height: '44px' },
-    descriptionInputField: "bg-transparent w-full focus:outline-none text-[16px] text-[#333355]",
+    descriptionInputField: "bg-transparent w-full focus:outline-none text-[16px] text-[#E1E3F8]",
     descriptionPlaceholderStyle: { fontSize: '14px', color: '#E1E3F8', opacity: 0.5 },
 
     actionsFlexRow: "flex items-center gap-3 w-full",
@@ -432,5 +433,7 @@ window.DESIGN = {
     prevLabelWrapper: "flex items-center justify-between w-full",
     // Sub-label showing the originating month beneath an expense description in previous-months rows.
     prevMonthSubLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
+    sectionPaddingTop: '16px',
+    sectionPaddingBottom: '16px',
   },
 };
