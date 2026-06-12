@@ -76,25 +76,19 @@ function SpriteIcon({ id, className = '', style }) {
   );
 }
 
-// ─── MULTI-COLOR ICON CSS VARIABLE PALETTES ───────────────────────────────
-// Each multi-color icon needs --accent-color-1 and --accent-color-2 injected
-// as CSS variables on the <svg> element. Define them here, not at call sites.
-const ICON_COLORS = {
-  // icon-warning-filled: accent-1 = gold
-  warningFilled:         { '--accent-color-1': '#F2C454' },
-  // icon-check: accent-1 = green
-  check:                 { '--accent-color-1': '#9CE66B' },
-  // icon-button-paid: accent-1 = green
-  buttonPaid:            { '--accent-color-1': '#9CE66B' },
-  // icon-button-unpaid: accent-1 = red (X over avatar), accent-2 = lavender (hand/badge)
-  buttonUnpaid:          { '--accent-color-1': '#E25344', '--accent-color-2': '#E1E3F8' },
-  // icon-building-expenseunpaid: accent-1 = red (X mark), accent-2 = lavender (wallet)
-  buildingExpenseUnpaid: { '--accent-color-1': '#E25344', '--accent-color-2': '#E1E3F8' },
-  // icon-avatar-debt: accent-1 = gold (badge), accent-2 = lavender (body)
-  avatarDebt:            { '--accent-color-1': '#F2C454', '--accent-color-2': '#E1E3F8' },
-  // icon-synced: accent-1 = green (cloud checkmark)
-  synced:                { '--accent-color-1': '#9CE66B' },
-};
+// Multi-color icon CSS variable palettes and shared icon size tokens live in
+// DesignConfig.js as window.DESIGN.iconColors / window.DESIGN.icons.
+
+// ─── PAID/UNPAID STATUS ICON ──────────────────────────────────────────────
+// Shared by resident card expenses, the history drawer, and building
+// expenses — all four call sites previously repeated this same ternary.
+function PaidStatusIcon({ paid }) {
+  const ICN = window.DESIGN.icons;
+  const IC  = window.DESIGN.iconColors;
+  return paid
+    ? <SpriteIcon id="icon-check" className={ICN.statusIconSize} style={IC.check} />
+    : <SpriteIcon id="icon-warning-filled" className={ICN.statusIconSize} style={IC.warningFilled} />;
+}
 
 function CurrencySymbol({ activeSymbol, className = '' }) {
   if (activeSymbol === '') return null;
@@ -315,6 +309,7 @@ function WalletFlipButton({ onToggle }) {
 function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconId, unpaidIconColors }) {
   const MDL = window.DESIGN.modal;
   const MB  = window.DESIGN.modalBase;
+  const IC  = window.DESIGN.iconColors;
 
   const isAddOrEdit = modalState.type === 'add' || modalState.type === 'edit';
   const isDelete    = modalState.type === 'delete' || modalState.type === 'buildingDelete';
@@ -349,7 +344,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
             </div>
             <button onClick={() => setModalState(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
               {modalState.paid ? (
-                <SpriteIcon id="icon-button-paid" className={MDL.paidToggleIcon} style={ICON_COLORS.buttonPaid} />
+                <SpriteIcon id="icon-button-paid" className={MDL.paidToggleIcon} style={IC.buttonPaid} />
               ) : (
                 <SpriteIcon id={unpaidIconId} className={MDL.paidToggleIcon} style={unpaidIconColors} />
               )}
@@ -422,10 +417,10 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
             {hasCurrent ? 'Expenses' : 'No expenses for this month'}
           </span>
           {showTotal && (
-            <span className={BE.totalLabel}>
-              total<CurrencySymbol activeSymbol={activeCurrencySymbol} className={`${BE.totalAmount} text-[0.7em] mr-0.5`} />
-              <span className={BE.totalAmount}>{formatAmount(totalUnpaid)}</span>
-            </span>
+              <span className={BE.totalLabel}>
+                total<CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.totalCurrencyMod} />
+                <span className={BE.totalAmount}>{formatAmount(totalUnpaid)}</span>
+              </span>
           )}
         </div>
 
@@ -440,10 +435,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
               >
                 <div className={BE.itemLeft}>
                   <div className={BE.itemIconArea}>
-                    {exp.paid
-                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
-                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
-                    }
+                    <PaidStatusIcon paid={exp.paid} />
                   </div>
                   <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
                 </div>
@@ -479,12 +471,9 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
               >
                 <div className={BE.itemLeft}>
                   <div className={BE.itemIconArea}>
-                    {exp.paid
-                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
-                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
-                    }
+                    <PaidStatusIcon paid={exp.paid} />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div className={BE.prevItemTextCol}>
                     <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
                     {/* Month sub-label shown beneath the expense description in previous-months rows */}
                     <span className={BE.prevMonthSubLabel}>{exp.month}</span>
@@ -516,6 +505,8 @@ window.App = function App() {
   const A      = D.animation;
   const CM     = D.cardModal;
   const SPC    = D.spacing;
+  const IC     = D.iconColors;
+  const ICN    = D.icons;
 
   // Ref attached to the sticky header so its rendered height can be measured
   // when calculating scroll offsets after a card expands.
@@ -926,10 +917,10 @@ window.App = function App() {
           <div className={HDR.topRow}>
             <div className={HDR.leftActionGroup}>
               <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
-                <SpriteIcon id="icon-hamburger" className="w-8 h-8 text-[#E1E3F8]" />
+                <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
               </button>
               <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
-                <SpriteIcon id="icon-button-add-user" className="w-8 h-8 text-[#E1E3F8]" />
+                <SpriteIcon id="icon-button-add-user" className={ICN.actionIconSize} />
               </button>
               <WalletFlipButton onToggle={handleToggleView} />
             </div>
@@ -944,7 +935,7 @@ window.App = function App() {
             {/* Sync button — visible but inert until backend sync is implemented */}
             <div className={HDR.syncIconWrapper}>
               <button className={HDR.touchTargetBtn} onClick={() => { /* TODO: implement sync */ }}>
-                <SpriteIcon id="icon-synced" className="w-8 h-8" style={ICON_COLORS.synced} />
+                <SpriteIcon id="icon-synced" className="w-8 h-8" style={IC.synced} />
               </button>
             </div>
           </div>
@@ -960,10 +951,10 @@ window.App = function App() {
 
             <div className={HDR.navPillContainer}>
               <div className={HDR.navPillIconArea}>
-                <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
+                <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
               </div>
               <div className={HDR.navPillIconArea}>
-                <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
+                <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
               </div>
               <div className={HDR.navPillLeftTapZone} onClick={handlePrevMonth} />
               <div className={HDR.navPillRightTapZone} onClick={handleNextMonth} />
@@ -974,7 +965,7 @@ window.App = function App() {
               className={HDR.goTodayFloatBtn}
               style={{ opacity: isFilteredAwayFromToday ? HDR.goTodayActiveOpacity : HDR.goTodayInactiveOpacity }}
             >
-              <SpriteIcon id="icon-go-today" className="w-8 h-8 text-[#E1E3F8]" />
+              <SpriteIcon id="icon-go-today" className={ICN.actionIconSize} />
             </button>
           </div>
         </header>
@@ -1032,12 +1023,12 @@ window.App = function App() {
                               <SpriteIcon
                                 id="icon-avatar-debt"
                                 className={CARD.avatarIcon}
-                                style={ICON_COLORS.avatarDebt}
+                                style={IC.avatarDebt}
                               />
                             ) : (
                               <SpriteIcon
                                 id="icon-avatar-nodebt"
-                                className={`${CARD.avatarIcon} text-[#E1E3F8]`}
+                                className={CARD.avatarIconNoDebt}
                               />
                             )}
                           </button>
@@ -1059,7 +1050,7 @@ window.App = function App() {
                                 <span className={CARD.noDebtText}>No debt</span>
                               )}
                               <span style={CARD.caretRotationStyle(isExpanded, A)}>
-                                <SpriteIcon id="icon-caret" className="w-4 h-4 text-[#E1E3F8]" />
+                                <SpriteIcon id="icon-caret" className={ICN.caretIconSize} />
                               </span>
                             </div>
                           </div>
@@ -1091,10 +1082,7 @@ window.App = function App() {
                                   >
                                     <div className={CARD.interactiveIconArea}>
                                       <div className={CARD.iconStateBtn}>
-                                        {expense.paid
-                                          ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
-                                          : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
-                                        }
+                                        <PaidStatusIcon paid={expense.paid} />
                                       </div>
                                       <span className={CARD.expenseDescription(expense.paid)}>
                                         {expense.description}
@@ -1124,10 +1112,7 @@ window.App = function App() {
                               >
                                 <div className={CARD.interactiveIconArea}>
                                   <div className={CARD.iconStateBtn}>
-                                    {pastExpense.paid
-                                      ? <SpriteIcon id="icon-check" className="w-5 h-5" style={ICON_COLORS.check} />
-                                      : <SpriteIcon id="icon-warning-filled" className="w-5 h-5" style={ICON_COLORS.warningFilled} />
-                                    }
+                                    <PaidStatusIcon paid={pastExpense.paid} />
                                   </div>
                                   <div className={DRW.metaSubTextGroup}>
                                     <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
@@ -1144,7 +1129,7 @@ window.App = function App() {
 
                         <div onClick={() => togglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
                           <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
-                            <SpriteIcon id="icon-caret" className="w-4 h-4 text-[#E1E3F8]" />
+                            <SpriteIcon id="icon-caret" className={ICN.caretIconSize} />
                           </span>
                           <div className={DRW.toggleBarLabelArea}>
                             <span className={DRW.toggleBarText}>
@@ -1215,7 +1200,7 @@ window.App = function App() {
                 <div className={MNU.optionsRightGroup}>
                   <div className={MNU.symbolPill}>
                     <div className={MNU.symbolIconArea}>
-                      <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
+                      <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
                     </div>
                     <div className={MNU.symbolRollWrapper}>
                       <div
@@ -1233,7 +1218,7 @@ window.App = function App() {
                       </div>
                     </div>
                     <div className={MNU.symbolIconArea}>
-                      <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
+                      <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
                     </div>
                     <div className={MNU.symbolLeftTapZone} onClick={() => cycleCurrency(-1)} />
                     <div className={MNU.symbolRightTapZone} onClick={() => cycleCurrency(1)} />
@@ -1263,7 +1248,7 @@ window.App = function App() {
               <div className={MNU.footerRow}>
                 {/* PDF export button — stub until export logic is implemented */}
                 <button className={MNU.actionBtn} onClick={() => { /* TODO: implement PDF export */ }}>
-                  <SpriteIcon id="icon-download" className="w-5 h-5 text-[#E1E3F8]" /> PDF
+                  <SpriteIcon id="icon-download" className={MNU.actionBtnIconSize} /> PDF
                 </button>
                 <button className={MNU.actionBtn} onClick={() => setIsMainMenuOpen(false)}>
                   Exit
@@ -1281,7 +1266,7 @@ window.App = function App() {
               <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
                 <div className={CAL.yearPill}>
                   <div className={CAL.yearIconArea}>
-                    <SpriteIcon id="icon-arrow-left" className="w-[18px] h-[18px]" />
+                    <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
                   </div>
                   <div className={CAL.yearRollWrapper}>
                     <div
@@ -1299,7 +1284,7 @@ window.App = function App() {
                     </div>
                   </div>
                   <div className={CAL.yearIconArea}>
-                    <SpriteIcon id="icon-arrow-right" className="w-[18px] h-[18px]" />
+                    <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
                   </div>
                   <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(window.TIMELINE_YEARS[0], y - 1))} />
                   <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(window.TIMELINE_YEARS[window.TIMELINE_YEARS.length - 1], y + 1))} />
@@ -1332,7 +1317,7 @@ window.App = function App() {
                 onClose={closeModal}
                 onDelete={handleDeleteExpense}
                 unpaidIconId="icon-button-unpaid"
-                unpaidIconColors={ICON_COLORS.buttonUnpaid}
+                unpaidIconColors={IC.buttonUnpaid}
               />
             )}
           </div>
@@ -1346,7 +1331,7 @@ window.App = function App() {
           >
             {/* Width wrapper prevents Flexbox from collapsing the modal to 0px.
                 See the architectural guardrail note in DesignConfig.js for details. */}
-            <div className="w-full max-w-[376px]" onClick={(e) => e.stopPropagation()}>
+            <div className={CM.wrapper} onClick={(e) => e.stopPropagation()}>
               {cardModal.type === 'addCard' && (
                 <CardProfileModal
                   mode="add"
@@ -1390,7 +1375,7 @@ window.App = function App() {
             onClose={closeBuildingModal}
             onDelete={handleDeleteBuildingExpense}
             unpaidIconId="icon-building-expenseunpaid"
-            unpaidIconColors={ICON_COLORS.buildingExpenseUnpaid}
+            unpaidIconColors={IC.buildingExpenseUnpaid}
           />
         )}
 

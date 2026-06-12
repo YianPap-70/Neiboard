@@ -10,6 +10,24 @@ const _DESIGN_PRIVATE = (() => {
   return { HEX_WARNING_RED, RADIUS_STANDARD };
 })();
 
+// ─── SHARED COLOR PALETTE ─────────────────────────────────────────────────
+// Single source of truth for the app's core palette. Exposed on
+// window.DESIGN.colors and referenced by name (rather than re-typed hex
+// literals) anywhere multiple tokens need the same color — including
+// window.DESIGN.iconColors below. App.js must never declare its own hex
+// values; everything color-related lives here.
+const COLORS = {
+  lavender: '#E1E3F8', // primary text/icon color on dark surfaces
+  gold:     '#F2C454', // debt totals, warning accents
+  green:    '#9CE66B', // paid / active state accents
+  red:      _DESIGN_PRIVATE.HEX_WARNING_RED, // delete / unpaid accents
+};
+
+// Shared max-width for the standard modal box, reused by
+// modalBase.boxContainerStyle, cardModal.deleteConfirmBoxStyle, and the
+// cardModal outer wrapper class (cardModal.wrapper) so all three stay in sync.
+const MODAL_MAX_WIDTH = '376px';
+
 // Calendar year range for the year-picker roller.
 // Adjust CALENDAR_START_YEAR / CALENDAR_END_YEAR here to change the selectable range.
 window.CALENDAR_START_YEAR = 2015;
@@ -20,6 +38,45 @@ window.TIMELINE_YEARS = Array.from(
 );
 
 window.DESIGN = {
+
+  // ─── SHARED PALETTE (see COLORS above) ───────────────────────────────────
+  colors: COLORS,
+
+  // ─── SHARED ICON SIZE TOKENS ──────────────────────────────────────────────
+  // Reused across header, resident cards, building expenses, and menus so
+  // icon sizing/coloring never needs to be retyped at call sites in App.js.
+  icons: {
+    // Paid/unpaid status icons (icon-check / icon-warning-filled)
+    statusIconSize: "w-5 h-5",
+    // Small roller-arrow icons (nav pill, currency picker, calendar year picker)
+    rollerArrowSize: "w-[18px] h-[18px]",
+    // Drawer/expand caret icon
+    caretIconSize: `w-4 h-4 text-[${COLORS.lavender}]`,
+    // Large header action icons (hamburger, add-user, go-today)
+    actionIconSize: `w-8 h-8 text-[${COLORS.lavender}]`,
+  },
+
+  // ─── MULTI-COLOR ICON CSS VARIABLE PALETTES ──────────────────────────────
+  // Each multi-color icon needs --accent-color-1 (and sometimes
+  // --accent-color-2) injected as CSS variables on the <svg> element.
+  // Defined here, built from the shared palette above — App.js only
+  // references these by name, never declares its own hex values.
+  iconColors: {
+    // icon-warning-filled: accent-1 = gold
+    warningFilled:         { '--accent-color-1': COLORS.gold },
+    // icon-check: accent-1 = green
+    check:                 { '--accent-color-1': COLORS.green },
+    // icon-button-paid: accent-1 = green
+    buttonPaid:            { '--accent-color-1': COLORS.green },
+    // icon-button-unpaid: accent-1 = red (X over avatar), accent-2 = lavender (hand/badge)
+    buttonUnpaid:          { '--accent-color-1': COLORS.red, '--accent-color-2': COLORS.lavender },
+    // icon-building-expenseunpaid: accent-1 = red (X mark), accent-2 = lavender (wallet)
+    buildingExpenseUnpaid: { '--accent-color-1': COLORS.red, '--accent-color-2': COLORS.lavender },
+    // icon-avatar-debt: accent-1 = gold (badge), accent-2 = lavender (body)
+    avatarDebt:            { '--accent-color-1': COLORS.gold, '--accent-color-2': COLORS.lavender },
+    // icon-synced: accent-1 = green (cloud checkmark)
+    synced:                { '--accent-color-1': COLORS.green },
+  },
 
   // ─── GLOBAL METADATA & LOCALIZATION ──────────────────────────────────────
   // ─── AI ARCHITECTURE GUARDRAILS (DO NOT REMOVE) ──────────────────────────
@@ -123,7 +180,9 @@ window.DESIGN = {
     deleteIconClass: (isActive) => isActive ? "w-6 h-6 text-[#E1E3F8]" : "w-6 h-6 text-[#E1E3F8] opacity-40",
 
     footerRow: "w-full flex items-center gap-3 pt-1",
-    actionBtn: "flex-1 h-[48px] rounded-[24px] bg-[#3D3D5F] text-[#E1E3F8] text-base font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 outline-none"
+    actionBtn: "flex-1 h-[48px] rounded-[24px] bg-[#3D3D5F] text-[#E1E3F8] text-base font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 outline-none",
+    // Icon size for the PDF export button inside footerRow
+    actionBtnIconSize: `w-5 h-5 text-[${COLORS.lavender}]`,
   },
 
   // ─── RESIDENT CARD COMPONENT ──────────────────────────────────────────────
@@ -136,12 +195,12 @@ window.DESIGN = {
     cardHeaderContainer: "flex items-center justify-between gap-3",
     cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
 
-    profileArea: "flex items-center min-w-0 gap-3",
-
     // Avatar button — wraps the sprite icon, sized to match original 46×46px avatar
     avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
     // Avatar icon — sprite SVG sized to fill the button
     avatarIcon: "w-[46px] h-[46px] pointer-events-none",
+    // Avatar icon variant for the "no debt" state, which uses currentColor
+    avatarIconNoDebt: `w-[46px] h-[46px] pointer-events-none text-[${COLORS.lavender}]`,
 
     textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
     residentName: "font-semibold tracking-wide truncate text-base text-[#E1E3F8]",
@@ -186,16 +245,6 @@ window.DESIGN = {
     maxLines: 5,
   },
 
-  // Input field tokens for card profile modals.
-  // The .card-modal-input class in styles.css reads these values; if you change
-  // them here, update the matching declarations in styles.css as well.
-  cardModalInput: {
-    placeholderColor: '#E1E3F8',
-    placeholderOpacity: '0.5',
-    textColor: '#E1E3F8',
-    fontSize: '14px',
-  },
-
   // ─── HISTORICAL DRAWER BAR COMPONENTS ─────────────────────────────────────
   historyDrawer: {
     drawerWrapper: "bg-[#49496A] px-4",
@@ -232,7 +281,7 @@ window.DESIGN = {
     boxContainer: "w-full relative shrink-0 bg-[#333355]",
     boxContainerStyle: {
       borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD,
-      maxWidth: '376px',
+      maxWidth: MODAL_MAX_WIDTH,
       padding: '16px'
     },
   },
@@ -270,7 +319,7 @@ window.DESIGN = {
 
     deletePromptTitle: "font-bold mb-6 text-xl text-[#E1E3F8] text-center",
     deleteYesBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] text-[#E1E3F8]",
-    deleteYesBtnStyle: { backgroundColor: _DESIGN_PRIVATE.HEX_WARNING_RED },
+    deleteYesBtnStyle: { backgroundColor: COLORS.red },
     deleteNoBtn: "flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] bg-[#49496A] text-[#E1E3F8]",
 
     calendar: {
@@ -292,6 +341,10 @@ window.DESIGN = {
   // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ───────────────────────────
   // Backdrop, animation, and box container tokens are inherited from modalBase.
   cardModal: {
+    // Outer width wrapper for the backdrop's middle div (see RULE #1 above) —
+    // shares MODAL_MAX_WIDTH with modalBase.boxContainerStyle so they stay in sync.
+    wrapper: `w-full max-w-[${MODAL_MAX_WIDTH}]`,
+
     headerRow: "flex items-center gap-3 mb-4",
     headerIcon: "w-7 h-7 shrink-0 opacity-80 text-[#E1E3F8]",
     headerLabel: "font-bold text-lg text-[#E1E3F8] tracking-wide",
@@ -300,7 +353,6 @@ window.DESIGN = {
     singleLineField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] h-[50px] leading-[50px]",
     notesField: "w-full bg-transparent focus:outline-none text-[14px] text-[#E1E3F8] resize-none leading-[1.5] py-[14px] overflow-hidden",
     fieldGap: "12px",
-    headerToFieldGap: "16px",
     fieldToButtonGap: "16px",
 
     buttonRow: "flex items-center gap-3 w-full",
@@ -314,7 +366,7 @@ window.DESIGN = {
 
     deleteConfirmBoxStyle: {
       borderRadius: _DESIGN_PRIVATE.RADIUS_STANDARD,
-      maxWidth: '376px',
+      maxWidth: MODAL_MAX_WIDTH,
       padding: '20px'
     },
     deleteConfirmTitle: "font-bold text-xl text-[#E1E3F8] text-center mb-6 leading-snug",
@@ -395,10 +447,12 @@ window.DESIGN = {
   buildingExpenses: {
     listContainer: "flex flex-col",
     labelRow: "flex items-center justify-between w-full",
-    labelRowGap: '30px',
     sectionLabel: "font-light text-[14px] text-[#E1E3F8]",
     totalLabel: "font-light text-[14px] text-[#E1E3F8]",
     totalAmount: "font-bold text-[18px] text-[#F2C454] ml-1",
+    // Currency symbol shown next to the running total — matches totalAmount's
+    // color/weight but scaled down, mirroring residentCard.totalDebtCurrencyMod
+    totalCurrencyMod: "font-bold text-[#F2C454] text-[0.7em] mr-0.5",
     addBtn: "w-[100px] h-[44px] rounded-[22px] bg-[#49496A] ring-2 ring-[#9CE66B] font-bold text-sm text-[#E1E3F8] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95",
     addBtnWrapper: "flex",
     addBtnGap: '30px',
@@ -414,6 +468,8 @@ window.DESIGN = {
     cardContainerGap: '16px',
     prevLabel: "font-light text-[14px] text-[#E1E3F8]",
     prevLabelWrapper: "flex items-center justify-between w-full",
+    // Wraps a previous-month expense's description + sub-label in a column
+    prevItemTextCol: "flex flex-col min-w-0",
     prevMonthSubLabel: "font-semibold truncate text-[12px] text-[#E1E3F8] opacity-50",
     sectionPaddingTop: '16px',
     sectionPaddingBottom: '16px',
