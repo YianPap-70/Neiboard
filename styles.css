@@ -12,11 +12,9 @@ body {
 /* CardProfileModal input styles.
    Colors match window.DESIGN.colors.lavender ('#E1E3F8') in DesignConfig.js.
    CSS can't read JS tokens directly, so these are kept in sync manually. */
-.card-modal-input::placeholder {
-  color: #E1E3F8;
-  opacity: 0.5;
-  font-size: 12px;
-}
+   .card-modal-input::placeholder {
+    color: #9596B1;  /* main-color-2 */
+  }
 .card-modal-input {
   color: #E1E3F8;
   font-size: 14px;

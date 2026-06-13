@@ -935,7 +935,7 @@ window.App = function App() {
             {/* Sync button — visible but inert until backend sync is implemented */}
             <div className={HDR.syncIconWrapper}>
               <button className={HDR.touchTargetBtn} onClick={() => { /* TODO: implement sync */ }}>
-                <SpriteIcon id="icon-synced" className="w-8 h-8" style={IC.synced} />
+              <SpriteIcon id="icon-synced" className={ICN.syncIconSize} style={IC.synced} />
               </button>
             </div>
           </div>
@@ -1025,12 +1025,13 @@ window.App = function App() {
                                 className={CARD.avatarIcon}
                                 style={IC.avatarDebt}
                               />
-                            ) : (
-                              <SpriteIcon
-                                id="icon-avatar-nodebt"
-                                className={CARD.avatarIconNoDebt}
-                              />
-                            )}
+                              ) : (
+                                <SpriteIcon
+                                  id="icon-avatar-nodebt"
+                                  className={CARD.avatarIconNoDebt}
+                                  style={IC.avatarNoDebt}
+                                />
+                              )}
                           </button>
 
                           <div
