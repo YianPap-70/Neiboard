@@ -107,11 +107,7 @@ window.DESIGN = {
     { label: 'Yen ¥', symbol: '¥' },
     { label: 'None', symbol: '' }
   ],
-  fontFamily: "'Open Sans', sans-serif",
-  monthNames: [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ],
+  fontFamily: "'Roboto', sans-serif",
 
   // ─── GLOBAL LAYOUT & APP CONTAINER ──────────────────────────────────────
   layout: {
@@ -240,7 +236,7 @@ window.DESIGN = {
     noExpensesFallback: `text-center py-4 text-xs text-[${COLORS['main-color-2']}]`,
 
     itemRowWrapper: "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-white/5",
-    itemRowDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]`,
+    itemRowDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]/50`,
     interactiveIconArea: "flex items-center min-w-0 gap-3 pointer-events-none",
     iconStateBtn: "shrink-0 h-5 flex items-center pointer-events-none",
     expenseDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
@@ -360,33 +356,77 @@ window.DESIGN = {
     }
   },
 
-  // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ─────────────────────────
+    // ─── CARD PROFILE MODALS (ADD CARD / EDIT CARD) ─────────────────────────
   // Form modal for creating new resident cards or editing existing ones.
-  // Contains name, apartment, and notes fields.
+  // Contains name, apartment, and notes fields with Notes icon + title.
   cardModal: {
-    wrapper: `w-full max-w-[${MODAL_MAX_WIDTH}]`,
-
-    headerRow: "flex items-center gap-3 mb-4",
-    headerIcon: `w-7 h-7 shrink-0 text-[${COLORS['main-color-2']}]`,
-    headerLabel: `font-bold text-lg text-[${COLORS['main-color-1']}] tracking-wide`,
-
-    fieldWrapper: `bg-[${COLORS['main-color-3']}] rounded-[12px] px-4 flex items-start w-full`,
-    singleLineField: `w-full bg-transparent focus:outline-none text-[14px] text-[${COLORS['main-color-1']}] h-[50px] leading-[50px]`,
-    notesField: `w-full bg-transparent focus:outline-none text-[14px] text-[${COLORS['main-color-1']}] resize-none leading-[1.5] py-[14px] overflow-hidden`,
-    fieldGap: "12px",
-    fieldToButtonGap: "16px",
-
-    buttonRow: "flex items-center gap-3 w-full",
-    okBtn: `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-1']}] font-bold text-[${COLORS['main-color-1']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-    cancelIconBtn: `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-    cancelTextBtn: `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-3']}] font-bold text-[${COLORS['main-color-1']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+    wrapper: `w-full max-w-[376px]`,
+    
+    // Container
+    containerPadding: '12px',
+    containerGap: '16px',
+    
+    // Header
+    headerRow: "flex items-center gap-3 mb-0",
+    headerIcon: `w-6 h-6 shrink-0 text-[${COLORS['main-color-2']}]`,
+    headerLabel: `font-medium text-[14px] text-[${COLORS['main-color-2']}] tracking-wide`,
+    
+    // Fields container - vertical stack with gaps
+    fieldsContainer: "flex flex-col",
+    fieldGap: '8px',
+    notesSectionGap: '16px',
+    
+    // Individual field wrapper - rounded corners 6px
+    fieldWrapper: `bg-[${COLORS['main-color-3']}] rounded-[6px] w-full`,
+    fieldInput: `w-full bg-transparent focus:outline-none`,
+    fieldHeight: '52px',
+    fieldPadding: '12px 16px',
+    
+    // Name field specific
+    nameFieldInput: `font-bold text-[18px] text-[${COLORS['main-color-1']}]`,
+    
+    // Apartment field specific
+    apartmentFieldInput: `font-normal text-[18px] text-[${COLORS['main-color-1']}]`,
+    
+    // Placeholder text style
+    placeholderStyle: `text-[16px] font-normal text-[${COLORS['main-color-2']}]`,
+    
+    // Notes section (icon + title row)
+    notesSection: "flex flex-col",
+    notesTitleRow: "flex items-center gap-2 mb-2",
+    notesIcon: `w-6 h-6 text-[${COLORS['main-color-2']}]`,
+    notesTitle: `text-[16px] font-medium text-[${COLORS['main-color-2']}]`,
+    
+    // Notes textarea - rounded corners 6px
+    notesFieldWrapper: `bg-[${COLORS['main-color-3']}] rounded-[6px] w-full`,
+    notesField: `w-full bg-transparent focus:outline-none resize-none overflow-hidden text-[16px] font-normal text-[${COLORS['main-color-1']}]`,
+    notesFieldPadding: '12px 16px',
+    notesFieldMinHeight: '52px',
+    
+    // Button row
+    buttonRow: "flex items-center gap-3 w-full mt-0",
+    buttonGap: '16px',
+    
+    // Common button styles
+    baseBtn: `h-[44px] rounded-[9999px] font-bold text-[${COLORS['main-color-1']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+    
+    // OK button (green ring)
+    okBtn: `flex-1 bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-1']}]`,
+    
+    // Next button
+nextBtn: `flex-1 bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-6']}]`,
+    
+    // Cancel button (NO ring, just background)
+    cancelTextBtn: `flex-1 bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}]`,
+    
+    // Trash/Delete button (circular, red ring)
     trashBtn: `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-    cancelIconSize: `w-5 h-5 text-[${COLORS['main-color-1']}]`,
     trashIconSize: `w-5 h-5 text-[${COLORS['main-color-1']}]`,
-
+    
+    // Delete confirmation modal
     deleteConfirmBoxStyle: {
       borderRadius: RADIUS_STANDARD,
-      maxWidth: MODAL_MAX_WIDTH,
+      maxWidth: '376px',
       padding: '20px'
     },
     deleteConfirmTitle: `font-bold text-xl text-[${COLORS['main-color-1']}] text-center mb-6 leading-snug`,
@@ -406,8 +446,8 @@ window.DESIGN = {
     autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
     autoTextareaDuration: '0.2s',
     rollerTransition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
-    viewTransitionDuration: '0.35s',
-    viewTransitionCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    viewTransitionDuration: '0.6s',
+    viewTransitionCurve: 'cubic-bezier(0.4, 0, 0.2, 1)',
     coinFlipDuration: '0.5s',
   },
 
@@ -480,7 +520,7 @@ window.DESIGN = {
     addBtnGap: '30px',
     itemsWrapper: "flex flex-col",
     itemRow: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
-    itemRowDivider: `border-t border-solid border-[${COLORS['main-color-2']}]`,
+    itemRowDivider: `border-t border-solid border-[${COLORS['main-color-2']}]/50`,
     itemLeft: "flex items-center min-w-0 gap-3 pointer-events-none",
     itemIconArea: "shrink-0 h-5 flex items-center pointer-events-none",
     itemDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
