@@ -1,11 +1,28 @@
 // =========================================================================
-// ARCHITECTURAL SOURCE OF TRUTH: APPLICATION CONTROLLER
+// MAIN APPLICATION CONTROLLER
+// =========================================================================
+// Manages residents, expenses, navigation state, and user interactions.
+// All styling references use window.DESIGN tokens - no hardcoded hex values.
 // =========================================================================
 
 const { useState, useCallback, useMemo, useRef, useEffect } = React;
 
 const systemDate = new Date();
 
+// Calendar year range configuration
+const CALENDAR_START_YEAR = 2015;
+const CALENDAR_END_YEAR = 2045;
+const TIMELINE_YEARS = Array.from(
+  { length: CALENDAR_END_YEAR - CALENDAR_START_YEAR + 1 },
+  (_, i) => CALENDAR_START_YEAR + i
+);
+window.TIMELINE_YEARS = TIMELINE_YEARS;
+
+// Default month names fallback (used only if translations fail to load)
+const DEFAULT_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// Formats a numeric amount by removing unnecessary decimal places
+// Returns integer as string, or float with trailing zeros trimmed
 function formatAmount(amount) {
   const num = parseFloat(amount);
   if (num % 1 === 0) return num.toString();
@@ -13,6 +30,8 @@ function formatAmount(amount) {
 }
 
 // ─── SPRITE ICON COMPONENT ────────────────────────────────────────────────
+// Renders an SVG sprite icon via <use> tag. The sprite sheet is injected
+// into the DOM from icons.svg before React mounts.
 function SpriteIcon({ id, className = '', style }) {
   return (
     <svg className={className} style={style} aria-hidden="true" focusable="false">
@@ -21,6 +40,7 @@ function SpriteIcon({ id, className = '', style }) {
   );
 }
 
+// Renders a checkmark for paid status or warning icon for unpaid status
 function PaidStatusIcon({ paid }) {
   const ICN = window.DESIGN.icons;
   const IC  = window.DESIGN.iconColors;
@@ -29,11 +49,14 @@ function PaidStatusIcon({ paid }) {
     : <SpriteIcon id="icon-warning-filled" className={ICN.statusIconSize} style={IC.warningFilled} />;
 }
 
+// Displays currency symbol if one is active (non-empty string)
 function CurrencySymbol({ activeSymbol, className = '' }) {
   if (activeSymbol === '') return null;
   return <span className={className}>{activeSymbol}</span>;
 }
 
+// Animated expandable container that auto-adjusts height based on content
+// Uses ResizeObserver to detect content size changes during animations
 function Drawer({ isOpen, children }) {
   const [height, setHeight] = useState(0);
   const contentRef = useRef(null);
@@ -63,6 +86,8 @@ function Drawer({ isOpen, children }) {
   );
 }
 
+// Textarea that automatically expands vertically up to a maximum line count
+// Height transitions smoothly as user types or content changes
 function AutoTextarea({ value, onChange, placeholder, className, style }) {
   const ref = useRef(null);
   const A = window.DESIGN.animation;
@@ -95,6 +120,8 @@ function AutoTextarea({ value, onChange, placeholder, className, style }) {
   );
 }
 
+// Modal for adding or editing resident card information
+// Handles name, apartment/tag, and notes fields with add/edit/delete modes
 function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onDeleteRequest, animStyle, t }) {
   const CM = window.DESIGN.cardModal;
   const MB = window.DESIGN.modalBase;
@@ -121,7 +148,6 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
       style={{ ...MB.boxContainerStyle, ...animStyle, padding: CM.containerPadding, maxWidth: '376px' }}
       className={MB.boxContainer}
     >
-      {/* Header */}
       <div className={CM.headerRow} style={{ marginBottom: CM.containerGap }}>
         <SpriteIcon
           id={isAdd ? 'icon-button-add-user' : 'icon-edit'}
@@ -130,10 +156,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
         <span className={CM.headerLabel}>{isAdd ? t('add_card') : t('edit_card')}</span>
       </div>
 
-      {/* Fields Container */}
       <div className={CM.fieldsContainer} style={{ gap: CM.fieldGap }}>
-        
-        {/* Name Field */}
         <div className={CM.fieldWrapper}>
           <input
             type="text"
@@ -145,7 +168,6 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
           />
         </div>
 
-        {/* Apartment Field */}
         <div className={CM.fieldWrapper}>
           <input
             type="text"
@@ -158,16 +180,13 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
         </div>
       </div>
 
-      {/* Notes Section */}
       <div style={{ marginTop: CM.notesSectionGap }}>
         <div className={CM.notesSection}>
-          {/* Notes Icon + Title Row */}
           <div className={CM.notesTitleRow}>
             <SpriteIcon id="icon-notes" className={CM.notesIcon} />
             <span className={CM.notesTitle}>{t('notes')}</span>
           </div>
 
-          {/* Notes Textarea */}
           <div className={CM.notesFieldWrapper}>
             <AutoTextarea
               value={notes}
@@ -182,7 +201,6 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
         </div>
       </div>
 
-      {/* Button Row */}
       <div className={CM.buttonRow} style={{ marginTop: CM.containerGap, gap: CM.buttonGap }}>
         {isAdd ? (
           <>
@@ -214,6 +232,7 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
   );
 }
 
+// Confirmation modal shown before deleting a resident card
 function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
   const CM = window.DESIGN.cardModal;
   const MB = window.DESIGN.modalBase;
@@ -231,6 +250,7 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
   );
 }
 
+// 3D flip button that toggles between resident cards and building expenses views
 function WalletFlipButton({ onToggle, t }) {
   const WFB = window.DESIGN.walletFlipBtn;
   const A = window.DESIGN.animation;
@@ -260,6 +280,7 @@ function WalletFlipButton({ onToggle, t }) {
   );
 }
 
+// Modal for adding, editing, or deleting expenses (both resident and building)
 function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconId, unpaidIconColors, t }) {
   const MDL = window.DESIGN.modal;
   const MB  = window.DESIGN.modalBase;
@@ -346,6 +367,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
   );
 }
 
+// Displays building/community expenses with current month and past unpaid sections
 function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
   const BE = window.DESIGN.buildingExpenses;
 
@@ -440,7 +462,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
   );
 }
 
-// ─── TEST DATA GENERATOR ──────────────────────────────────────────────────
+// Generates random test data for initial residents with expenses spanning current and past months
 function generateInitialResidents(D, monthNames, currentMonthString) {
   const SURNAMES = ['Ramirez', 'Chen', 'Marcus', 'Patel', 'Kowalski', 'Nguyen', 'Ferreira', 'Schmidt', 'Okafor', 'Petrov'];
   const EXPENSE_NAMES = ['Monthly Maintenance', 'Heating Oil', 'Elevator Repair', 'Water Balance', 'Shared Repairs', 'Stairwell Lighting'];
@@ -500,7 +522,7 @@ window.App = function App() {
   const IC     = D.iconColors;
   const ICN    = D.icons;
 
-  // ─── LOCALIZATION SYSTEM ─────────────────────────────────────────────
+  // ─── LOCALIZATION ─────────────────────────────────────────────────────
   const [translations, setTranslations] = useState(null);
   const [currentLanguage, setCurrentLanguage] = useState('en');
 
@@ -508,10 +530,8 @@ window.App = function App() {
     if (!translations || !translations[key]) return key;
     let value = translations[key][currentLanguage] || translations[key]['en'] || key;
     
-    // Return array as-is (for months_short)
     if (Array.isArray(value)) return value;
     
-    // Otherwise process string replacements
     if (typeof value === 'string') {
       Object.keys(replacements).forEach(placeholder => {
         value = value.replace(`{${placeholder}}`, replacements[placeholder]);
@@ -520,13 +540,12 @@ window.App = function App() {
     return value;
   }, [translations, currentLanguage]);
 
-  const monthNames = translations ? t('months') : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = translations ? t('months') : DEFAULT_MONTH_NAMES;
 
   const [currentMonthIdx, setCurrentMonthIdx] = useState(systemDate.getMonth());
   const [currentYear, setCurrentYear] = useState(systemDate.getFullYear());
   const currentMonthString = monthNames.length ? `${monthNames[currentMonthIdx]} ${currentYear}` : '';
 
-  // Generate initial residents AFTER monthNames is ready
   const getInitialResidents = useCallback(() => {
     return generateInitialResidents(D, monthNames, currentMonthString);
   }, [D, monthNames, currentMonthString]);
@@ -534,7 +553,6 @@ window.App = function App() {
   const [residents, setResidents] = useState([]);
   const [buildingExpenses, setBuildingExpenses] = useState([]);
 
-  // Initialize residents when translations load
   useEffect(() => {
     if (translations && residents.length === 0) {
       setResidents(getInitialResidents());
@@ -789,7 +807,7 @@ window.App = function App() {
   };
 
   const currentTimelineIndex = useMemo(() => {
-    const foundIdx = window.TIMELINE_YEARS.indexOf(tempYear);
+    const foundIdx = TIMELINE_YEARS.indexOf(tempYear);
     return foundIdx !== -1 ? foundIdx : 11;
   }, [tempYear]);
 
@@ -903,7 +921,6 @@ window.App = function App() {
   const cardModalContentAnim = MB.contentAnimation(A);
   const cardModalBackdropAnim = MB.backdropAnimation(A);
 
-  // Fetch translations on mount
   useEffect(() => {
     fetch('./lang.json')
       .then(res => res.json())
@@ -915,7 +932,7 @@ window.App = function App() {
     return (
       <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
         <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
-          <div style={{ color: '#E1E3F8', textAlign: 'center', marginTop: '100px' }}>Loading...</div>
+          <div style={LAYOUT.loadingTextStyle}>Loading...</div>
         </div>
       </div>
     );
@@ -1263,12 +1280,12 @@ window.App = function App() {
                       className={CAL.yearRollContainer}
                       style={{
                         transform: `translateY(-${currentTimelineIndex * 28}px)`,
-                        height: `${window.TIMELINE_YEARS.length * 28}px`,
+                        height: `${TIMELINE_YEARS.length * 28}px`,
                         transition: A.rollerTransition,
                         top: '0px'
                       }}
                     >
-                      {window.TIMELINE_YEARS.map(year => (
+                      {TIMELINE_YEARS.map(year => (
                         <div key={year} className={CAL.yearText}>{year}</div>
                       ))}
                     </div>
@@ -1276,27 +1293,26 @@ window.App = function App() {
                   <div className={CAL.yearIconArea}>
                     <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
                   </div>
-                  <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(window.TIMELINE_YEARS[0], y - 1))} />
-                  <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(window.TIMELINE_YEARS[window.TIMELINE_YEARS.length - 1], y + 1))} />
+                  <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
+                  <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
                 </div>
 
                 <div className={CAL.gridContainer}>
-  {monthNames.map((monthName, idx) => {
-    const isSelected = tempMonthIdx === idx;
-    // Safely get short month names with fallback
-    let shortMonth;
-    try {
-      shortMonth = translations['months_short'][currentLanguage][idx];
-    } catch (e) {
-      shortMonth = monthName.substring(0, 3).toUpperCase();
-    }
-    return (
-      <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
-        {shortMonth}
-      </button>
-    );
-  })}
-</div>
+                  {monthNames.map((monthName, idx) => {
+                    const isSelected = tempMonthIdx === idx;
+                    let shortMonth;
+                    try {
+                      shortMonth = translations['months_short'][currentLanguage][idx];
+                    } catch (e) {
+                      shortMonth = monthName.substring(0, 3).toUpperCase();
+                    }
+                    return (
+                      <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
+                        {shortMonth}
+                      </button>
+                    );
+                  })}
+                </div>
 
                 <div className={CAL.footerRow}>
                   <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>{t('ok')}</button>
