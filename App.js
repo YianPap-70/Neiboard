@@ -211,8 +211,8 @@ function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onD
               {t('next')}
             </button>
             <button className={`${CM.baseBtn} ${CM.cancelTextBtn}`} onClick={onCancel}>
-              {t('cancel')}
-            </button>
+  {t('exit')}
+</button>
           </>
         ) : (
           <>
@@ -246,6 +246,24 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
         <button className={CM.deleteConfirmYesBtn} onClick={onConfirm}>{t('yes')}</button>
         <button className={CM.deleteConfirmNoBtn} onClick={onCancel}>{t('no')}</button>
       </div>
+    </div>
+  );
+}
+
+// Wraps any modal with consistent backdrop, animation, and click-to-close
+function ModalWrapper({ isOpen, onClose, children }) {
+  const MB = window.DESIGN.modalBase;
+  const A = window.DESIGN.animation;
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      style={{ ...MB.backdropAnimation(A), ...MB.backdropOverlayStyle }}
+      className={MB.backdropOverlay}
+      onClick={() => onClose()}
+    >
+      {children}
     </div>
   );
 }
@@ -292,8 +310,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
   if (!isAddOrEdit && !isDelete) return null;
 
   return (
-    <div style={MB.backdropAnimation(window.DESIGN.animation)} className={MB.backdropOverlay} onClick={onClose}>
-
+    <>
       {isAddOrEdit && (
         <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(window.DESIGN.animation) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
 
@@ -362,8 +379,7 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 }
 
@@ -603,7 +619,7 @@ window.App = function App() {
     type: null, residentId: null, expenseId: null, amount: '', description: '', paid: false
   });
 
-  const [cardModal, setCardModal] = useState({
+  const [cardModalState, setCardModalState] = useState({
     type: null,
     residentId: null,
   });
@@ -858,16 +874,16 @@ window.App = function App() {
   };
 
   const handleOpenAddCard = () => {
-    setCardModal({ type: 'addCard', residentId: null });
+    setCardModalState({ type: 'addCard', residentId: null });
   };
 
   const handleOpenEditCard = (residentId, e) => {
     e.stopPropagation();
-    setCardModal({ type: 'editCard', residentId });
+    setCardModalState({ type: 'editCard', residentId });
   };
 
   const closeCardModal = () => {
-    setCardModal({ type: null, residentId: null });
+    setCardModalState({ type: null, residentId: null });
   };
 
   const createResident = ({ name, apartment, notes }) => ({
@@ -889,7 +905,7 @@ window.App = function App() {
 
   const handleConfirmEditCard = ({ name, apartment, notes }) => {
     setResidents(prev => prev.map(res =>
-      res.id === cardModal.residentId
+      res.id === cardModalState.residentId
         ? { ...res, name: name || res.name, apartment: apartment || res.apartment, notes }
         : res
     ));
@@ -897,12 +913,12 @@ window.App = function App() {
   };
 
   const handleDeleteCardRequest = () => {
-    setCardModal(prev => ({ ...prev, type: 'deleteCard' }));
+    setCardModalState(prev => ({ ...prev, type: 'deleteCard' }));
   };
 
   const handleConfirmDeleteCard = () => {
-    setResidents(prev => prev.filter(res => res.id !== cardModal.residentId));
-    if (expandedResident === cardModal.residentId) {
+    setResidents(prev => prev.filter(res => res.id !== cardModalState.residentId));
+    if (expandedResident === cardModalState.residentId) {
       setExpandedResident(null);
       setOpenPreviousDrawer({});
     }
@@ -910,16 +926,15 @@ window.App = function App() {
   };
 
   const handleCancelDeleteCard = () => {
-    setCardModal(prev => ({ ...prev, type: 'editCard' }));
+    setCardModalState(prev => ({ ...prev, type: 'editCard' }));
   };
 
   const editingResident = useMemo(() => {
-    if (!cardModal.residentId) return null;
-    return residents.find(r => r.id === cardModal.residentId) || null;
-  }, [cardModal.residentId, residents]);
+    if (!cardModalState.residentId) return null;
+    return residents.find(r => r.id === cardModalState.residentId) || null;
+  }, [cardModalState.residentId, residents]);
 
   const cardModalContentAnim = MB.contentAnimation(A);
-  const cardModalBackdropAnim = MB.backdropAnimation(A);
 
   useEffect(() => {
     fetch('./lang.json')
@@ -1267,114 +1282,113 @@ window.App = function App() {
           </div>
         )}
 
-        {modal.type && (
-          <div style={MB.backdropAnimation(A)} className={MB.backdropOverlay} onClick={closeModal}>
-            {modal.type === 'calendar' && (
-              <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
-                <div className={CAL.yearPill}>
-                  <div className={CAL.yearIconArea}>
-                    <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
-                  </div>
-                  <div className={CAL.yearRollWrapper}>
-                    <div
-                      className={CAL.yearRollContainer}
-                      style={{
-                        transform: `translateY(-${currentTimelineIndex * 28}px)`,
-                        height: `${TIMELINE_YEARS.length * 28}px`,
-                        transition: A.rollerTransition,
-                        top: '0px'
-                      }}
-                    >
-                      {TIMELINE_YEARS.map(year => (
-                        <div key={year} className={CAL.yearText}>{year}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={CAL.yearIconArea}>
-                    <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
-                  </div>
-                  <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
-                  <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
+        {/* MODAL WRAPPER FOR EXPENSE AND CALENDAR MODALS */}
+        <ModalWrapper isOpen={modal.type !== null} onClose={closeModal}>
+          {modal.type === 'calendar' && (
+            <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
+              <div className={CAL.yearPill}>
+                <div className={CAL.yearIconArea}>
+                  <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
                 </div>
-
-                <div className={CAL.gridContainer}>
-                  {monthNames.map((monthName, idx) => {
-                    const isSelected = tempMonthIdx === idx;
-                    let shortMonth;
-                    try {
-                      shortMonth = translations['months_short'][currentLanguage][idx];
-                    } catch (e) {
-                      shortMonth = monthName.substring(0, 3).toUpperCase();
-                    }
-                    return (
-                      <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
-                        {shortMonth}
-                      </button>
-                    );
-                  })}
+                <div className={CAL.yearRollWrapper}>
+                  <div
+                    className={CAL.yearRollContainer}
+                    style={{
+                      transform: `translateY(-${currentTimelineIndex * 28}px)`,
+                      height: `${TIMELINE_YEARS.length * 28}px`,
+                      transition: A.rollerTransition,
+                      top: '0px'
+                    }}
+                  >
+                    {TIMELINE_YEARS.map(year => (
+                      <div key={year} className={CAL.yearText}>{year}</div>
+                    ))}
+                  </div>
                 </div>
-
-                <div className={CAL.footerRow}>
-                  <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>{t('ok')}</button>
-                  <button className={CAL.actionBtn} onClick={closeModal}>{t('cancel')}</button>
+                <div className={CAL.yearIconArea}>
+                  <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
                 </div>
+                <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
+                <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
               </div>
-            )}
 
-            {(modal.type === 'add' || modal.type === 'edit' || modal.type === 'delete') && (
-              <ExpenseModal
-                modalState={modal}
-                setModalState={setModal}
-                onConfirm={handleConfirmModal}
-                onClose={closeModal}
-                onDelete={handleDeleteExpense}
-                unpaidIconId="icon-button-unpaid"
-                unpaidIconColors={IC.buttonUnpaid}
+              <div className={CAL.gridContainer}>
+                {monthNames.map((monthName, idx) => {
+                  const isSelected = tempMonthIdx === idx;
+                  let shortMonth;
+                  try {
+                    shortMonth = translations['months_short'][currentLanguage][idx];
+                  } catch (e) {
+                    shortMonth = monthName.substring(0, 3).toUpperCase();
+                  }
+                  return (
+                    <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
+                      {shortMonth}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className={CAL.footerRow}>
+                <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>{t('ok')}</button>
+                <button className={CAL.actionBtn} onClick={closeModal}>{t('cancel')}</button>
+              </div>
+            </div>
+          )}
+
+          {(modal.type === 'add' || modal.type === 'edit' || modal.type === 'delete') && (
+            <ExpenseModal
+              modalState={modal}
+              setModalState={setModal}
+              onConfirm={handleConfirmModal}
+              onClose={closeModal}
+              onDelete={handleDeleteExpense}
+              unpaidIconId="icon-button-unpaid"
+              unpaidIconColors={IC.buttonUnpaid}
+              t={t}
+            />
+          )}
+        </ModalWrapper>
+
+        {/* MODAL WRAPPER FOR CARD MODALS */}
+        <ModalWrapper isOpen={!!cardModalState.type} onClose={closeCardModal}>
+          <div className={CM.wrapper} onClick={(e) => e.stopPropagation()}>
+            {cardModalState.type === 'addCard' && (
+              <CardProfileModal
+                mode="add"
+                residentData={null}
+                onConfirm={handleConfirmAddCard}
+                onNext={handleNextAddCard}
+                onCancel={closeCardModal}
+                animStyle={cardModalContentAnim}
+                t={t}
+              />
+            )}
+            {cardModalState.type === 'editCard' && editingResident && (
+              <CardProfileModal
+                mode="edit"
+                residentData={editingResident}
+                onConfirm={handleConfirmEditCard}
+                onNext={null}
+                onCancel={closeCardModal}
+                onDeleteRequest={handleDeleteCardRequest}
+                animStyle={cardModalContentAnim}
+                t={t}
+              />
+            )}
+            {cardModalState.type === 'deleteCard' && (
+              <DeleteCardConfirmModal
+                onConfirm={handleConfirmDeleteCard}
+                onCancel={handleCancelDeleteCard}
+                animStyle={cardModalContentAnim}
                 t={t}
               />
             )}
           </div>
-        )}
+        </ModalWrapper>
 
-        {cardModal.type && (
-          <div style={cardModalBackdropAnim} className={MB.backdropOverlay} onClick={closeCardModal}>
-            <div className={CM.wrapper} onClick={(e) => e.stopPropagation()}>
-              {cardModal.type === 'addCard' && (
-                <CardProfileModal
-                  mode="add"
-                  residentData={null}
-                  onConfirm={handleConfirmAddCard}
-                  onNext={handleNextAddCard}
-                  onCancel={closeCardModal}
-                  animStyle={cardModalContentAnim}
-                  t={t}
-                />
-              )}
-              {cardModal.type === 'editCard' && editingResident && (
-                <CardProfileModal
-                  mode="edit"
-                  residentData={editingResident}
-                  onConfirm={handleConfirmEditCard}
-                  onNext={null}
-                  onCancel={closeCardModal}
-                  onDeleteRequest={handleDeleteCardRequest}
-                  animStyle={cardModalContentAnim}
-                  t={t}
-                />
-              )}
-              {cardModal.type === 'deleteCard' && (
-                <DeleteCardConfirmModal
-                  onConfirm={handleConfirmDeleteCard}
-                  onCancel={handleCancelDeleteCard}
-                  animStyle={cardModalContentAnim}
-                  t={t}
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {(buildingModal.type === 'add' || buildingModal.type === 'edit' || buildingModal.type === 'buildingDelete') && (
+        {/* MODAL WRAPPER FOR BUILDING EXPENSE MODALS */}
+        <ModalWrapper isOpen={(buildingModal.type === 'add' || buildingModal.type === 'edit' || buildingModal.type === 'buildingDelete')} onClose={closeBuildingModal}>
           <ExpenseModal
             modalState={buildingModal}
             setModalState={setBuildingModal}
@@ -1385,7 +1399,7 @@ window.App = function App() {
             unpaidIconColors={IC.buildingExpenseUnpaid}
             t={t}
           />
-        )}
+        </ModalWrapper>
 
       </div>
     </div>

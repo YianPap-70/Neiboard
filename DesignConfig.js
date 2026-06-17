@@ -33,34 +33,34 @@ const MODAL_MAX_WIDTH = '376px';
 (function injectAnimationKeyframes() {
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes modalBackdropIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes modalContentIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes menuBackdropIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes menuContentIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes viewExitRecede {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-    @keyframes viewEnterFromRight {
-      from { opacity: 0; transform: translateX(60px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes viewEnterFromLeft {
-      from { opacity: 0; transform: translateX(-60px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
+  @keyframes modalBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes modalContentIn {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes menuBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes menuContentIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes viewExitRecede {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes viewEnterFromRight {
+    from { opacity: 0; transform: translateX(60px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes viewEnterFromLeft {
+    from { opacity: 0; transform: translateX(-60px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   `;
   document.head.appendChild(style);
 })();
@@ -84,8 +84,8 @@ const iconColors = {
   buttonPaid:            { '--accent-color-1': COLORS['accent-color-1'] },
   buttonUnpaid:          { '--accent-color-1': COLORS['accent-color-3'], '--accent-color-2': COLORS['main-color-1'] },
   buildingExpenseUnpaid: { '--accent-color-1': COLORS['accent-color-3'], '--accent-color-2': COLORS['main-color-1'] },
-  avatarDebt:            { '--accent-color-1': COLORS['accent-color-2'], '--accent-color-2': COLORS['main-color-1'] },
-  avatarNoDebt:          { '--accent-color-1': COLORS['accent-color-1'], '--accent-color-2': COLORS['main-color-1'] },
+  avatarDebt:            { '--avatar-debt-badge': COLORS['accent-color-2'], '--avatar-debt-body': COLORS['main-color-2'] },
+  avatarNoDebt:          { '--avatar-nodebt-check': COLORS['accent-color-1'], '--avatar-nodebt-body': COLORS['main-color-2'] },
   synced:                { '--accent-color-1': COLORS['accent-color-1'] },
 };
 
@@ -105,8 +105,8 @@ const animation = {
   drawerCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
   drawerDuration: '0.5s',
   caretDuration: '500ms',
-  modalCurve: 'cubic-bezier(0.34, 1.2, 0.64, 1)',
-  modalDuration: '0.4s',
+  modalCurve: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',  // Standard ease-out
+  modalDuration: '0.45s',  // Much slower (was 0.45s)
   autoTextareaCurve: 'cubic-bezier(0.25, 1, 0.5, 1)',
   autoTextareaDuration: '0.2s',
   rollerTransition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -137,7 +137,7 @@ const header = {
   currencySizeMod: "text-[0.7em] mr-1",
   syncIconWrapper: "ml-2",
   bottomRow: "flex items-center pl-[2px] pr-[2px] w-full",
-  monthTextBtn: "font-extralight tracking-wide text-left text-2xl hover:opacity-80 transition-opacity select-none truncate pr-2",
+  monthTextBtn: "font-normal tracking-wide text-left text-2xl hover:opacity-80 transition-opacity select-none truncate pr-2",
   navPillContainer: `w-[100px] h-[44px] bg-[${COLORS['main-color-3']}] rounded-[22px] flex items-center justify-between ml-auto select-none relative overflow-hidden shrink-0`,
   navPillIconArea: `w-[50px] h-11 flex items-center justify-center pointer-events-none text-[${COLORS['main-color-1']}]`,
   navPillLeftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/10 transition-colors",
@@ -162,7 +162,7 @@ const mainMenu = {
   boxContainer: `w-full flex flex-col bg-[${COLORS['main-color-5']}] p-4 text-[${COLORS['main-color-1']}] gap-3 select-none`,
   boxContainerStyle: { borderRadius: RADIUS_STANDARD, maxWidth: '340px' },
   sectionRow: `w-full bg-[${COLORS['main-color-3']}] rounded-[12px] p-2 flex items-center justify-between h-[60px]`,
-  sectionLabelLeft: `font-semibold tracking-wide text-left pl-2 text-base text-[${COLORS['main-color-1']}]`,
+  sectionLabelLeft: `font-medium tracking-wide text-left pl-2 text-base text-[${COLORS['main-color-1']}]`,
   optionsRightGroup: "flex items-center gap-3 pr-1",
   pillButton: `h-[44px] px-5 font-bold rounded-[22px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] flex items-center justify-center min-w-[64px] transition-all duration-300 outline-none select-none`,
   activeRingClass: `ring-2 ring-[${COLORS['accent-color-1']}]`,
@@ -175,7 +175,7 @@ const mainMenu = {
   symbolRightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
   dateRangeSection: `w-full bg-[${COLORS['main-color-3']}] rounded-[12px] p-3 flex flex-col gap-3`,
   dateRangeButtonsRow: "flex items-center gap-3 w-full",
-  dateRangeBtn: `flex-1 h-[44px] rounded-[22px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] text-sm font-semibold flex items-center justify-center outline-none select-none transition-all`,
+  dateRangeBtn: `flex-1 h-[44px] rounded-[22px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] text-sm font-medium flex items-center justify-center outline-none select-none transition-all`,
   deleteBtn: `w-full h-[48px] rounded-[24px] bg-[${COLORS['main-color-4']}] border-none text-base font-bold flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none`,
   deleteActiveRingClass: `ring-2 ring-[${COLORS['accent-color-3']}]`,
   deleteText: (isActive) => isActive ? `text-[${COLORS['main-color-1']}]` : `text-[${COLORS['main-color-2']}]`,
@@ -193,11 +193,11 @@ const residentCard = {
   cardInnerPadding: "p-4",
   cardHeaderContainer: "flex items-center justify-between gap-3",
   cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
-  avatarBtn: "shrink-0 h-[46px] w-[46px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-  avatarIcon: "w-[46px] h-[46px] pointer-events-none",
-  avatarIconNoDebt: `w-[46px] h-[46px] pointer-events-none text-[${COLORS['main-color-1']}]`,
+  avatarBtn: "shrink-0 h-[40px] w-[40px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
+  avatarIcon: "w-[40px] h-[40px] pointer-events-none",
+  avatarIconNoDebt: `w-[40px] h-[40px] pointer-events-none text-[${COLORS['main-color-1']}]`,
   textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
-  residentName: `font-semibold tracking-wide truncate text-base text-[${COLORS['main-color-1']}]`,
+  residentName: `font-medium tracking-wide truncate text-base text-[${COLORS['main-color-1']}]`,
   apartmentNumber: `font-medium truncate text-sm text-[${COLORS['main-color-2']}]`,
   balanceArea: "flex items-center shrink-0 gap-3",
   totalDebtText: `font-bold text-[22px] text-[${COLORS['accent-color-2']}]`,
@@ -218,8 +218,8 @@ const residentCard = {
   interactiveIconArea: "flex items-center min-w-0 gap-3 pointer-events-none",
   iconStateBtn: "shrink-0 h-5 flex items-center pointer-events-none",
   expenseDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
-  expenseValueAmount: (isPaid) => `font-semibold shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
-  expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-semibold"
+  expenseValueAmount: (isPaid) => `font-medium shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
+  expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-medium"
 };
 
 // ─── DRAWER COMPONENT ────────────────────────────────────────────────────
@@ -240,11 +240,11 @@ const historyDrawer = {
   rowItemFirst: "pt-3 pb-3",
   rowItemDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]`,
   metaSubTextGroup: "flex flex-col min-w-0 pr-2 pointer-events-none",
-  pastMonthLabel: `font-semibold truncate text-[12px] text-[${COLORS['main-color-2']}]`,
+  pastMonthLabel: `font-medium truncate text-[12px] text-[${COLORS['main-color-2']}]`,
   toggleBar: `w-full flex items-center justify-between cursor-pointer hover:opacity-90 select-none bg-[${COLORS['main-color-3']}] py-2 px-4`,
   toggleBarLabelArea: "flex items-center min-w-0 gap-1.5",
-  toggleBarText: `font-medium truncate text-xs text-[${COLORS['main-color-2']}]`,
-  toggleBarAmount: `font-bold shrink-0 text-base text-[${COLORS['main-color-2']}]`,
+  toggleBarText: `font-normal truncate text-sm text-[${COLORS['main-color-2']}]`,
+  toggleBarAmount: `font-bold shrink-0 text-base text-[${COLORS['main-color-1']}]`,
   toggleBarCurrencyMod: "text-[0.7em] mr-0.5",
   cardRoundingContainerStyle: (hasPastUnpaidItems) => ({
     borderRadius: hasPastUnpaidItems ? `${RADIUS_STANDARD} ${RADIUS_STANDARD} 0 0` : RADIUS_STANDARD,
@@ -258,7 +258,11 @@ const historyDrawer = {
 
 // ─── MODAL BASE (SHARED MODAL BEHAVIOR) ──────────────────────────────────
 const modalBase = {
-  backdropOverlay: "fixed inset-0 flex items-start justify-center px-4 z-50 bg-black/70 modal-safe-top",
+  backdropOverlay: "fixed inset-0 flex items-start justify-center px-4 z-50 bg-black/70",
+  backdropOverlayStyle: { 
+    paddingTop: '32px',
+    paddingTop: 'max(32px, env(safe-area-inset-top))' 
+  },
   backdropAnimation: (A) => ({ animation: `modalBackdropIn ${A.modalDuration} ease-out` }),
   contentAnimation: (A) => ({ animation: `modalContentIn ${A.modalDuration} ${A.modalCurve}` }),
   boxContainer: `w-full relative shrink-0 bg-[${COLORS['main-color-5']}]`,
@@ -288,7 +292,7 @@ const modal = {
   amountToDescriptionGap: '12px',
   descriptionToActionsGap: '16px',
   confirmBtn: `flex-1 font-bold transition-transform active:scale-95 text-center bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] h-[52px] rounded-[9999px]`,
-  cancelBtn: `flex-1 font-semibold transition-transform active:scale-95 text-center bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] h-[52px] rounded-[9999px]`,
+  cancelBtn: `flex-1 font-medium transition-transform active:scale-95 text-center bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] h-[52px] rounded-[9999px]`,
   deleteActionBtn: `shrink-0 flex items-center justify-center transition-transform active:scale-95 w-[52px] h-[52px] rounded-[9999px] bg-[${COLORS['main-color-3']}] outline-none select-none`,
   deleteActionBtnRingClass: `ring-2 ring-[${COLORS['accent-color-3']}]`,
   deleteActionIcon: `w-6 h-6 text-[${COLORS['main-color-1']}]`,
@@ -309,7 +313,7 @@ const modal = {
     monthCircle: `w-[52px] h-[52px] rounded-full bg-[${COLORS['main-color-3']}] text-[13px] font-bold text-[${COLORS['main-color-1']}] tracking-wide flex items-center justify-center transition-all duration-300 outline-none select-none`,
     monthActiveRing: `ring-2 ring-[${COLORS['accent-color-1']}]`,
     footerRow: "flex items-center gap-3 mt-4",
-    actionBtn: `flex-1 h-11 rounded-[22px] bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] text-sm font-semibold tracking-wide text-center transition-transform active:scale-95 outline-none`
+    actionBtn: `flex-1 h-11 rounded-[22px] bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] text-sm font-medium tracking-wide text-center transition-transform active:scale-95 outline-none`
   }
 };
 
@@ -415,8 +419,8 @@ const viewTransition = {
 const buildingExpenses = {
   listContainer: "flex flex-col",
   labelRow: "flex items-center justify-between w-full",
-  sectionLabel: `font-light text-[14px] text-[${COLORS['main-color-1']}]`,
-  totalLabel: `font-light text-[14px] text-[${COLORS['main-color-1']}]`,
+  sectionLabel: `font-thin text-[14px] text-[${COLORS['main-color-1']}]`,
+  totalLabel: `font-thin text-[14px] text-[${COLORS['main-color-1']}]`,
   totalAmount: `font-bold text-[18px] text-[${COLORS['accent-color-2']}] ml-1`,
   totalCurrencyMod: `font-bold text-[${COLORS['accent-color-2']}] text-[0.7em] mr-0.5`,
   addBtn: `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-1']}] font-bold text-sm text-[${COLORS['main-color-1']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
@@ -428,14 +432,14 @@ const buildingExpenses = {
   itemLeft: "flex items-center min-w-0 gap-3 pointer-events-none",
   itemIconArea: "shrink-0 h-5 flex items-center pointer-events-none",
   itemDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
-  itemAmount: (isPaid) => `font-semibold shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
-  itemCurrencyMod: "text-[0.7em] mr-0.5 font-semibold",
+  itemAmount: (isPaid) => `font-medium shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
+  itemCurrencyMod: "text-[0.7em] mr-0.5 font-medium",
   cardContainer: `bg-[${COLORS['main-color-5']}] rounded-[12px] overflow-hidden px-4`,
   cardContainerGap: '16px',
-  prevLabel: `font-light text-[14px] text-[${COLORS['main-color-1']}]`,
+  prevLabel: `font-thin text-[14px] text-[${COLORS['main-color-1']}]`,
   prevLabelWrapper: "flex items-center justify-between w-full",
   prevItemTextCol: "flex flex-col min-w-0",
-  prevMonthSubLabel: `font-semibold truncate text-[12px] text-[${COLORS['main-color-2']}]`,
+  prevMonthSubLabel: `font-medium truncate text-[12px] text-[${COLORS['main-color-2']}]`,
   sectionPaddingTop: '16px',
   sectionPaddingBottom: '16px',
 };
