@@ -8,6 +8,7 @@
 const { useState, useCallback, useMemo, useRef, useEffect } = React;
 
 const systemDate = new Date();
+function getMonthKey(year, month) { return year * 12 + month; }
 
 // Calendar year range configuration
 const CALENDAR_START_YEAR = 2015;
@@ -384,11 +385,11 @@ function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete,
 }
 
 // Displays building/community expenses with current month and past unpaid sections
-function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
+function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
   const BE = window.DESIGN.buildingExpenses;
 
-  const currentExpenses    = expenses.filter(exp => exp.month === currentMonthString);
-  const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
+  const currentExpenses    = expenses.filter(exp => exp.monthKey === currentMonthKey);
+  const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
 
   const allUnpaid   = expenses.filter(exp => !exp.paid);
   const showTotal   = allUnpaid.length >= 2;
@@ -426,7 +427,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
                   <div className={BE.itemIconArea}>
                     <PaidStatusIcon paid={exp.paid} />
                   </div>
-                  <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+                  <span className={BE.itemDescription}>{exp.description}</span>
                 </div>
                 <span className={BE.itemAmount(exp.paid)}>
                   <CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.itemCurrencyMod} />{formatAmount(exp.amount)}
@@ -461,7 +462,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
                     <PaidStatusIcon paid={exp.paid} />
                   </div>
                   <div className={BE.prevItemTextCol}>
-                    <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+                  <span className={BE.itemDescription}>{exp.description}</span>
                     <span className={BE.prevMonthSubLabel}>{exp.month}</span>
                   </div>
                 </div>
@@ -479,7 +480,7 @@ function BuildingExpenses({ expenses, currentMonthString, isPastExpense, activeC
 }
 
 // Generates random test data for initial residents with expenses spanning current and past months
-function generateInitialResidents(D, monthNames, currentMonthString) {
+function generateInitialResidents(D, monthNames, currentMonthString, currentMonthKey) {
   const SURNAMES = ['Ramirez', 'Chen', 'Marcus', 'Patel', 'Kowalski', 'Nguyen', 'Ferreira', 'Schmidt', 'Okafor', 'Petrov'];
   const EXPENSE_NAMES = ['Monthly Maintenance', 'Heating Oil', 'Elevator Repair', 'Water Balance', 'Shared Repairs', 'Stairwell Lighting'];
   const APARTMENTS = ['1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C'];
@@ -511,10 +512,13 @@ function generateInitialResidents(D, monthNames, currentMonthString) {
     let expCounter = 0;
 
     pickUnique(EXPENSE_NAMES, rand(1, 2)).forEach((name) => {
-      expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: Math.random() > 0.4, month: currentMonthString });
+      expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: Math.random() > 0.4, month: currentMonthString, monthKey: currentMonthKey });
     });
     pickUnique(EXPENSE_NAMES, rand(0, 2)).forEach((name) => {
-      expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: false, month: pick(pastMonths) });
+      const pastMonth = pick(pastMonths);
+const pastDate = new Date(today.getFullYear(), today.getMonth() - (pastMonths.indexOf(pastMonth) + 1), 1);
+const pastMonthKey = pastDate.getFullYear() * 12 + pastDate.getMonth();
+expenses.push({ id: `exp-${i}-${expCounter++}`, description: name, amount: rand(40, 150), paid: false, month: pastMonth, monthKey: pastMonthKey });
     });
 
     residents.push({ id: `R${i}`, name: `${surname} Family`, apartment: `Apt ${apt}`, notes: '', expenses });
@@ -561,10 +565,24 @@ window.App = function App() {
   const [currentMonthIdx, setCurrentMonthIdx] = useState(systemDate.getMonth());
   const [currentYear, setCurrentYear] = useState(systemDate.getFullYear());
   const currentMonthString = monthNames.length ? `${monthNames[currentMonthIdx]} ${currentYear}` : '';
+  const currentMonthKey = currentYear * 12 + currentMonthIdx;
 
   const getInitialResidents = useCallback(() => {
-    return generateInitialResidents(D, monthNames, currentMonthString);
-  }, [D, monthNames, currentMonthString]);
+    const residents = generateInitialResidents(D, monthNames, currentMonthString, currentMonthKey);
+    // Add monthKey to any expenses that might be missing it
+    return residents.map(res => ({
+      ...res,
+      expenses: res.expenses.map(exp => ({
+        ...exp,
+        monthKey: exp.monthKey || (() => {
+          const [monthName, yearStr] = exp.month.split(' ');
+          const year = parseInt(yearStr) || 0;
+          const monthIdx = monthNames.indexOf(monthName);
+          return monthIdx !== -1 ? year * 12 + monthIdx : currentYear * 12 + currentMonthIdx;
+        })()
+      }))
+    }));
+  }, [D, monthNames, currentMonthString, currentMonthKey, currentYear, currentMonthIdx]);
 
   const [residents, setResidents] = useState([]);
   const [buildingExpenses, setBuildingExpenses] = useState([]);
@@ -647,14 +665,9 @@ window.App = function App() {
 
   const isFilteredAwayFromToday = currentMonthIdx !== systemDate.getMonth() || currentYear !== systemDate.getFullYear();
 
-  const isPastExpense = useCallback((expenseMonthStr) => {
-    const [expMonthName, expYearStr] = expenseMonthStr.split(' ');
-    const expYear = parseInt(expYearStr) || 0;
-    const expMonthIdx = monthNames.indexOf(expMonthName);
-    if (expYear < currentYear) return true;
-    if (expYear === currentYear && expMonthIdx < currentMonthIdx) return true;
-    return false;
-  }, [currentMonthIdx, currentYear, monthNames]);
+  const isPastExpense = useCallback((monthKey) => {
+    return monthKey < currentMonthKey;
+  }, [currentMonthKey]);
 
   const totalAllDebts = useMemo(() => {
     return residents.reduce((total, resident) => {
@@ -727,7 +740,7 @@ window.App = function App() {
   const closePastDrawerIfEmpty = (updatedResidents, residentId) => {
     const resident = updatedResidents.find(r => r.id === residentId);
     if (!resident) return;
-    const hasPast = resident.expenses.some(exp => isPastExpense(exp.month) && !exp.paid);
+    const hasPast = resident.expenses.some(exp => isPastExpense(exp.monthKey) && !exp.paid);
     if (!hasPast) {
       setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: false }));
     }
@@ -743,7 +756,7 @@ window.App = function App() {
         if (res.id !== modal.residentId) return res;
         let expenses = [...res.expenses];
         if (modal.type === 'add') {
-          expenses.push({ id: 'exp-' + Date.now(), description: desc, amount: parsedAmount, paid: modal.paid, month: currentMonthString });
+          expenses.push({ id: 'exp-' + Date.now(), description: desc, amount: parsedAmount, paid: modal.paid, month: currentMonthString, monthKey: currentMonthKey });
         } else if (modal.type === 'edit' && modal.expenseId) {
           expenses = expenses.map(exp => exp.id === modal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid: modal.paid } : exp);
         }
@@ -785,6 +798,7 @@ window.App = function App() {
         amount: parsedAmount,
         paid: buildingModal.paid,
         month: currentMonthString,
+        monthKey: currentMonthKey,
       }]);
     } else if (buildingModal.type === 'edit' && buildingModal.expenseId) {
       setBuildingExpenses(prev => prev.map(exp =>
@@ -1033,8 +1047,8 @@ window.App = function App() {
                 const isExpanded = expandedResident === resident.id;
                 const isDrawerOpen = isExpanded && (openPreviousDrawer[resident.id] || false);
 
-                const currentMonthExpenses = resident.expenses.filter(exp => exp.month === currentMonthString);
-                const pastUnpaidExpenses = resident.expenses.filter(exp => isPastExpense(exp.month) && !exp.paid);
+                const currentMonthExpenses = resident.expenses.filter(exp => exp.monthKey === currentMonthKey);
+                const pastUnpaidExpenses = resident.expenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
 
                 const currentUnpaidTotal = currentMonthExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
                 const pastUnpaidTotal = pastUnpaidExpenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -1108,8 +1122,8 @@ window.App = function App() {
                                       <div className={CARD.iconStateBtn}>
                                         <PaidStatusIcon paid={expense.paid} />
                                       </div>
-                                      <span className={CARD.expenseDescription(expense.paid)}>
-                                        {expense.description}
+                                      <span className={CARD.expenseDescription}>
+                                      {expense.description}
                                       </span>
                                     </div>
                                     <span className={CARD.expenseValueAmount(expense.paid)}>
@@ -1139,7 +1153,7 @@ window.App = function App() {
                                     <PaidStatusIcon paid={pastExpense.paid} />
                                   </div>
                                   <div className={DRW.metaSubTextGroup}>
-                                    <span className={CARD.expenseDescription(pastExpense.paid)}>{pastExpense.description}</span>
+                                  <span className={CARD.expenseDescription}>{pastExpense.description}</span>
                                     <span className={DRW.pastMonthLabel}>{pastExpense.month}</span>
                                   </div>
                                 </div>
@@ -1176,6 +1190,7 @@ window.App = function App() {
             <BuildingExpenses
               expenses={buildingExpenses}
               currentMonthString={currentMonthString}
+              currentMonthKey={currentMonthKey}
               isPastExpense={isPastExpense}
               activeCurrencySymbol={activeCurrencySymbol}
               openBuildingModal={openBuildingModal}

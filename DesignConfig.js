@@ -202,7 +202,7 @@ const residentCard = {
   balanceArea: "flex items-center shrink-0 gap-3",
   totalDebtText: `font-bold text-[22px] text-[${COLORS['accent-color-2']}]`,
   totalDebtCurrencyMod: "text-[0.7em] mr-0.5 font-bold",
-  noDebtText: `font-normal text-[22px] text-[${COLORS['main-color-1']}]`,
+  noDebtText: `font-light text-[16px] text-[${COLORS['accent-color-1']}]`,
   caretRotationStyle: (isExpanded, A) => ({
     display: 'inline-block',
     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -217,7 +217,7 @@ const residentCard = {
   itemRowDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]/50`,
   interactiveIconArea: "flex items-center min-w-0 gap-3 pointer-events-none",
   iconStateBtn: "shrink-0 h-5 flex items-center pointer-events-none",
-  expenseDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
+  expenseDescription: `font-medium truncate pr-2 text-base text-[${COLORS['main-color-1']}]`,
   expenseValueAmount: (isPaid) => `font-medium shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
   expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-medium"
 };
@@ -431,7 +431,7 @@ const buildingExpenses = {
   itemRowDivider: `border-t border-solid border-[${COLORS['main-color-2']}]/50`,
   itemLeft: "flex items-center min-w-0 gap-3 pointer-events-none",
   itemIconArea: "shrink-0 h-5 flex items-center pointer-events-none",
-  itemDescription: (isPaid) => `font-medium truncate pr-2 text-base ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
+  itemDescription: `font-medium truncate pr-2 text-base text-[${COLORS['main-color-1']}]`,
   itemAmount: (isPaid) => `font-medium shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
   itemCurrencyMod: "text-[0.7em] mr-0.5 font-medium",
   cardContainer: `bg-[${COLORS['main-color-5']}] rounded-[12px] overflow-hidden px-4`,
