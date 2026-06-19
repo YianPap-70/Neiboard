@@ -691,37 +691,76 @@ window.App = function App() {
 
   const scrollCardIntoViewAfterExpand = (residentId) => {
     const drawerDurationMs = parseFloat(A.drawerDuration) * 1000;
+    
+    // Custom smooth scroll function with full control
+    const smoothScrollTo = (targetY, duration = 700, easing = 'easeInOutQuad') => {
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+      
+      // If distance is very small, just snap (no animation needed)
+      if (Math.abs(distance) < 10) {
+        window.scrollTo(0, targetY);
+        return;
+      }
+      
+      const startTime = performance.now();
+  
+      const easingFunctions = {
+        easeOutCubic: t => 1 - Math.pow(1 - t, 3),
+        easeInOutQuad: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+        easeOutQuint: t => 1 - Math.pow(1 - t, 5),
+        easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+      };
+  
+      const ease = easingFunctions[easing] || easingFunctions.easeInOutQuad;
+  
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = ease(progress);
+        window.scrollTo(0, startY + distance * easedProgress);
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+  
+      requestAnimationFrame(animate);
+    };
+  
     setTimeout(() => {
       const cardEl = cardRefs.current[residentId];
       if (!cardEl) return;
       const headerHeight = headerRef.current?.offsetHeight ?? 90;
       const gapPx = parseInt(D.spacing.headerToListGap);
-      const cardTopInViewport = cardEl.getBoundingClientRect().top;
+      const cardTopAbsolute = cardEl.getBoundingClientRect().top + window.scrollY;
       const idealOffset = headerHeight + gapPx;
-      if (cardTopInViewport < idealOffset) {
-        const cardTopAbsolute = cardEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: cardTopAbsolute - idealOffset, behavior: 'smooth' });
-      }
+      
+      smoothScrollTo(cardTopAbsolute - idealOffset, 700, 'easeInOutQuad');
     }, drawerDurationMs);
   };
 
   const togglePreviousDrawer = (residentId) => {
+    // If card is collapsed, expand everything
     if (expandedResident !== residentId) {
       setExpandedResident(residentId);
-      setOpenPreviousDrawer({});
+      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: true }));
       scrollCardIntoViewAfterExpand(residentId);
     } else {
-      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: !prev[residentId] }));
+      // Card is expanded, just toggle the past debts drawer
+      setOpenPreviousDrawer(prev => ({ 
+        ...prev, 
+        [residentId]: !prev[residentId] 
+      }));
     }
   };
 
   const handleResidentHeaderClick = (residentId) => {
     if (expandedResident === residentId) {
+      // If already expanded, collapse everything
       setExpandedResident(null);
       setOpenPreviousDrawer({});
     } else {
+      // Expand card AND automatically open past debts
       setExpandedResident(residentId);
-      setOpenPreviousDrawer({});
+      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: true }));
       scrollCardIntoViewAfterExpand(residentId);
     }
   };
