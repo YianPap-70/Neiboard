@@ -28,7 +28,7 @@
   "show_building_expenses": { "en": "Show building expenses", "gr": "Εμφάνιση κοινόχρηστων" },
   "add_expense_modal": { "en": "Add expense", "gr": "Προσθήκη εξόδου" },
   "edit_expense_modal": { "en": "Edit expense", "gr": "Επεξεργασία εξόδου" },
-  "expense_placeholder": { "en": "Edit description (Optional)", "gr": "Επεξεργασία περιγραφής (Προαιρετικό)" },
+  "expense_placeholder": { "en": "Description (Optional)", "gr": "Περιγραφή (Προαιρετικό)" },
   "delete_expense_confirm": { "en": "Are you sure you want to delete this expense?", "gr": "Σίγουρα θέλετε να διαγράψετε αυτό το ποσό;" },
   "building_expense_default": { "en": "Building Expense", "gr": "Κοινόχρηστο" },
   "expenses": { "en": "Expenses", "gr": "Έξοδα" },
@@ -47,5 +47,9 @@
   "monthly_fee_default": { "en": "Monthly Fee", "gr": "Μηνιαία Συνδρομή" },
   "total": { "en": "Total", "gr": "Σύνολο" },
   "amount_placeholder": { "en": "0.00", "gr": "0.00" },
-  "new_resident_default": { "en": "New Resident", "gr": "Νέος Ένοικος" }
+  "new_resident_default": { "en": "New Resident", "gr": "Νέος Ένοικος" },
+  "add_amount": { "en": "Add amount", "gr": "Προσθήκη ποσού" },
+  "edit_amount": { "en": "Edit amount", "gr": "Επεξεργασία ποσού" },
+  "unpaid": { "en": "Unpaid", "gr": "Δεν έχει εξοφληθεί" },
+  "paid": { "en": "Paid", "gr": "Έχει εξοφληθεί" }
 }

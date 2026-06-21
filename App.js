@@ -260,7 +260,10 @@ function ModalWrapper({ isOpen, onClose, children }) {
   
   return (
     <div 
-      style={{ ...MB.backdropAnimation(A), ...MB.backdropOverlayStyle }}
+      style={{ 
+        ...MB.backdropAnimation(A), 
+        ...MB.backdropOverlayStyle
+      }}
       className={MB.backdropOverlay}
       onClick={() => onClose()}
     >
@@ -299,84 +302,135 @@ function WalletFlipButton({ onToggle, t }) {
   );
 }
 
-// Modal for adding, editing, or deleting expenses (both resident and building)
-function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, unpaidIconId, unpaidIconColors, t }) {
-  const MDL = window.DESIGN.modal;
-  const MB  = window.DESIGN.modalBase;
-  const IC  = window.DESIGN.iconColors;
+// ─── UNIFIED EXPENSE MODAL ─────────────────────────────────────────────────
+function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, t }) {
+  const D = window.DESIGN;
+  const EM = D.modal.expenseModal;
+  const MB = D.modalBase;
+  const A = D.animation;
+  const configs = D.expenseModalConfigs;
+  
+  const config = modalState.context ? configs[modalState.context] : configs.resident;
+  const { unpaidIconId, unpaidIconColors, deleteModeType } = config;
 
-  const isAddOrEdit = modalState.type === 'add' || modalState.type === 'edit';
-  const isDelete    = modalState.type === 'delete' || modalState.type === 'buildingDelete';
+  const isAdd = modalState.type === 'add';
+  const isEdit = modalState.type === 'edit';
+  const isDelete = modalState.type === 'delete' || modalState.type === 'buildingDelete';
 
-  if (!isAddOrEdit && !isDelete) return null;
+  const titleKey = isAdd ? 'add_amount' : 'edit_amount';
+  const title = t(titleKey);
+
+  if (!isAdd && !isEdit && !isDelete) return null;
+
+  const [isPaid, setIsPaid] = useState(modalState.paid !== undefined ? modalState.paid : false);
+  
+  useEffect(() => {
+    const paidState = modalState.paid !== undefined ? modalState.paid : false;
+    setIsPaid(paidState);
+  }, [modalState.paid]);
+
+  const handleStatusToggle = () => {
+    const newPaidState = !isPaid;
+    setIsPaid(newPaidState);
+    setModalState(m => ({ ...m, paid: newPaidState }));
+  };
+
+  const ringClass = isPaid ? EM.statusPillRingPaid : EM.statusPillRingUnpaid;
 
   return (
     <>
-      {isAddOrEdit && (
-        <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(window.DESIGN.animation) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
-
-          <div className={MDL.headerRow}>
-            <SpriteIcon id="icon-edit" className={MDL.headerIcon} />
-            <span className={MDL.headerTitle}>
-              {modalState.type === 'add' ? t('add_expense_modal') : t('edit_expense_modal')}
-            </span>
+      {isAdd || isEdit ? (
+        <div 
+          style={{ 
+            ...MB.boxContainerStyle, 
+            ...MB.contentAnimation(A),
+            padding: EM.containerPadding,
+            maxWidth: EM.containerMaxWidth
+          }} 
+          className={MB.boxContainer} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={EM.headerRow}>
+            <SpriteIcon id="icon-edit" className={EM.headerIcon} />
+            <span className={EM.headerTitle}>{title}</span>
           </div>
 
-          <div className={MDL.actionsFlexRow} style={{ marginBottom: MDL.amountToDescriptionGap }}>
-            <div style={MDL.amountInputBoxStyle} className={MDL.amountInputBox}>
-              <input
-                type="number"
-                placeholder={t('amount_placeholder')}
-                value={modalState.amount}
-                onChange={(e) => setModalState(m => ({ ...m, amount: e.target.value }))}
-                onKeyDown={(e) => { if (e.key === 'Enter') onConfirm(); }}
-                className={MDL.amountInputField}
-                autoFocus
-                style={MDL.amountPlaceholderStyle}
-              />
-            </div>
-            <button onClick={() => setModalState(m => ({ ...m, paid: !m.paid }))} className={MDL.paidStateToggleBtn}>
-              {modalState.paid ? (
-                <SpriteIcon id="icon-button-paid" className={MDL.paidToggleIcon} style={IC.buttonPaid} />
-              ) : (
-                <SpriteIcon id={unpaidIconId} className={MDL.paidToggleIcon} style={unpaidIconColors} />
-              )}
-            </button>
-          </div>
-
-          <div style={{ ...MDL.descriptionInputBoxStyle, marginBottom: MDL.descriptionToActionsGap }} className={MDL.descriptionInputBox}>
+          <div className={EM.amountWrapper}>
             <input
-              type="text"
-              placeholder={t('expense_placeholder')}
-              value={modalState.description}
-              onChange={(e) => setModalState(m => ({ ...m, description: e.target.value }))}
+              type="number"
+              placeholder={t('amount_placeholder')}
+              value={modalState.amount || ''}
+              onChange={(e) => setModalState(m => ({ ...m, amount: e.target.value }))}
               onKeyDown={(e) => { if (e.key === 'Enter') onConfirm(); }}
-              className={MDL.descriptionInputField}
-              style={MDL.descriptionPlaceholderStyle}
+              className={EM.amountInput}
+              autoFocus
+              style={{ fontSize: '38px' }}
             />
           </div>
 
-          <div className={MDL.actionsFlexRow}>
-            <button onClick={onConfirm} className={MDL.confirmBtn}>{t('ok')}</button>
-            <button onClick={onClose} className={MDL.cancelBtn}>{t('cancel')}</button>
-            {modalState.type === 'edit' && (
+          <div style={{ height: D.modal.amountToDescriptionGap }} />
+
+          <div className={EM.descriptionWrapper}>
+            <input
+              type="text"
+              placeholder={t('expense_placeholder')}
+              value={modalState.description || ''}
+              onChange={(e) => setModalState(m => ({ ...m, description: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === 'Enter') onConfirm(); }}
+              className={EM.descriptionInput}
+            />
+          </div>
+
+          <div style={{ height: D.modal.descriptionToActionsGap }} />
+
+          {/* --- SIMPLE TOGGLE BUTTON --- */}
+          <button 
+            onClick={handleStatusToggle}
+            className={`${EM.statusPill} ${ringClass}`}
+          >
+            <span className={EM.statusPillText}>
+              {isPaid ? t('paid') : t('unpaid')}
+            </span>
+          </button>
+
+          <div style={{ height: D.modal.descriptionToActionsGap }} />
+
+          <div className={EM.actionRow}>
+            <button onClick={onConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>
+              {t('ok')}
+            </button>
+            <button onClick={onClose} className={`${EM.actionBtn} ${EM.cancelBtn}`}>
+              {t('cancel')}
+            </button>
+            {isEdit && (
               <button
-                onClick={() => setModalState(m => ({ ...m, type: isDelete ? m.type : (unpaidIconId === 'icon-button-unpaid' ? 'delete' : 'buildingDelete') }))}
-                className={`${MDL.deleteActionBtn} ${MDL.deleteActionBtnRingClass}`}
+                onClick={() => setModalState(m => ({ 
+                  ...m, 
+                  type: deleteModeType 
+                }))}
+                className={EM.deleteBtn}
               >
-                <SpriteIcon id="icon-trash" className={MDL.deleteActionIcon} />
+                <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
               </button>
             )}
           </div>
         </div>
-      )}
+      ) : null}
 
       {isDelete && (
-        <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(window.DESIGN.animation) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
-          <h4 className={MDL.deletePromptTitle}>{t('delete_expense_confirm')}</h4>
-          <div className={MDL.actionsFlexRow}>
-            <button onClick={onDelete} style={MDL.deleteYesBtnStyle} className={MDL.deleteYesBtn}>{t('yes')}</button>
-            <button onClick={() => setModalState(m => ({ ...m, type: 'edit' }))} className={MDL.deleteNoBtn}>{t('no')}</button>
+        <div 
+          style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} 
+          className={MB.boxContainer} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h4 className={D.modal.deletePromptTitle}>{t('delete_expense_confirm')}</h4>
+          <div className={D.modal.actionsFlexRow}>
+            <button onClick={onDelete} style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>
+              {t('yes')}
+            </button>
+            <button onClick={() => setModalState(m => ({ ...m, type: 'edit' }))} className={D.modal.deleteNoBtn}>
+              {t('no')}
+            </button>
           </div>
         </div>
       )}
@@ -633,17 +687,20 @@ window.App = function App() {
 
   const cardRefs = useRef({});
 
-  const [modal, setModal] = useState({
-    type: null, residentId: null, expenseId: null, amount: '', description: '', paid: false
+  // UNIFIED MODAL STATE - Handles both resident and building expenses
+  const [expenseModal, setExpenseModal] = useState({
+    type: null,           // 'add', 'edit', 'delete', 'buildingDelete', or null
+    context: null,        // 'resident' or 'building'
+    residentId: null,     // Only for resident expenses
+    expenseId: null,
+    amount: '',
+    description: '',
+    paid: false
   });
 
   const [cardModalState, setCardModalState] = useState({
     type: null,
     residentId: null,
-  });
-
-  const [buildingModal, setBuildingModal] = useState({
-    type: null, expenseId: null, amount: '', description: '', paid: false
   });
 
   const handlePrevMonth = () => {
@@ -765,16 +822,41 @@ window.App = function App() {
     }
   };
 
-  const openModal = (type, residentId, expenseId = null, amount = '', description = '', paid = false) => {
+    // ─── UNIFIED MODAL HANDLERS ──────────────────────────────────────────────
+  
+  // Opens expense modal for residents
+  const openResidentModal = (type, residentId, expenseId = null, amount = '', description = '', paid = false) => {
     if (type === 'calendar') {
       setCalendarTargetField('appCurrent');
       setTempYear(currentYear);
       setTempMonthIdx(currentMonthIdx);
     }
-    setModal({ type, residentId, expenseId, amount, description, paid });
+    setExpenseModal({ 
+      type, 
+      context: 'resident',
+      residentId, 
+      expenseId, 
+      amount, 
+      description, 
+      paid 
+    });
   };
 
-  const closeModal = () => setModal(m => ({ ...m, type: null }));
+  // Opens expense modal for building expenses
+  const openBuildingModal = (type, expenseId = null, amount = '', description = '', paid = false) => {
+    setExpenseModal({ 
+      type, 
+      context: 'building',
+      residentId: null,
+      expenseId, 
+      amount, 
+      description, 
+      paid 
+    });
+  };
+
+  // Closes any expense modal
+  const closeExpenseModal = () => setExpenseModal(m => ({ ...m, type: null }));
 
   const closePastDrawerIfEmpty = (updatedResidents, residentId) => {
     const resident = updatedResidents.find(r => r.id === residentId);
@@ -785,74 +867,85 @@ window.App = function App() {
     }
   };
 
-  const handleConfirmModal = () => {
-    if (!modal.residentId) return;
-    const parsedAmount = parseFloat(modal.amount) || 0;
-    const desc = modal.description.trim() || t('monthly_fee_default');
+  // Handles confirm for resident expenses
+  const handleConfirmResidentExpense = () => {
+    if (!expenseModal.residentId || expenseModal.context !== 'resident') return;
+    const parsedAmount = parseFloat(expenseModal.amount) || 0;
+    const desc = expenseModal.description.trim() || t('monthly_fee_default');
 
     setResidents(prev => {
       const updated = prev.map(res => {
-        if (res.id !== modal.residentId) return res;
+        if (res.id !== expenseModal.residentId) return res;
         let expenses = [...res.expenses];
-        if (modal.type === 'add') {
-          expenses.push({ id: 'exp-' + Date.now(), description: desc, amount: parsedAmount, paid: modal.paid, month: currentMonthString, monthKey: currentMonthKey });
-        } else if (modal.type === 'edit' && modal.expenseId) {
-          expenses = expenses.map(exp => exp.id === modal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid: modal.paid } : exp);
+        if (expenseModal.type === 'add') {
+          expenses.push({ 
+            id: 'exp-' + Date.now(), 
+            description: desc, 
+            amount: parsedAmount, 
+            paid: expenseModal.paid, 
+            month: currentMonthString, 
+            monthKey: currentMonthKey 
+          });
+        } else if (expenseModal.type === 'edit' && expenseModal.expenseId) {
+          expenses = expenses.map(exp => 
+            exp.id === expenseModal.expenseId 
+              ? { ...exp, description: desc, amount: parsedAmount, paid: expenseModal.paid } 
+              : exp
+          );
         }
         return { ...res, expenses };
       });
-      closePastDrawerIfEmpty(updated, modal.residentId);
+      closePastDrawerIfEmpty(updated, expenseModal.residentId);
       return updated;
     });
-    closeModal();
+    closeExpenseModal();
   };
 
-  const handleDeleteExpense = () => {
-    if (!modal.residentId || !modal.expenseId) return;
+  // Handles delete for resident expenses
+  const handleDeleteResidentExpense = () => {
+    if (!expenseModal.residentId || !expenseModal.expenseId || expenseModal.context !== 'resident') return;
     setResidents(prev => {
       const updated = prev.map(res =>
-        res.id === modal.residentId
-          ? { ...res, expenses: res.expenses.filter(exp => exp.id !== modal.expenseId) }
+        res.id === expenseModal.residentId
+          ? { ...res, expenses: res.expenses.filter(exp => exp.id !== expenseModal.expenseId) }
           : res
       );
-      closePastDrawerIfEmpty(updated, modal.residentId);
+      closePastDrawerIfEmpty(updated, expenseModal.residentId);
       return updated;
     });
-    closeModal();
+    closeExpenseModal();
   };
 
-  const openBuildingModal = (type, expenseId = null, amount = '', description = '', paid = false) => {
-    setBuildingModal({ type, expenseId, amount, description, paid });
-  };
-
-  const closeBuildingModal = () => setBuildingModal(m => ({ ...m, type: null }));
-
-  const handleConfirmBuildingModal = () => {
-    const parsedAmount = parseFloat(buildingModal.amount) || 0;
-    const desc = buildingModal.description.trim() || t('building_expense_default');
-    if (buildingModal.type === 'add') {
+  // Handles confirm for building expenses
+  const handleConfirmBuildingExpense = () => {
+    if (expenseModal.context !== 'building') return;
+    const parsedAmount = parseFloat(expenseModal.amount) || 0;
+    const desc = expenseModal.description.trim() || t('building_expense_default');
+    
+    if (expenseModal.type === 'add') {
       setBuildingExpenses(prev => [...prev, {
         id: 'bexp-' + Date.now(),
         description: desc,
         amount: parsedAmount,
-        paid: buildingModal.paid,
+        paid: expenseModal.paid,
         month: currentMonthString,
         monthKey: currentMonthKey,
       }]);
-    } else if (buildingModal.type === 'edit' && buildingModal.expenseId) {
+    } else if (expenseModal.type === 'edit' && expenseModal.expenseId) {
       setBuildingExpenses(prev => prev.map(exp =>
-        exp.id === buildingModal.expenseId
-          ? { ...exp, description: desc, amount: parsedAmount, paid: buildingModal.paid }
+        exp.id === expenseModal.expenseId
+          ? { ...exp, description: desc, amount: parsedAmount, paid: expenseModal.paid }
           : exp
       ));
     }
-    closeBuildingModal();
+    closeExpenseModal();
   };
 
+  // Handles delete for building expenses
   const handleDeleteBuildingExpense = () => {
-    if (!buildingModal.expenseId) return;
-    setBuildingExpenses(prev => prev.filter(exp => exp.id !== buildingModal.expenseId));
-    closeBuildingModal();
+    if (!expenseModal.expenseId || expenseModal.context !== 'building') return;
+    setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseModal.expenseId));
+    closeExpenseModal();
   };
 
   const handleConfirmCalendar = () => {
@@ -865,14 +958,22 @@ window.App = function App() {
     } else if (calendarTargetField === 'rangeTo') {
       setToMonth(formattedString);
     }
-    closeModal();
+    closeExpenseModal();
   };
 
   const handleOpenRangePicker = (target) => {
     setCalendarTargetField(target);
     setTempYear(systemDate.getFullYear());
     setTempMonthIdx(systemDate.getMonth());
-    setModal({ type: 'calendar', residentId: null, expenseId: null, amount: '', description: '', paid: false });
+    setExpenseModal({ 
+      type: 'calendar', 
+      context: null,
+      residentId: null, 
+      expenseId: null, 
+      amount: '', 
+      description: '', 
+      paid: false 
+    });
   };
 
   const currentTimelineIndex = useMemo(() => {
@@ -1037,10 +1138,23 @@ window.App = function App() {
           </div>
 
           <div className={HDR.bottomRow}>
-            <button
+          <button
               className={HDR.monthTextBtn}
               style={{ color: isFilteredAwayFromToday ? HDR.monthTextBtnOtherColor : HDR.monthTextBtnCurrentColor }}
-              onClick={() => openModal('calendar', null)}
+              onClick={() => {
+                setCalendarTargetField('appCurrent');
+                setTempYear(currentYear);
+                setTempMonthIdx(currentMonthIdx);
+                setExpenseModal({ 
+                  type: 'calendar', 
+                  context: null,
+                  residentId: null,
+                  expenseId: null,
+                  amount: '', 
+                  description: '', 
+                  paid: false 
+                });
+              }}
             >
               {currentMonthString}
             </button>
@@ -1105,35 +1219,38 @@ window.App = function App() {
                   >
                     <div className={CARD.cardBody}>
                       <div className={CARD.cardInnerPadding}>
-                        <div className={CARD.cardHeaderContainer}>
-                          <button className={CARD.avatarBtn} onClick={(e) => handleOpenEditCard(resident.id, e)}>
-                            {totalResidentDebt > 0 ? (
-                              <SpriteIcon id="icon-avatar-debt" className={CARD.avatarIcon} style={IC.avatarDebt} />
-                            ) : (
-                              <SpriteIcon id="icon-avatar-nodebt" className={CARD.avatarIconNoDebt} style={IC.avatarNoDebt} />
-                            )}
-                          </button>
+                      <div className={CARD.cardHeaderContainer}>
+  <button className={CARD.avatarBtn} onClick={(e) => handleOpenEditCard(resident.id, e)}>
+    {totalResidentDebt > 0 ? (
+      <SpriteIcon id="icon-avatar-debt" className={CARD.avatarIcon} style={IC.avatarDebt} />
+    ) : (
+      <SpriteIcon id="icon-avatar-nodebt" className={CARD.avatarIconNoDebt} style={IC.avatarNoDebt} />
+    )}
+  </button>
 
-                          <div className={CARD.cardHeaderRightArea} onClick={() => handleResidentHeaderClick(resident.id)}>
-                            <div className={CARD.textMetaArea}>
-                              <h2 className={CARD.residentName}>{resident.name}</h2>
-                              <p className={CARD.apartmentNumber}>{resident.apartment}</p>
-                            </div>
-                            <div className={CARD.balanceArea}>
-                              {totalResidentDebt > 0 ? (
-                                <span className={CARD.totalDebtText}>
-                                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />{formatAmount(totalResidentDebt)}
-                                </span>
-                              ) : (
-                                <span className={CARD.noDebtText}>{t('no_debt')}</span>
-                              )}
-                              <span style={CARD.caretRotationStyle(isExpanded, A)}>
-                                <SpriteIcon id="icon-caret" className={ICN.caretIconSize} />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+  <div className={CARD.cardHeaderContent}>
+    <div className={CARD.cardTopRow} onClick={() => handleResidentHeaderClick(resident.id)}>
+      <div className={CARD.textMetaArea}>
+        <h2 className={CARD.residentName}>{resident.name}</h2>
+        <p className={CARD.apartmentNumber}>{resident.apartment}</p>
+      </div>
+      <span style={CARD.caretRotationStyle(isExpanded, A)}>
+        <SpriteIcon id="icon-caret" className={ICN.caretIconSize} />
+      </span>
+    </div>
+
+    <div className={CARD.cardBottomRow} onClick={() => handleResidentHeaderClick(resident.id)}>
+      {totalResidentDebt > 0 ? (
+        <span className={CARD.totalDebtText}>
+          <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.totalDebtCurrencyMod} />
+          {formatAmount(totalResidentDebt)}
+        </span>
+      ) : (
+        <span className={CARD.noDebtText}>{t('no_debt')}</span>
+      )}
+    </div>
+  </div>
+</div>
 
                       <Drawer isOpen={isExpanded}>
                         <div>
@@ -1141,12 +1258,12 @@ window.App = function App() {
                             <span className={CARD.monthActionLabel}>
                               {t('debts_for_month', { month: currentMonthString })}
                             </span>
-                            <button onClick={() => openModal('add', resident.id)} className={CARD.addExpenseBtn}>
+                            <button onClick={() => openResidentModal('add', resident.id)} className={CARD.addExpenseBtn}>
                               {t('add_expense')}
                             </button>
                           </div>
 
-                          <div className={CARD.itemContainer}>
+                          <div className="flex flex-col gap-1">
                             {combinedCurrentExpenses.length === 0 ? (
                               <p className={CARD.noExpensesFallback}>{t('no_expenses_this_month')}</p>
                             ) : (
@@ -1155,7 +1272,7 @@ window.App = function App() {
                                   <div
                                     key={expense.id}
                                     className={`${idx === 0 ? '' : CARD.itemRowDividerStyle} ${CARD.itemRowWrapper}`}
-                                    onClick={() => openModal('edit', resident.id, expense.id, expense.amount.toString(), expense.description, expense.paid)}
+                                    onClick={() => openResidentModal('edit', resident.id, expense.id, expense.amount.toString(), expense.description, expense.paid)}
                                   >
                                     <div className={CARD.interactiveIconArea}>
                                       <div className={CARD.iconStateBtn}>
@@ -1167,15 +1284,16 @@ window.App = function App() {
                                     </div>
                                     <span className={CARD.expenseValueAmount(expense.paid)}>
                                       <CurrencySymbol activeSymbol={activeCurrencySymbol} className={CARD.expenseValueCurrencyMod} />{formatAmount(expense.amount)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Drawer>
-                    </div>
+                                      </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      </Drawer>
+  </div>
+</div>
 
                     {hasPastUnpaidItems && (
                       <div>
@@ -1185,7 +1303,7 @@ window.App = function App() {
                               <div
                                 key={pastExpense.id}
                                 className={`${idx === 0 ? DRW.rowItemFirst : DRW.rowItemDividerStyle} ${DRW.rowItemWrapper}`}
-                                onClick={() => openModal('edit', resident.id, pastExpense.id, pastExpense.amount.toString(), pastExpense.description, pastExpense.paid)}
+                                onClick={() => openResidentModal('edit', resident.id, pastExpense.id, pastExpense.amount.toString(), pastExpense.description, pastExpense.paid)}
                               >
                                 <div className={CARD.interactiveIconArea}>
                                   <div className={CARD.iconStateBtn}>
@@ -1238,17 +1356,17 @@ window.App = function App() {
           );
 
           if (isTransitioning) {
-            return (
-              <div style={VT.outerStyle}>
-                <div style={exitStyle}>
-                  {isBuildingView ? cardsView : buildingView}
-                </div>
-                <div style={enterStyle}>
-                  {isBuildingView ? buildingView : cardsView}
-                </div>
-              </div>
-            );
-          }
+  return (
+    <div style={VT.outerStyle}>
+      <div style={exitStyle}>
+        {isBuildingView ? cardsView : buildingView}
+      </div>
+      <div style={enterStyle}>
+        {isBuildingView ? buildingView : cardsView}
+      </div>
+    </div>
+  );
+}
 
           return isBuildingView ? buildingView : cardsView;
         })()}
@@ -1336,75 +1454,87 @@ window.App = function App() {
           </div>
         )}
 
-        {/* MODAL WRAPPER FOR EXPENSE AND CALENDAR MODALS */}
-        <ModalWrapper isOpen={modal.type !== null} onClose={closeModal}>
-          {modal.type === 'calendar' && (
-            <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
-              <div className={CAL.yearPill}>
-                <div className={CAL.yearIconArea}>
-                  <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
-                </div>
-                <div className={CAL.yearRollWrapper}>
-                  <div
-                    className={CAL.yearRollContainer}
-                    style={{
-                      transform: `translateY(-${currentTimelineIndex * 28}px)`,
-                      height: `${TIMELINE_YEARS.length * 28}px`,
-                      transition: A.rollerTransition,
-                      top: '0px'
-                    }}
-                  >
-                    {TIMELINE_YEARS.map(year => (
-                      <div key={year} className={CAL.yearText}>{year}</div>
-                    ))}
-                  </div>
-                </div>
-                <div className={CAL.yearIconArea}>
-                  <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
-                </div>
-                <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
-                <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
-              </div>
-
-              <div className={CAL.gridContainer}>
-                {monthNames.map((monthName, idx) => {
-                  const isSelected = tempMonthIdx === idx;
-                  let shortMonth;
-                  try {
-                    shortMonth = translations['months_short'][currentLanguage][idx];
-                  } catch (e) {
-                    shortMonth = monthName.substring(0, 3).toUpperCase();
-                  }
-                  return (
-                    <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
-                      {shortMonth}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className={CAL.footerRow}>
-                <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>{t('ok')}</button>
-                <button className={CAL.actionBtn} onClick={closeModal}>{t('cancel')}</button>
-              </div>
-            </div>
-          )}
-
-          {(modal.type === 'add' || modal.type === 'edit' || modal.type === 'delete') && (
-            <ExpenseModal
-              modalState={modal}
-              setModalState={setModal}
-              onConfirm={handleConfirmModal}
-              onClose={closeModal}
-              onDelete={handleDeleteExpense}
-              unpaidIconId="icon-button-unpaid"
-              unpaidIconColors={IC.buttonUnpaid}
-              t={t}
-            />
-          )}
+                {/* ─── UNIFIED EXPENSE MODAL WRAPPER ────────────────────────────── */}
+        {/* Handles both resident and building expenses in one modal */}
+        <ModalWrapper 
+          isOpen={expenseModal.type !== null && expenseModal.type !== 'calendar'} 
+          onClose={closeExpenseModal}
+        >
+          <ExpenseModal
+            modalState={expenseModal}
+            setModalState={setExpenseModal}
+            onConfirm={
+              expenseModal.context === 'resident' 
+                ? handleConfirmResidentExpense 
+                : handleConfirmBuildingExpense
+            }
+            onClose={closeExpenseModal}
+            onDelete={
+              expenseModal.context === 'resident' 
+                ? handleDeleteResidentExpense 
+                : handleDeleteBuildingExpense
+            }
+            t={t}
+          />
         </ModalWrapper>
 
-        {/* MODAL WRAPPER FOR CARD MODALS */}
+        {/* ─── CALENDAR MODAL ────────────────────────────────────────────── */}
+        <ModalWrapper 
+          isOpen={expenseModal.type === 'calendar'} 
+          onClose={closeExpenseModal}
+        >
+          <div style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }} className={MB.boxContainer} onClick={(e) => e.stopPropagation()}>
+            <div className={CAL.yearPill}>
+              <div className={CAL.yearIconArea}>
+                <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
+              </div>
+              <div className={CAL.yearRollWrapper}>
+                <div
+                  className={CAL.yearRollContainer}
+                  style={{
+                    transform: `translateY(-${currentTimelineIndex * 28}px)`,
+                    height: `${TIMELINE_YEARS.length * 28}px`,
+                    transition: A.rollerTransition,
+                    top: '0px'
+                  }}
+                >
+                  {TIMELINE_YEARS.map(year => (
+                    <div key={year} className={CAL.yearText}>{year}</div>
+                  ))}
+                </div>
+              </div>
+              <div className={CAL.yearIconArea}>
+                <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
+              </div>
+              <div className={CAL.leftTapZone} onClick={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))} />
+              <div className={CAL.rightTapZone} onClick={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))} />
+            </div>
+
+            <div className={CAL.gridContainer}>
+              {monthNames.map((monthName, idx) => {
+                const isSelected = tempMonthIdx === idx;
+                let shortMonth;
+                try {
+                  shortMonth = translations['months_short'][currentLanguage][idx];
+                } catch (e) {
+                  shortMonth = monthName.substring(0, 3).toUpperCase();
+                }
+                return (
+                  <button key={monthName} onClick={() => setTempMonthIdx(idx)} className={`${CAL.monthCircle} ${isSelected ? CAL.monthActiveRing : ''}`}>
+                    {shortMonth}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className={CAL.footerRow}>
+              <button className={CAL.actionBtn} onClick={handleConfirmCalendar}>{t('ok')}</button>
+              <button className={CAL.actionBtn} onClick={closeExpenseModal}>{t('cancel')}</button>
+            </div>
+          </div>
+        </ModalWrapper>
+
+        {/* ─── CARD MODAL WRAPPER ────────────────────────────────────────── */}
         <ModalWrapper isOpen={!!cardModalState.type} onClose={closeCardModal}>
           <div className={CM.wrapper} onClick={(e) => e.stopPropagation()}>
             {cardModalState.type === 'addCard' && (
@@ -1439,20 +1569,6 @@ window.App = function App() {
               />
             )}
           </div>
-        </ModalWrapper>
-
-        {/* MODAL WRAPPER FOR BUILDING EXPENSE MODALS */}
-        <ModalWrapper isOpen={(buildingModal.type === 'add' || buildingModal.type === 'edit' || buildingModal.type === 'buildingDelete')} onClose={closeBuildingModal}>
-          <ExpenseModal
-            modalState={buildingModal}
-            setModalState={setBuildingModal}
-            onConfirm={handleConfirmBuildingModal}
-            onClose={closeBuildingModal}
-            onDelete={handleDeleteBuildingExpense}
-            unpaidIconId="icon-building-expenseunpaid"
-            unpaidIconColors={IC.buildingExpenseUnpaid}
-            t={t}
-          />
         </ModalWrapper>
 
       </div>

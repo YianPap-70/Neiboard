@@ -71,7 +71,7 @@ const icons = {
   statusIconSize: "w-5 h-5",
   rollerArrowSize: "w-[18px] h-[18px]",
   caretIconSize: `w-4 h-4 text-[${COLORS['main-color-1']}]`,
-  actionIconSize: `w-8 h-8 text-[${COLORS['main-color-1']}]`,
+  actionIconSize: `w-9 h-9 text-[${COLORS['main-color-1']}]`,
   syncIconSize: "w-8 h-8",
 };
 
@@ -191,13 +191,22 @@ const residentCard = {
   cardWrapper: "flex flex-col overflow-hidden",
   cardBody: `bg-[${COLORS['main-color-5']}]`,
   cardInnerPadding: "p-4",
-  cardHeaderContainer: "flex items-center justify-between gap-3",
-  cardHeaderRightArea: "flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none gap-3",
-  avatarBtn: "shrink-0 h-[40px] w-[40px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
-  avatarIcon: "w-[40px] h-[40px] pointer-events-none",
-  avatarIconNoDebt: `w-[40px] h-[40px] pointer-events-none text-[${COLORS['main-color-1']}]`,
-  textMetaArea: "min-w-0 cursor-pointer select-none flex-1",
-  residentName: `font-medium tracking-wide truncate text-base text-[${COLORS['main-color-1']}]`,
+  cardHeaderContainer: "flex items-start gap-3",
+  
+  // NEW: Container for the two-row layout
+  cardHeaderContent: "flex-1 min-w-0 flex flex-col gap-[2px]",
+  
+  // NEW: Top row with name and caret
+  cardTopRow: "flex items-start justify-between gap-3 cursor-pointer select-none flex-1 min-w-0",
+  
+  // NEW: Bottom row for debt amount (right-aligned)
+  cardBottomRow: "flex justify-end cursor-pointer select-none",
+  
+  avatarBtn: "shrink-0 h-[48px] w-[48px] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity active:scale-95",
+  avatarIcon: "w-[48px] h-[48px] pointer-events-none",
+  avatarIconNoDebt: `w-[48px] h-[48px] pointer-events-none text-[${COLORS['main-color-1']}]`,
+  textMetaArea: "min-w-0 flex-1",
+  residentName: `font-medium tracking-wide truncate text-lg text-[${COLORS['main-color-1']}]`,
   apartmentNumber: `font-medium truncate text-sm text-[${COLORS['main-color-2']}]`,
   balanceArea: "flex items-center shrink-0 gap-3",
   totalDebtText: `font-bold text-[22px] text-[${COLORS['accent-color-2']}]`,
@@ -208,16 +217,16 @@ const residentCard = {
     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
     transition: `transform ${A.caretDuration} ${A.drawerCurve}`
   }),
-  monthActionRow: "flex items-center justify-between px-4 py-2.5",
+  monthActionRow: "flex items-center justify-between py-2.5",
   monthActionLabel: `font-medium truncate pr-2 text-xs text-[${COLORS['main-color-2']}]`,
-  addExpenseBtn: `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-1']}] font-bold text-sm text-[${COLORS['main-color-1']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
-  itemContainer: "px-4 pb-4",
+  addExpenseBtn: `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['main-color-3']}] font-bold text-sm text-[${COLORS['main-color-1']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
+  itemContainer: "flex flex-col gap-1",
   noExpensesFallback: `text-center py-4 text-xs text-[${COLORS['main-color-2']}]`,
   itemRowWrapper: "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-white/5",
   itemRowDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]/50`,
   interactiveIconArea: "flex items-center min-w-0 gap-3 pointer-events-none",
   iconStateBtn: "shrink-0 h-5 flex items-center pointer-events-none",
-  expenseDescription: `font-medium truncate pr-2 text-base text-[${COLORS['main-color-1']}]`,
+  expenseDescription: `font-normal truncate pr-2 text-base text-[${COLORS['main-color-1']}]`,
   expenseValueAmount: (isPaid) => `font-medium shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['accent-color-1']}]` : `text-[${COLORS['main-color-1']}]`}`,
   expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-medium"
 };
@@ -235,7 +244,7 @@ const autoTextarea = {
 
 // ─── HISTORICAL DRAWER (PAST UNPAID EXPENSES) ────────────────────────────
 const historyDrawer = {
-  drawerWrapper: `bg-[${COLORS['main-color-3']}] px-4`,
+  drawerWrapper: `bg-[${COLORS['main-color-4']}] px-4`,
   rowItemWrapper: "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
   rowItemFirst: "pt-3 pb-3",
   rowItemDividerStyle: `border-t border-solid border-[${COLORS['main-color-2']}]`,
@@ -275,20 +284,47 @@ const modalBase = {
 
 // ─── EXPENSE MODAL ───────────────────────────────────────────────────────
 const modal = {
-  headerRow: "flex items-center gap-2 mb-4",
+  // ─── UNIFIED EXPENSE MODAL (Resident & Building) ──────────────────
+  expenseModal: {
+    containerPadding: '16px',
+    containerMaxWidth: '376px',
+    headerRow: `flex items-center gap-3 mb-3`,
+    headerIcon: `w-6 h-6 shrink-0 text-[${COLORS['main-color-2']}]`,
+    headerTitle: `font-medium text-[14px] text-[${COLORS['main-color-2']}] tracking-wide`,
+    amountWrapper: `h-[52px] px-4 rounded-[6px] bg-[${COLORS['main-color-3']}] w-full flex items-center`,
+    amountInput: `bg-transparent w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[38px] font-normal text-[${COLORS['main-color-1']}]`,
+    amountPlaceholder: `text-[16px] font-normal text-[${COLORS['main-color-2']}]`,
+    descriptionWrapper: `h-[52px] px-4 rounded-[6px] bg-[${COLORS['main-color-3']}] w-full flex items-center`,
+    descriptionInput: `bg-transparent w-full focus:outline-none text-[16px] font-normal text-[${COLORS['main-color-1']}]`,
+    descriptionPlaceholder: `text-[16px] font-normal text-[${COLORS['main-color-2']}]`,
+    statusPill: `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
+    statusPillRingUnpaid: `ring-2 ring-[${COLORS['accent-color-3']}]`,
+    statusPillRingPaid: `ring-2 ring-[${COLORS['accent-color-1']}]`,
+    statusPillIcon: `w-6 h-6 flex-shrink-0`,
+    statusPillText: `text-[16px] font-medium text-[${COLORS['main-color-1']}]`,
+    actionRow: `flex items-center gap-3 w-full`,
+    actionBtn: `h-[52px] rounded-[9999px] font-bold text-[${COLORS['main-color-1']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
+    okBtn: `flex-1 bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-1']}]`,
+    cancelBtn: `flex-1 bg-[${COLORS['main-color-3']}]`,
+    deleteBtn: `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['main-color-3']}] ring-2 ring-[${COLORS['accent-color-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
+    deleteIcon: `w-6 h-6 text-[${COLORS['main-color-1']}]`,
+  },
+  
+  // ─── LEGACY MODAL STYLES (Keep for calendar and other modals) ─────
+  headerRow: `flex items-center gap-2 mb-4`,
   headerIcon: `w-4 h-4 shrink-0 text-[${COLORS['main-color-2']}]`,
   headerTitle: `text-[14px] text-[${COLORS['main-color-2']}] tracking-wide`,
   amountInputBox: `px-3 flex items-center bg-[${COLORS['main-color-3']}] rounded-[12px] w-full`,
   amountInputBoxStyle: { height: '52px' },
   amountInputField: `bg-transparent font-bold w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[26px] text-[${COLORS['main-color-1']}]`,
   amountPlaceholderStyle: { fontSize: '14px', color: COLORS['main-color-2'], fontWeight: 'normal' },
-  paidStateToggleBtn: "shrink-0 w-[52px] h-[52px] flex items-center justify-center transition-transform active:scale-95",
-  paidToggleIcon: "w-9 h-9",
+  paidStateToggleBtn: `shrink-0 w-[52px] h-[52px] flex items-center justify-center transition-transform active:scale-95`,
+  paidToggleIcon: `w-9 h-9`,
   descriptionInputBox: `px-3 flex items-center bg-[${COLORS['main-color-3']}] rounded-[12px] w-full`,
   descriptionInputBoxStyle: { height: '44px' },
   descriptionInputField: `bg-transparent w-full focus:outline-none text-[16px] text-[${COLORS['main-color-1']}]`,
   descriptionPlaceholderStyle: { fontSize: '14px', color: COLORS['main-color-2'] },
-  actionsFlexRow: "flex items-center gap-3 w-full",
+  actionsFlexRow: `flex items-center gap-3 w-full`,
   amountToDescriptionGap: '12px',
   descriptionToActionsGap: '16px',
   confirmBtn: `flex-1 font-bold transition-transform active:scale-95 text-center bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] h-[52px] rounded-[9999px]`,
@@ -301,18 +337,19 @@ const modal = {
   deleteYesBtnStyle: { backgroundColor: COLORS['accent-color-3'] },
   deleteNoBtn: `flex-1 font-bold transition-transform active:scale-95 h-12 rounded-[9999px] bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}]`,
   
+  // ─── CALENDAR MODAL ──────────────────────────────────────────────────────
   calendar: {
     yearPill: `w-full h-11 bg-[${COLORS['main-color-3']}] rounded-[22px] flex items-center justify-between px-4 mb-4 select-none relative overflow-hidden`,
     yearIconArea: `w-6 h-11 flex items-center justify-center pointer-events-none text-[${COLORS['main-color-1']}]`,
-    yearRollWrapper: "h-7 overflow-hidden relative pointer-events-none flex items-center justify-center w-28",
-    yearRollContainer: "absolute flex flex-col items-center",
+    yearRollWrapper: `h-7 overflow-hidden relative pointer-events-none flex items-center justify-center w-28`,
+    yearRollContainer: `absolute flex flex-col items-center`,
     yearText: `text-xl font-bold text-[${COLORS['main-color-1']}] tracking-wider h-7 leading-7 flex items-center justify-center`,
-    leftTapZone: "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
-    rightTapZone: "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
-    gridContainer: "grid grid-cols-4 gap-x-2 gap-y-2 mb-4 justify-items-center justify-center mx-auto",
+    leftTapZone: `absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors`,
+    rightTapZone: `absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors`,
+    gridContainer: `grid grid-cols-4 gap-x-2 gap-y-2 mb-4 justify-items-center justify-center mx-auto`,
     monthCircle: `w-[52px] h-[52px] rounded-full bg-[${COLORS['main-color-3']}] text-[13px] font-bold text-[${COLORS['main-color-1']}] tracking-wide flex items-center justify-center transition-all duration-300 outline-none select-none`,
     monthActiveRing: `ring-2 ring-[${COLORS['accent-color-1']}]`,
-    footerRow: "flex items-center gap-3 mt-4",
+    footerRow: `flex items-center gap-3 mt-4`,
     actionBtn: `flex-1 h-11 rounded-[22px] bg-[${COLORS['main-color-3']}] text-[${COLORS['main-color-1']}] text-sm font-medium tracking-wide text-center transition-transform active:scale-95 outline-none`
   }
 };
@@ -364,14 +401,14 @@ const cardModal = {
 
 // ─── WALLET FLIP BUTTON (3D TOGGLE) ──────────────────────────────────────
 const walletFlipBtn = {
-  container: "w-[44px] h-[44px] flex items-center justify-center shrink-0",
+  container: "w-[52px] h-[52px] flex items-center justify-center shrink-0",
   containerStyle: { perspective: '200px' },
   flipperStyle: (isBuilding, duration) => ({
     transition: `transform ${duration} cubic-bezier(0.25, 1, 0.5, 1)`,
     transform: isBuilding ? 'rotateY(180deg)' : 'rotateY(0deg)',
     transformStyle: 'preserve-3d',
-    width: '44px',
-    height: '44px',
+    width: '52px',
+    height: '52px',
   }),
   faceBase: {
     position: 'absolute',
@@ -390,7 +427,7 @@ const walletFlipBtn = {
     WebkitBackfaceVisibility: 'hidden',
     transform: 'rotateY(180deg)',
   },
-  faceIconSize: `w-8 h-8 text-[${COLORS['main-color-1']}]`,
+  faceIconSize: `w-9 h-9 text-[${COLORS['main-color-1']}]`,
 };
 
 // ─── VIEW TRANSITION (CARDS ↔ BUILDING) ──────────────────────────────────
@@ -444,6 +481,23 @@ const buildingExpenses = {
   sectionPaddingBottom: '16px',
 };
 
+// ─── EXPENSE MODAL CONFIGURATIONS ────────────────────────────────────────
+// Centralized configuration for expense modals (resident and building)
+const expenseModalConfigs = {
+  resident: {
+    unpaidIconId: 'icon-button-unpaid',
+    unpaidIconColors: iconColors.buttonUnpaid,
+    deleteModeType: 'delete',
+    context: 'resident',
+  },
+  building: {
+    unpaidIconId: 'icon-building-expenseunpaid',
+    unpaidIconColors: iconColors.buildingExpenseUnpaid,
+    deleteModeType: 'buildingDelete',
+    context: 'building',
+  },
+};
+
 // ─── EXPORT ALL DESIGN TOKENS ────────────────────────────────────────────
 window.DESIGN = {
   colors: COLORS,
@@ -466,4 +520,5 @@ window.DESIGN = {
   walletFlipBtn,
   viewTransition,
   buildingExpenses,
+  expenseModalConfigs,
 };
