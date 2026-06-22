@@ -292,10 +292,10 @@ function WalletFlipButton({ onToggle, t }) {
     >
       <div style={WFB.flipperStyle(isFlipped, A.coinFlipDuration)}>
         <div style={WFB.faceBase}>
-          <SpriteIcon id="icon-wallet" className={WFB.faceIconSize} />
+          <SpriteIcon id="expenses-icn" className={WFB.faceIconSize} />
         </div>
         <div style={WFB.backFaceStyle}>
-          <SpriteIcon id="icon-residentcard" className={WFB.faceIconSize} />
+          <SpriteIcon id="resident-card-icn" className={WFB.faceIconSize} />
         </div>
       </div>
     </button>
@@ -305,6 +305,7 @@ function WalletFlipButton({ onToggle, t }) {
 // ─── UNIFIED EXPENSE MODAL ─────────────────────────────────────────────────
 function ExpenseModal({ modalState, setModalState, onConfirm, onClose, onDelete, t }) {
   const D = window.DESIGN;
+const COLORS = D.colors;
   const EM = D.modal.expenseModal;
   const MB = D.modalBase;
   const A = D.animation;
@@ -1113,15 +1114,22 @@ window.App = function App() {
 
         <header ref={headerRef} style={HDR.stickyContainerStyle} className={HDR.stickyContainer}>
           <div className={HDR.topRow}>
-            <div className={HDR.leftActionGroup}>
-              <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
-                <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
-              </button>
-              <button className={HDR.touchTargetBtn} onClick={handleOpenAddCard}>
-                <SpriteIcon id="icon-button-add-user" className={ICN.actionIconSize} />
-              </button>
-              <WalletFlipButton onToggle={handleToggleView} t={t} />
-            </div>
+          <div className={HDR.leftActionGroup}>
+  <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
+    <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
+  </button>
+  <WalletFlipButton onToggle={handleToggleView} t={t} />
+  <button 
+    className={isBuildingView ? HDR.touchTargetBtnDisabled : HDR.touchTargetBtn}
+    onClick={isBuildingView ? undefined : handleOpenAddCard}
+  >
+    <SpriteIcon 
+      id="icon-button-add-user" 
+      className={ICN.actionIconSize}
+      style={isBuildingView ? { color: COLORS['main-color-3'] } : {}}
+    />
+  </button>
+</div>
 
             <div className={HDR.debtSection}>
               <span className={HDR.totalDebtLabel}>{t('total_debt')}</span>

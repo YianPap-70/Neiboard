@@ -128,7 +128,8 @@ const layout = {
 const header = {
   stickyContainer: "sticky top-0 z-40 w-full mx-auto pt-3 pb-2 flex flex-col gap-2",
   stickyContainerStyle: { backgroundColor: COLORS['main-color-6'] },
-  touchTargetBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity",
+  touchTargetBtn: "w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity cursor-pointer",
+  touchTargetBtnDisabled: "w-[44px] h-[44px] flex items-center justify-center shrink-0 cursor-default opacity-40 pointer-events-none",
   topRow: "flex items-center pl-[2px] pr-[2px] w-full",
   leftActionGroup: "flex items-center gap-2",
   debtSection: "flex items-center gap-2 ml-auto",
