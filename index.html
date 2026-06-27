@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Neiboard App</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN (simplest approach for now) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <!-- Preload icons.svg before React mounts -->
+  <script>
+    fetch('/icons.svg')
+      .then(r => {
+        if (!r.ok) throw new Error('icons.svg not found');
+        return r.text();
+      })
+      .then(svg => {
+        const div = document.createElement('div');
+        div.style.display = 'none';
+        div.setAttribute('aria-hidden', 'true');
+        div.innerHTML = svg;
+        document.body.insertBefore(div, document.body.firstChild);
+      })
+      .catch(err => console.warn('Failed to load icons.svg:', err));
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- Load DesignConfig FIRST so window.DESIGN is available -->
+  <script type="module" src="/src/DesignConfig.js"></script>
+  
+  <!-- Then load the main app -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
