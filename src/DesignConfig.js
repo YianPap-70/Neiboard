@@ -278,8 +278,8 @@ const settingsModal = {
   // Row 1 — header (logo + report button)
   headerRow:        "flex items-center justify-between w-full",
   headerRowGap:      '20px',
-  logoIcon:          `h-7 text-[${COLORS['main-color-1']}]`,
-  logoIconStyle:     { width: '160px' },
+  logoIcon:          `text-[${COLORS['main-color-1']}]`,
+logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
   reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['accent-color-1']}] text-[${COLORS['main-color-1']}] font-medium text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
   reportIcon:        "h-6 w-6",
 
