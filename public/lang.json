@@ -34,6 +34,7 @@
   "unpaid_from_previous_months": { "en": "Unpaid from previous months", "gr": "Απλήρωτα από προηγούμενους μήνες" },
   "language": { "en": "Language", "gr": "Γλώσσα" },
   "sort_by": { "en": "Sort by", "gr": "Ταξινόμηση" },
+  "sort_order": { "en": "Sort order", "gr": "Σειρά" },
   "tag": { "en": "Tag", "gr": "Ετικέτα" },
   "debt": { "en": "Debt", "gr": "Χρέος" },
   "symbol": { "en": "Symbol", "gr": "Σύμβολο" },
@@ -49,5 +50,13 @@
   "add_amount": { "en": "Add amount", "gr": "Προσθήκη ποσού" },
   "edit_amount": { "en": "Edit amount", "gr": "Επεξεργασία ποσού" },
   "unpaid": { "en": "Unpaid", "gr": "Δεν έχει εξοφληθεί" },
-  "paid": { "en": "Paid", "gr": "Έχει εξοφληθεί" }
+  "paid": { "en": "Paid", "gr": "Έχει εξοφληθεί" },
+  "report": { "en": "Report", "gr": "Κατάσταση" },
+  "color_theme": { "en": "Color theme", "gr": "Χρώμα" },
+  "export_data": { "en": "Export Data", "gr": "Εξαγωγή δεδομένων" },
+  "import_data": { "en": "Import Data", "gr": "Εισαγωγή δεδομένων" },
+  "sort_apartment_tag": { "en": "Apartment / Tag", "gr": "διαμέρισμα / ετικέτα" },
+  "from": { "en": "From", "gr": "Από" },
+  "to": { "en": "To", "gr": "Έως" },
+  "reset": { "en": "Reset", "gr": "Επαναφορά" }
 }

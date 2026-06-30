@@ -5,17 +5,97 @@
 // No hex values should appear anywhere else in the application.
 // =========================================================================
 
-// ─── COLOR PALETTE (ONLY PLACE HEX VALUES MAY APPEAR) ─────────────────────
+// ─── COLOR THEMES (ONLY PLACE HEX VALUES MAY APPEAR) ───────────────────────
+// Each theme maps the same token keys to a distinct hex palette. Theme 0 is
+// the original/default palette. Themes are injected as CSS custom properties
+// scoped under [data-theme="N"] on the app root, so switching themes is just
+// a matter of changing that attribute — no React re-render of color values
+// is required, and the change can transition smoothly via CSS.
+const THEMES = [
+  {
+    name: 'Midnight', // default
+    tokens: {
+      'main-color-1': '#E1E3F8',
+      'main-color-2': '#9596B1',
+      'main-color-3': '#49496A',
+      'main-color-4': '#3D3D5F',
+      'main-color-5': '#333355',
+      'main-color-6': '#11112E',
+      'accent-color-1': '#9CE66B',
+      'accent-color-2': '#F2C454',
+      'accent-color-3': '#E25344',
+    },
+  },
+  {
+    name: 'Coastal',
+    tokens: {
+      'main-color-1': '#EAF6F6',
+      'main-color-2': '#8FB6BD',
+      'main-color-3': '#2E6E73',
+      'main-color-4': '#235459',
+      'main-color-5': '#1B4347',
+      'main-color-6': '#0B2326',
+      'accent-color-1': '#6BD8C4',
+      'accent-color-2': '#F2B854',
+      'accent-color-3': '#E2664A',
+    },
+  },
+  {
+    name: 'Ember',
+    tokens: {
+      'main-color-1': '#FBE9E1',
+      'main-color-2': '#C49A8F',
+      'main-color-3': '#6B3A36',
+      'main-color-4': '#542D2A',
+      'main-color-5': '#412221',
+      'main-color-6': '#1F0F0E',
+      'accent-color-1': '#E6A96B',
+      'accent-color-2': '#F2D454',
+      'accent-color-3': '#E2447A',
+    },
+  },
+];
+
+// ─── INJECT CSS CUSTOM PROPERTIES FOR EACH THEME ───────────────────────────
+// :root carries the default (Midnight) values so the app renders correctly
+// even before the theme system initializes. Each additional theme is scoped
+// under html[data-theme="N"] and overrides the same variable names.
+(function injectThemeVariables() {
+  const toCssVars = (tokens) =>
+    Object.entries(tokens).map(([key, val]) => `--${key}: ${val};`).join('\n    ');
+
+  const blocks = THEMES.map((theme, idx) => {
+    const selector = idx === 0 ? ':root' : `html[data-theme="${idx}"]`;
+    return `  ${selector} {\n    ${toCssVars(theme.tokens)}\n  }`;
+  }).join('\n');
+
+  const style = document.createElement('style');
+  style.setAttribute('data-design-theme-vars', 'true');
+  style.textContent = `\n${blocks}\n  html {\n    transition: background-color 0.3s ease-in-out;\n  }\n  html * {\n    transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;\n  }\n  `;
+  document.head.appendChild(style);
+})();
+
+// ─── ACTIVE THEME APPLICATION ───────────────────────────────────────────────
+// Sets the data-theme attribute on <html>, which the injected CSS above uses
+// to swap variable values with a smooth ease-in-out transition.
+function applyTheme(index) {
+  const safeIndex = THEMES[index] ? index : 0;
+  document.documentElement.setAttribute('data-theme', String(safeIndex));
+}
+
+// ─── COLOR TOKEN REFERENCES ─────────────────────────────────────────────────
+// These resolve to CSS variables (not raw hex) so every consumer of
+// window.DESIGN.colors automatically follows the active theme.
 const COLORS = {
-  'main-color-1': '#E1E3F8',
-  'main-color-2': '#9596B1',
-  'main-color-3': '#49496A',
-  'main-color-4': '#3D3D5F',
-  'main-color-5': '#333355',
-  'main-color-6': '#11112E',
-  'accent-color-1': '#9CE66B',
-  'accent-color-2': '#F2C454',
-  'accent-color-3': '#E25344',
+  'main-color-1': 'var(--main-color-1)',
+  'main-color-2': 'var(--main-color-2)',
+  'main-color-3': 'var(--main-color-3)',
+  'main-color-4': 'var(--main-color-4)',
+  'main-color-5': 'var(--main-color-5)',
+  'main-color-6': 'var(--main-color-6)',
+  'accent-color-1': 'var(--accent-color-1)',
+  'accent-color-2': 'var(--accent-color-2)',
+  'accent-color-3': 'var(--accent-color-3)',
 };
 
 // ─── UNIFIED LABEL SYSTEM ──────────────────────────────────────────────────
@@ -188,33 +268,63 @@ const spacing = {
   headerToListGap: '16px',
 };
 
-// ─── MAIN MENU ───────────────────────────────────────────────────────────
-const mainMenu = {
-  contentAnimation:      (A) => ({ animation: `menuContentIn ${A.modalDuration} ${A.modalCurve}` }),
-  boxContainer:          `w-full flex flex-col bg-[${COLORS['main-color-5']}] p-4 text-[${COLORS['main-color-1']}] gap-3 select-none`,
-  boxContainerStyle:     { borderRadius: RADIUS_STANDARD, maxWidth: '340px' },
-  sectionRow:            `w-full bg-[${COLORS['main-color-3']}] rounded-[12px] p-2 flex items-center justify-between h-[60px]`,
-  sectionLabelLeft:      `font-medium tracking-wide text-left pl-2 text-base text-[${COLORS['main-color-1']}]`,
-  optionsRightGroup:     "flex items-center gap-3 pr-1",
-  pillButton:            `h-[44px] px-5 font-bold rounded-[22px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] flex items-center justify-center min-w-[64px] transition-all duration-300 outline-none select-none`,
-  activeRingClass:       `ring-2 ring-[${COLORS['accent-color-1']}]`,
-  symbolPill:            `w-[150px] h-[44px] bg-[${COLORS['main-color-4']}] rounded-[22px] flex items-center justify-between px-3 select-none relative overflow-hidden`,
-  symbolIconArea:        `w-5 h-11 flex items-center justify-center pointer-events-none text-[${COLORS['main-color-1']}]`,
-  symbolRollWrapper:     "h-7 overflow-hidden relative pointer-events-none flex items-center justify-center flex-1",
-  symbolRollContainer:   "absolute flex flex-col items-center",
-  symbolText:            `text-base font-bold text-[${COLORS['main-color-1']}] h-7 leading-7 flex items-center justify-center whitespace-nowrap`,
-  symbolLeftTapZone:     "absolute left-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
-  symbolRightTapZone:    "absolute right-0 top-0 bottom-0 w-1/2 cursor-pointer active:bg-white/5 transition-colors",
-  dateRangeSection:      `w-full bg-[${COLORS['main-color-3']}] rounded-[12px] p-3 flex flex-col gap-3`,
-  dateRangeButtonsRow:   "flex items-center gap-3 w-full",
-  dateRangeBtn:          `flex-1 h-[44px] rounded-[22px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] text-sm font-medium flex items-center justify-center outline-none select-none transition-all`,
-  deleteBtn:             `w-full h-[48px] rounded-[24px] bg-[${COLORS['main-color-4']}] border-none text-base font-bold flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none`,
-  deleteActiveRingClass: `ring-2 ring-[${COLORS['accent-color-3']}]`,
-  deleteText:            (isActive) => isActive ? `text-[${COLORS['main-color-1']}]` : `text-[${COLORS['main-color-2']}]`,
-  deleteIconClass:       (isActive) => isActive ? `w-6 h-6 text-[${COLORS['main-color-1']}]` : `w-6 h-6 text-[${COLORS['main-color-2']}]`,
-  footerRow:             "w-full flex items-center gap-3 pt-1",
-  actionBtn:             `flex-1 h-[48px] rounded-[24px] bg-[${COLORS['main-color-4']}] text-[${COLORS['main-color-1']}] text-base font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 outline-none`,
-  actionBtnIconSize:     `w-5 h-5 text-[${COLORS['main-color-1']}]`,
+// ─── MAIN SETTINGS MODAL (9-ROW REDESIGN) ────────────────────────────────
+const settingsModal = {
+  contentAnimation: (A) => ({ animation: `menuContentIn ${A.modalDuration} ${A.modalCurve}` }),
+  boxContainer:      `w-full flex flex-col bg-[${COLORS['main-color-5']}] text-[${COLORS['main-color-1']}] select-none`,
+  boxContainerStyle: { borderRadius: RADIUS_STANDARD, maxWidth: '376px', padding: '16px' },
+  rowGap:            '16px',
+
+  // Row 1 — header (logo + report button)
+  headerRow:        "flex items-center justify-between w-full",
+  headerRowGap:      '20px',
+  logoIcon:          `h-7 text-[${COLORS['main-color-1']}]`,
+  logoIconStyle:     { width: '160px' },
+  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['accent-color-1']}] text-[${COLORS['main-color-1']}] font-medium text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
+  reportIcon:        "h-6 w-6",
+
+  // Shared "pill row" base used by rows 2-9
+  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['main-color-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['main-color-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['accent-color-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillPaddingX:       '16px',
+  pillLabel:          `font-medium text-base text-[${COLORS['main-color-1']}] whitespace-nowrap`,
+  pillIcon:           `h-6 w-6 text-[${COLORS['main-color-1']}] shrink-0`,
+  pillCenterText:     `flex-1 text-center font-medium text-base text-[${COLORS['main-color-1']}]`,
+
+  // Roller value (rows 2-4): sliding/rolling dynamic value display
+  rollerWrapper:     "h-6 overflow-hidden relative flex items-center flex-1 min-w-0 justify-end",
+  rollerTrack:        (activeIdx, A) => ({
+    position: 'absolute',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    transform: `translateY(-${activeIdx * 24}px)`,
+    transition: A.rollerTransition,
+    right: 0,
+    top: 0,
+  }),
+  rollerItem:        `h-6 leading-6 font-medium text-base text-[${COLORS['accent-color-1']}] whitespace-nowrap text-right`,
+};
+
+// ─── DELETE DATA RANGE SUB-MODAL ─────────────────────────────────────────
+const deleteRangeModal = {
+  boxContainer:      `w-full flex flex-col bg-[${COLORS['main-color-5']}] text-[${COLORS['main-color-1']}] select-none`,
+  boxContainerStyle: { borderRadius: RADIUS_STANDARD, maxWidth: '376px', padding: '16px' },
+  rowGap:            '16px',
+
+  boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['main-color-3']}] outline-none select-none transition-all duration-300 cursor-pointer font-medium text-base text-[${COLORS['main-color-1']}]`,
+  boundaryBtnSetRing: `ring-2 ring-[${COLORS['accent-color-2']}]`,
+
+  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['accent-color-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['main-color-1']}]`,
+  resetIcon:           `h-6 w-6 text-[${COLORS['main-color-1']}]`,
+
+  deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent outline-none select-none transition-all duration-300 font-medium text-base`,
+  deleteBtnDisabled:   `ring-2 ring-[${COLORS['main-color-3']}] text-[${COLORS['main-color-2']}] cursor-not-allowed opacity-60`,
+  deleteBtnEnabled:    `ring-2 ring-[${COLORS['accent-color-3']}] text-[${COLORS['main-color-1']}] cursor-pointer transition-transform active:scale-95`,
+  deleteIcon:          `h-6 w-6 text-[${COLORS['main-color-1']}]`,
+
+  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-2 ring-[${COLORS['main-color-3']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['main-color-1']}]`,
 };
 
 // ─── RESIDENT CARD COMPONENT ─────────────────────────────────────────────
@@ -480,6 +590,8 @@ const expenseModalConfigs = {
 // ─── EXPORT ALL DESIGN TOKENS ────────────────────────────────────────────
 const DESIGN = {
   colors: COLORS,
+  themes: THEMES,
+  applyTheme,
   labels: LABELS,
   icons,
   iconColors,
@@ -490,7 +602,8 @@ const DESIGN = {
   header,
   spacing,
   navigationPill,
-  mainMenu,
+  settingsModal,
+  deleteRangeModal,
   residentCard,
   drawer,
   autoTextarea,

@@ -3,373 +3,27 @@
 // =========================================================================
 // Manages residents, expenses, navigation state, and user interactions.
 // All styling references use window.DESIGN tokens — no hardcoded hex values.
+//
+// WalletFlipButton, BuildingExpenses, and ResidentListView live in this file
+// (rather than primitives.jsx/modals.jsx) because they're tightly bound to
+// the dashboard's own state and layout, not generic reusable pieces.
 // =========================================================================
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-
-const systemDate = new Date();
-
-// Calendar year range configuration
-const CALENDAR_START_YEAR = 2015;
-const CALENDAR_END_YEAR   = 2045;
-const TIMELINE_YEARS = Array.from(
-  { length: CALENDAR_END_YEAR - CALENDAR_START_YEAR + 1 },
-  (_, i) => CALENDAR_START_YEAR + i
-);
-window.TIMELINE_YEARS = TIMELINE_YEARS;
-
-// Default English month names — used only as a loading fallback
-const DEFAULT_MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December',
-];
-
-// FIX [Unnecessary #4]: Collapsed EASING object to the single function actually used.
-// easeOutCubic, easeOutQuint, and easeInOutCubic were dead code.
-const easeInOutQuad = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-// Formats a numeric amount — integer displayed without decimals, float trimmed
-function formatAmount(amount) {
-  const num = parseFloat(amount);
-  if (num % 1 === 0) return num.toString();
-  return num.toFixed(2).replace(/\.?0+$/, '');
-}
-
-// FIX [Unnecessary #4]: Removed the easing parameter — only easeInOutQuad is used.
-function smoothScrollTo(targetY, duration = 700) {
-  const startY   = window.scrollY;
-  const distance = targetY - startY;
-  if (Math.abs(distance) < 10) { window.scrollTo(0, targetY); return; }
-
-  const startTime = performance.now();
-
-  const animate = (currentTime) => {
-    const elapsed  = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    window.scrollTo(0, startY + distance * easeInOutQuad(progress));
-    if (progress < 1) requestAnimationFrame(animate);
-  };
-  requestAnimationFrame(animate);
-}
-
-// ─── DEMO DATA GENERATOR ─────────────────────────────────────────────────
-// Intentional: generates random test residents for development/testing.
-// cardCount is capped at APARTMENTS.length to prevent an infinite loop.
-function generateInitialResidents(monthNames, currentMonthString, currentMonthKey) {
-  const SURNAMES      = ['Ramirez','Chen','Marcus','Patel','Kowalski','Nguyen','Ferreira','Schmidt','Okafor','Petrov'];
-  const EXPENSE_NAMES = ['Monthly Maintenance','Heating Oil','Elevator Repair','Water Balance','Shared Repairs','Stairwell Lighting'];
-  const APARTMENTS    = ['1A','1B','1C','2A','2B','2C','3A','3B','3C'];
-
-  const rand       = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const pick       = (arr)      => arr[Math.floor(Math.random() * arr.length)];
-  const pickUnique = (arr, n)   => [...arr].sort(() => Math.random() - 0.5).slice(0, n);
-
-  const today      = new Date();
-  const pastMonths = [];
-  for (let i = 1; i <= 3; i++) {
-    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    pastMonths.push({
-      label:    `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
-      monthKey: d.getFullYear() * 12 + d.getMonth(),
-    });
-  }
-
-  const cardCount      = Math.min(rand(5, 8), APARTMENTS.length);
-  const shuffledApts   = [...APARTMENTS].sort(() => Math.random() - 0.5).slice(0, cardCount);
-  const residents      = [];
-
-  shuffledApts.forEach((apt, i) => {
-    const surname = SURNAMES[i] || `Family ${i + 1}`;
-    const expenses = [];
-    let expCounter = 0;
-
-    pickUnique(EXPENSE_NAMES, rand(1, 2)).forEach(name => {
-      expenses.push({
-        id: `exp-${i}-${expCounter++}`, description: name,
-        amount: rand(40, 150), paid: Math.random() > 0.4,
-        month: currentMonthString, monthKey: currentMonthKey,
-      });
-    });
-
-    pickUnique(EXPENSE_NAMES, rand(0, 2)).forEach(name => {
-      const past = pick(pastMonths);
-      expenses.push({
-        id: `exp-${i}-${expCounter++}`, description: name,
-        amount: rand(40, 150), paid: false,
-        month: past.label, monthKey: past.monthKey,
-      });
-    });
-
-    residents.push({ id: `R${i}`, name: `${surname} Family`, apartment: `Apt ${apt}`, notes: '', expenses });
-  });
-
-  return residents;
-}
-
-// ─── SPRITE ICON COMPONENT ────────────────────────────────────────────────
-
-// FIX [Unnecessary #1]: Removed duplicate section header comment that appeared twice.
-// ─── NAVIGATION PILL (UNIFIED) ────────────────────────────────────────────
-function NavigationPill({ 
-  type, 
-  currentValue, 
-  totalOptions, 
-  onPrev, 
-  onNext, 
-  onGoToday, 
-  canGoToday = false,
-  variant = 'default'
-}) {
-  const NP = window.DESIGN.navigationPill;
-  // FIX [Unnecessary #2]: Removed unused `const A = window.DESIGN.animation` declaration.
-
-  return (
-    <div className={NP.container} style={NP.containerStyle(variant)}>
-      <button
-        onClick={onPrev}
-        className={NP.btn}
-        style={NP.btnStyle}
-        aria-label={type === 'year' ? "Previous year" : "Previous month"}
-      >
-        <SpriteIcon id="icon-arrow-left" className={NP.icon} style={NP.iconStyle} />
-      </button>
-      
-      {/* Go Today button - always shown */}
-      <button
-        onClick={canGoToday ? onGoToday : undefined}
-        className={canGoToday ? NP.btn : NP.btnDisabled}
-        style={canGoToday ? NP.btnStyle : NP.btnDisabledStyle}
-        aria-label={type === 'year' ? "Go to current year" : "Go to current month"}
-        disabled={!canGoToday}
-      >
-        <SpriteIcon 
-          id="icon-go-today" 
-          className={NP.icon} 
-          style={canGoToday ? NP.iconStyle : NP.iconDisabledStyle} 
-        />
-      </button>
-      
-      <button
-        onClick={onNext}
-        className={NP.btn}
-        style={NP.btnStyle}
-        aria-label={type === 'year' ? "Next year" : "Next month"}
-      >
-        <SpriteIcon id="icon-arrow-right" className={NP.icon} style={NP.iconStyle} />
-      </button>
-    </div>
-  );
-}
-
-function SpriteIcon({ id, className = '', style }) {
-  return (
-    <svg className={className} style={style} aria-hidden="true" focusable="false">
-      <use href={`#${id}`} />
-    </svg>
-  );
-}
-
-// Checkmark (paid) or warning icon (unpaid)
-function PaidStatusIcon({ paid }) {
-  const ICN = window.DESIGN.icons;
-  return paid
-    ? <SpriteIcon id="icon-check"          className={`${ICN.statusIconSize} ${ICN.iconColorClasses.check}`} />
-    : <SpriteIcon id="icon-warning-filled" className={`${ICN.statusIconSize} ${ICN.iconColorClasses.warning}`} style={window.DESIGN.iconColors.warningFilled} />;
-}
-
-// Renders the active currency symbol, or nothing if symbol is empty
-function CurrencySymbol({ activeSymbol, className = '' }) {
-  if (!activeSymbol) return null;
-  return <span className={className}>{activeSymbol}</span>;
-}
-
-// Amount span with strikethrough applied when an expense is paid
-function AmountSpan({ amount, isPaid }) {
-  const D = window.DESIGN;
-  return (
-    <span className={isPaid ? D.labels.strikethroughPaid : ''}>
-      {formatAmount(amount)}
-    </span>
-  );
-}
-
-// ─── DRAWER ───────────────────────────────────────────────────────────────
-// Animated expandable container — auto-adjusts height via ResizeObserver
-function Drawer({ isOpen, children }) {
-  const [height, setHeight] = useState(0);
-  const contentRef = useRef(null);
-  const A          = window.DESIGN.animation;
-  const drawerCfg  = window.DESIGN.drawer;
-
-  // FIX [Bug #3]: Removed `children` from the dependency array.
-  // React creates a new children object on every render, so including it caused
-  // the observer to disconnect and reconnect constantly — even for unrelated state
-  // changes. The ResizeObserver already handles content size changes internally.
-  useEffect(() => {
-    if (!contentRef.current) return;
-    const el     = contentRef.current;
-    const update = () => setHeight(isOpen ? el.scrollHeight : 0);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isOpen]);
-
-  return (
-    <div style={{ height: height + 'px', transition: `height ${A.drawerDuration} ${A.drawerCurve}`, ...drawerCfg.containerStyle }}>
-      <div ref={contentRef}>{children}</div>
-    </div>
-  );
-}
-
-// ─── AUTO-TEXTAREA ────────────────────────────────────────────────────────
-// Expands vertically up to a max line count as the user types
-function AutoTextarea({ value, onChange, placeholder, className, style }) {
-  const ref         = useRef(null);
-  const A           = window.DESIGN.animation;
-  const textareaCfg = window.DESIGN.autoTextarea;
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 21;
-    const maxHeight  = lineHeight * textareaCfg.maxLines + 28;
-    el.style.height    = Math.min(el.scrollHeight, maxHeight) + 'px';
-    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
-  }, [value]);
-
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={className}
-      style={{ ...style, transition: `height ${A.autoTextareaDuration} ${A.autoTextareaCurve}`, minHeight: textareaCfg.minHeight }}
-      rows={1}
-    />
-  );
-}
-
-// ─── MODAL WRAPPER ────────────────────────────────────────────────────────
-// Wraps any modal with a consistent backdrop, animation, and click-to-close
-function ModalWrapper({ isOpen, onClose, children }) {
-  const MB = window.DESIGN.modalBase;
-  const A  = window.DESIGN.animation;
-  if (!isOpen) return null;
-  return (
-    <div
-      style={{ ...MB.backdropAnimation(A), ...MB.backdropOverlayStyle }}
-      className={MB.backdropOverlay}
-      onClick={onClose}
-    >
-      {children}
-    </div>
-  );
-}
-
-// ─── CARD PROFILE MODAL (ADD / EDIT RESIDENT) ────────────────────────────
-function CardProfileModal({ mode, residentData, onConfirm, onNext, onCancel, onDeleteRequest, animStyle, t }) {
-  const CM = window.DESIGN.cardModal;
-  const MB = window.DESIGN.modalBase;
-
-  const [name,      setName]      = useState(residentData?.name      || '');
-  const [apartment, setApartment] = useState(residentData?.apartment || '');
-  const [notes,     setNotes]     = useState(residentData?.notes     || '');
-
-  const collect = () => ({ name: name.trim(), apartment: apartment.trim(), notes: notes.trim() });
-
-  const handleConfirm = () => onConfirm(collect());
-  const handleNext    = () => { onNext(collect()); setName(''); setApartment(''); setNotes(''); };
-
-  const isAdd = mode === 'add';
-
-  return (
-    <div
-      style={{ ...MB.boxContainerStyle, ...animStyle, padding: CM.containerPadding, maxWidth: '376px' }}
-      className={MB.boxContainer}
-    >
-      <div className={CM.headerRow} style={{ marginBottom: CM.containerGap }}>
-        <SpriteIcon id={isAdd ? 'icon-button-add-user' : 'icon-edit'} className={CM.headerIcon} />
-        <span className={CM.headerLabel}>{isAdd ? t('add_card') : t('edit_card')}</span>
-      </div>
-
-      <div className={CM.fieldsContainer} style={{ gap: CM.fieldGap }}>
-        <div className={CM.fieldWrapper}>
-          <input
-            type="text"
-            placeholder={t('name_title')}
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className={`${CM.fieldInput} ${CM.nameFieldInput} ${CM.placeholderStyle}`}
-            style={{ height: CM.fieldHeight, padding: CM.fieldPadding }}
-          />
-        </div>
-        <div className={CM.fieldWrapper}>
-          <input
-            type="text"
-            placeholder={t('apartment_tag')}
-            value={apartment}
-            onChange={e => setApartment(e.target.value)}
-            className={`${CM.fieldInput} ${CM.apartmentFieldInput} ${CM.placeholderStyle}`}
-            style={{ height: CM.fieldHeight, padding: CM.fieldPadding }}
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: CM.notesSectionGap }}>
-        <div className={CM.notesSection}>
-          <div className={CM.notesTitleRow}>
-            <SpriteIcon id="icon-notes" className={CM.notesIcon} />
-            <span className={CM.notesTitle}>{t('notes')}</span>
-          </div>
-          <div className={CM.notesFieldWrapper}>
-            <AutoTextarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className={`${CM.notesField} ${CM.placeholderStyle}`}
-              style={{ padding: CM.notesFieldPadding, minHeight: CM.notesFieldMinHeight }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className={CM.buttonRow} style={{ marginTop: CM.containerGap, gap: CM.buttonGap }}>
-        {isAdd ? (
-          <>
-            <button className={`${CM.baseBtn} ${CM.okBtn}`}         onClick={handleConfirm}>{t('ok')}</button>
-            <button className={`${CM.baseBtn} ${CM.nextBtn}`}        onClick={handleNext}>{t('next')}</button>
-            <button className={`${CM.baseBtn} ${CM.cancelTextBtn}`}  onClick={onCancel}>{t('cancel')}</button>
-          </>
-        ) : (
-          <>
-            <button className={`${CM.baseBtn} ${CM.okBtn}`}         onClick={handleConfirm}>{t('ok')}</button>
-            <button className={`${CM.baseBtn} ${CM.cancelTextBtn}`}  onClick={onCancel}>{t('cancel')}</button>
-            <button className={CM.trashBtn}                          onClick={onDeleteRequest}>
-              <SpriteIcon id="icon-trash" className={CM.trashIconSize} />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Confirmation dialog shown before permanently deleting a resident card
-function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
-  const CM = window.DESIGN.cardModal;
-  const MB = window.DESIGN.modalBase;
-  return (
-    <div style={{ ...CM.deleteConfirmBoxStyle, ...animStyle }} className={MB.boxContainer}>
-      <p className={CM.deleteConfirmTitle}>{t('delete_card_confirm')}</p>
-      <div className={CM.deleteConfirmRow}>
-        <button className={CM.deleteConfirmYesBtn} onClick={onConfirm}>{t('yes')}</button>
-        <button className={CM.deleteConfirmNoBtn}  onClick={onCancel}>{t('no')}</button>
-      </div>
-    </div>
-  );
-}
+import {
+  systemDate, STORAGE_KEY, STORAGE_VERSION,
+  loadPersistedData, savePersistedData, formatDateStamp,
+  TIMELINE_YEARS, DEFAULT_MONTH_NAMES,
+  formatAmount, smoothScrollTo, generateInitialResidents,
+} from './utils.js';
+import {
+  SpriteIcon, NavigationPill, Drawer, ModalWrapper,
+  PaidStatusIcon, CurrencySymbol, AmountSpan,
+} from './primitives.jsx';
+import {
+  CardProfileModal, DeleteCardConfirmModal, ExpenseModal,
+  MonthYearPickerModal, DeleteRangeModal, SettingsModal,
+} from './modals.jsx';
 
 // ─── 3D FLIP BUTTON (CARDS ↔ BUILDING VIEW) ──────────────────────────────
 function WalletFlipButton({ onToggle, t }) {
@@ -398,140 +52,6 @@ function WalletFlipButton({ onToggle, t }) {
   );
 }
 
-// ─── UNIFIED EXPENSE MODAL ────────────────────────────────────────────────
-// Handles add / edit / delete for both resident and building expenses.
-// Works on an internal copy of the data; changes are only committed on OK.
-function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t }) {
-  const D      = window.DESIGN;
-  const EM     = D.modal.expenseModal;
-  const MB     = D.modalBase;
-  const A      = D.animation;
-  const config = D.expenseModalConfigs[context] || D.expenseModalConfigs.resident;
-
-  // Local copies — nothing is written to parent state until onConfirm
-  const [amount,      setAmount]      = useState(initialData.amount      || '');
-  const [description, setDescription] = useState(initialData.description || '');
-  const [isPaid,      setIsPaid]      = useState(initialData.paid        ?? false);
-  const [mode,        setMode]        = useState(initialData.type); // 'add' | 'edit' | 'delete' | 'buildingDelete'
-
-  // FIX [Bug #4]: Amount validation state — drives shake animation and error ring.
-  const [amountError, setAmountError] = useState(false);
-  const amountWrapperRef = useRef(null);
-
-  const isAdd    = mode === 'add';
-  const isEdit   = mode === 'edit';
-  const isDelete = mode === 'delete' || mode === 'buildingDelete';
-
-  const ringClass = isPaid ? EM.statusPillRingPaid : EM.statusPillRingUnpaid;
-
-  const handleConfirm = () => {
-    const parsed = parseFloat(amount);
-    if (!amount || isNaN(parsed) || parsed <= 0) {
-      // Trigger shake animation: remove then re-add the animation style so it
-      // re-fires even if the user clicks OK multiple times without changing input.
-      const el = amountWrapperRef.current;
-      if (el) {
-        el.style.animation = 'none';
-        // Force reflow to restart the animation
-        void el.offsetWidth;
-        el.style.animation = A.inputShake;
-      }
-      setAmountError(true);
-      return;
-    }
-    setAmountError(false);
-    onConfirm({ amount, description, paid: isPaid });
-  };
-
-  const handleEnter = (e) => { if (e.key === 'Enter') handleConfirm(); };
-
-  // Clear error state as soon as the user starts correcting the amount
-  const handleAmountChange = (e) => {
-    setAmount(e.target.value);
-    if (amountError) setAmountError(false);
-  };
-
-  if (!isAdd && !isEdit && !isDelete) return null;
-
-  return (
-    <>
-      {(isAdd || isEdit) && (
-        <div
-          style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A), padding: EM.containerPadding, maxWidth: EM.containerMaxWidth }}
-          className={MB.boxContainer}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className={EM.headerRow}>
-            <SpriteIcon id="icon-edit" className={EM.headerIcon} />
-            <span className={EM.headerTitle}>{t(isAdd ? 'add_amount' : 'edit_amount')}</span>
-          </div>
-
-          {/* FIX [Bug #4]: ref for shake animation; error ring via inline style override */}
-          <div
-            ref={amountWrapperRef}
-            className={EM.amountWrapper}
-            style={amountError ? EM.amountWrapperErrorStyle : undefined}
-          >
-            <input
-              type="number"
-              placeholder={t('amount_placeholder')}
-              value={amount}
-              onChange={handleAmountChange}
-              onKeyDown={handleEnter}
-              className={EM.amountInput}
-              autoFocus
-            />
-          </div>
-
-          <div style={{ height: D.modal.amountToDescriptionGap }} />
-
-          <div className={EM.descriptionWrapper}>
-            <input
-              type="text"
-              placeholder={t('expense_placeholder')}
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              onKeyDown={handleEnter}
-              className={EM.descriptionInput}
-            />
-          </div>
-
-          <div style={{ height: D.modal.descriptionToActionsGap }} />
-
-          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
-            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
-          </button>
-
-          <div style={{ height: D.modal.descriptionToActionsGap }} />
-
-          <div className={EM.actionRow}>
-            <button onClick={handleConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>{t('ok')}</button>
-            <button onClick={onClose}       className={`${EM.actionBtn} ${EM.cancelBtn}`}>{t('cancel')}</button>
-            {isEdit && (
-              <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
-                <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {isDelete && (
-        <div
-          style={{ ...MB.boxContainerStyle, ...MB.contentAnimation(A) }}
-          className={MB.boxContainer}
-          onClick={e => e.stopPropagation()}
-        >
-          <h4 className={D.modal.deletePromptTitle}>{t('delete_expense_confirm')}</h4>
-          <div className={D.modal.actionsFlexRow}>
-            <button onClick={onDelete}               style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>{t('yes')}</button>
-            <button onClick={() => setMode('edit')}  className={D.modal.deleteNoBtn}>{t('no')}</button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
 function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
@@ -789,16 +309,13 @@ function ResidentListView({
   );
 }
 
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────
 export default function App() {
   const D      = window.DESIGN;
   const LAYOUT = D.layout;
   const HDR    = D.header;
-  const MP     = D.monthPill;
-  const MDL    = D.modal;
   const MB     = D.modalBase;
-  const CAL    = D.modal.calendar;
-  const MNU    = D.mainMenu;
   const A      = D.animation;
   const CM     = D.cardModal;
   const SPC    = D.spacing;
@@ -859,21 +376,6 @@ export default function App() {
   const [residents,       setResidents]       = useState([]);
   const [buildingExpenses, setBuildingExpenses] = useState([]);
 
-  // FIX [Bug #1]: Resolved stale-closure bug in demo data initialisation.
-  // Previously, the effect captured `monthNames`, `currentMonthString`, and
-  // `currentMonthKey` from the outer scope — values that were not in the
-  // dependency array and could be stale. Now the effect derives everything it
-  // needs from `translations` directly, making it self-contained.
-  useEffect(() => {
-    if (translations && residents.length === 0) {
-      const names  = translations['months']['en'];
-      const now    = new Date();
-      const key    = now.getFullYear() * 12 + now.getMonth();
-      const str    = `${names[now.getMonth()]} ${now.getFullYear()}`;
-      setResidents(generateInitialResidents(names, str, key));
-    }
-  }, [translations]);
-
   // ─── VIEW STATE ────────────────────────────────────────────────────────
   const [isMainMenuOpen,       setIsMainMenuOpen]       = useState(false);
   const [isBuildingView,       setIsBuildingView]       = useState(false);
@@ -882,8 +384,60 @@ export default function App() {
   const [openPreviousDrawer,   setOpenPreviousDrawer]   = useState({});
   const [currentSortBy,        setCurrentSortBy]        = useState('Tag');
   const [currencyIndex,        setCurrencyIndex]        = useState(0);
-  const [fromMonth,            setFromMonth]            = useState('');
-  const [toMonth,              setToMonth]              = useState('');
+  const [themeIndex,           setThemeIndex]           = useState(0);
+  const [isHeaderPickerOpen,   setIsHeaderPickerOpen]   = useState(false);
+
+  // ─── PERSISTENCE-AWARE INITIAL LOAD ─────────────────────────────────────
+  // FIX [Bug #1] (carried forward): effect derives everything it needs from
+  // `translations` directly rather than closing over outer-scope values.
+  // On first run: hydrate from localStorage if a saved blob exists; otherwise
+  // fall back to the original demo-data generator (first-run experience).
+  // NOTE: must be declared after the state hooks above (currentSortBy,
+  // currencyIndex, themeIndex, currentLanguage) since their setters/values
+  // are referenced directly in these effects' bodies and dependency arrays.
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!translations) return;
+    if (residents.length > 0 || buildingExpenses.length > 0) return;
+
+    const persisted = loadPersistedData();
+    if (persisted) {
+      setResidents(persisted.residents);
+      setBuildingExpenses(persisted.buildingExpenses);
+      const s = persisted.settings || {};
+      if (s.language === 'en' || s.language === 'gr') setCurrentLanguage(s.language);
+      if (s.sortBy === 'Tag' || s.sortBy === 'Debt') setCurrentSortBy(s.sortBy);
+      if (typeof s.currencyIndex === 'number') setCurrencyIndex(s.currencyIndex);
+      if (typeof s.themeIndex === 'number') setThemeIndex(s.themeIndex);
+    } else {
+      const names  = translations['months']['en'];
+      const now    = new Date();
+      const key    = now.getFullYear() * 12 + now.getMonth();
+      const str    = `${names[now.getMonth()]} ${now.getFullYear()}`;
+      setResidents(generateInitialResidents(names, str, key));
+    }
+    initializedRef.current = true;
+  }, [translations]);
+
+  // ─── DEBOUNCED PERSISTENCE SAVE ──────────────────────────────────────────
+  // Skips writes until the initial hydration above has run, so we never
+  // clobber a saved backup with the transient empty initial state.
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    const timer = setTimeout(() => {
+      savePersistedData({
+        residents,
+        buildingExpenses,
+        settings: {
+          language: currentLanguage,
+          sortBy: currentSortBy,
+          currencyIndex,
+          themeIndex,
+        },
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [residents, buildingExpenses, currentLanguage, currentSortBy, currencyIndex, themeIndex]);
 
   const headerRef       = useRef(null);
   const cardRefs        = useRef({});
@@ -917,6 +471,81 @@ export default function App() {
       if (next >= D.currencyOptions.length) next = 0;
       return next;
     });
+  };
+
+  // ─── SETTINGS: LANGUAGE / SORT / THEME ──────────────────────────────────
+  const toggleLanguage = () => setCurrentLanguage(prev => (prev === 'en' ? 'gr' : 'en'));
+  const toggleSortBy   = () => setCurrentSortBy(prev => (prev === 'Tag' ? 'Debt' : 'Tag'));
+  const cycleCurrencyForward = () => cycleCurrency(1);
+
+  // Applies the active color theme as soon as it changes (and on initial
+  // hydration from persisted settings), using the CSS-variable transition
+  // configured in DesignConfig.js.
+  useEffect(() => {
+    if (D.applyTheme) D.applyTheme(themeIndex);
+  }, [themeIndex]);
+
+  const cycleTheme = () => {
+    const count = D.themes?.length || 1;
+    setThemeIndex(prev => (prev + 1) % count);
+  };
+
+  // ─── SETTINGS: EXPORT / IMPORT DATA BACKUP ──────────────────────────────
+  const handleExportData = () => {
+    const payload = JSON.stringify({
+      version: STORAGE_VERSION,
+      residents,
+      buildingExpenses,
+      settings: { language: currentLanguage, sortBy: currentSortBy, currencyIndex, themeIndex },
+    });
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `neiboard-backup-${formatDateStamp(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!parsed || !Array.isArray(parsed.residents) || !Array.isArray(parsed.buildingExpenses)) {
+          console.error('Invalid backup file: missing residents/buildingExpenses arrays.');
+          return;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ...parsed }));
+        window.location.reload();
+      } catch (err) {
+        console.error('Failed to parse imported backup file:', err);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // ─── SETTINGS: RANGE-BASED DATA DELETION ────────────────────────────────
+  // Receives { monthIdx, year } boundaries from the Delete Range sub-modal.
+  // Mirrors the original swap-safety behavior: reversed ranges are
+  // normalized rather than silently deleting everything.
+  const handleDeleteDataRange = (fromDate, toDate) => {
+    const rawStart = fromDate.year * 12 + fromDate.monthIdx;
+    const rawEnd   = toDate.year * 12 + toDate.monthIdx;
+    const startKey = Math.min(rawStart, rawEnd);
+    const endKey   = Math.max(rawStart, rawEnd);
+
+    setResidents(prev =>
+      prev.map(res => ({
+        ...res,
+        expenses: res.expenses.filter(exp => exp.monthKey < startKey || exp.monthKey > endKey),
+      }))
+    );
+    setBuildingExpenses(prev =>
+      prev.filter(exp => exp.monthKey < startKey || exp.monthKey > endKey)
+    );
   };
 
   const totalAllDebts = useMemo(
@@ -1021,13 +650,6 @@ export default function App() {
     openExpenseModal('building', type, { expenseId, amount, description, paid });
   };
 
-  const openCalendarModal = (target) => {
-    setCalendarTargetField(target);
-    setTempYear(target === 'appCurrent' ? currentYear : systemDate.getFullYear());
-    setTempMonthIdx(target === 'appCurrent' ? currentMonthIdx : systemDate.getMonth());
-    setExpenseModal({ type: 'calendar', context: null, residentId: null, expenseId: null, amount: '', description: '', paid: false });
-  };
-
   // ─── EXPENSE HANDLERS ──────────────────────────────────────────────────
   const handleConfirmResidentExpense = ({ amount, description, paid }) => {
     if (!expenseModal.residentId) return;
@@ -1084,67 +706,6 @@ export default function App() {
     if (!expenseModal.expenseId) return;
     setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseModal.expenseId));
     closeExpenseModal();
-  };
-
-  // ─── CALENDAR STATE & HANDLER ──────────────────────────────────────────
-  const [calendarTargetField, setCalendarTargetField] = useState(null);
-  const [tempYear,            setTempYear]            = useState(systemDate.getFullYear());
-  const [tempMonthIdx,        setTempMonthIdx]        = useState(systemDate.getMonth());
-
-  const currentTimelineIndex = useMemo(() => {
-    const idx = TIMELINE_YEARS.indexOf(tempYear);
-    return idx !== -1 ? idx : 0;
-  }, [tempYear]);
-
-  const handleConfirmCalendar = () => {
-    const formattedString = `${monthNames[tempMonthIdx].substring(0, 3)} ${tempYear}`;
-    if (calendarTargetField === 'appCurrent') {
-      setCurrentYear(tempYear);
-      setCurrentMonthIdx(tempMonthIdx);
-    } else if (calendarTargetField === 'rangeFrom') {
-      setFromMonth(formattedString);
-    } else if (calendarTargetField === 'rangeTo') {
-      setToMonth(formattedString);
-    }
-    closeExpenseModal();
-  };
-
-  // ─── DATE RANGE DELETION ───────────────────────────────────────────────
-  const isDeleteRangeActive = fromMonth !== '' && toMonth !== '';
-
-  const handleDeleteSelectedRangeData = () => {
-    if (!isDeleteRangeActive) return;
-
-    const parseRangeString = (str) => {
-      if (!str) return 0;
-      const [mStr, yStr] = str.split(' ');
-      const year      = parseInt(yStr) || 0;
-      const shortNames = monthNames.map(n => n.substring(0, 3).toUpperCase());
-      const monthIdx  = shortNames.indexOf(mStr.toUpperCase());
-      return year * 12 + monthIdx;
-    };
-
-    const rawStart = parseRangeString(fromMonth);
-    const rawEnd   = parseRangeString(toMonth);
-
-    // FIX [Bug #5]: Swap keys if the user picked dates in reverse order.
-    // Previously, startKey > endKey caused the filter to match everything,
-    // silently deleting all expense data rather than the intended range.
-    const startKey = Math.min(rawStart, rawEnd);
-    const endKey   = Math.max(rawStart, rawEnd);
-
-    setResidents(prev =>
-      prev.map(res => ({
-        ...res,
-        expenses: res.expenses.filter(exp => exp.monthKey < startKey || exp.monthKey > endKey),
-      }))
-    );
-    setBuildingExpenses(prev =>
-      prev.filter(exp => exp.monthKey < startKey || exp.monthKey > endKey)
-    );
-
-    setFromMonth('');
-    setToMonth('');
   };
 
   // ─── CARD MODAL STATE ──────────────────────────────────────────────────
@@ -1305,7 +866,7 @@ export default function App() {
         color: isFilteredAwayFromToday ? HDR.monthTextBtnOtherColor : HDR.monthTextBtnCurrentColor,
         ...HDR.monthTextBtnStyle
       }}
-      onClick={() => openCalendarModal('appCurrent')}
+      onClick={() => setIsHeaderPickerOpen(true)}
     >
       {currentMonthString}
     </button>
@@ -1329,88 +890,12 @@ export default function App() {
 
         {contentArea}
 
-        {/* ─── MAIN MENU (now uses ModalWrapper for consistent behavior) ── */}
-        <ModalWrapper isOpen={isMainMenuOpen} onClose={() => setIsMainMenuOpen(false)}>
-          <div
-            style={{ ...MNU.boxContainerStyle, ...MNU.contentAnimation(A) }}
-            className={MNU.boxContainer}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className={MNU.sectionRow}>
-              <span className={MNU.sectionLabelLeft}>{t('language')}</span>
-              <div className={MNU.optionsRightGroup}>
-                <button onClick={() => setCurrentLanguage('en')} className={`${MNU.pillButton} ${currentLanguage === 'en' ? MNU.activeRingClass : ''}`}>EN</button>
-                <button onClick={() => setCurrentLanguage('gr')} className={`${MNU.pillButton} ${currentLanguage === 'gr' ? MNU.activeRingClass : ''}`}>GR</button>
-              </div>
-            </div>
-
-            <div className={MNU.sectionRow}>
-              <span className={MNU.sectionLabelLeft}>{t('sort_by')}</span>
-              <div className={MNU.optionsRightGroup}>
-                <button onClick={() => setCurrentSortBy('Tag')}  className={`${MNU.pillButton} ${currentSortBy === 'Tag'  ? MNU.activeRingClass : ''}`}>{t('tag')}</button>
-                <button onClick={() => setCurrentSortBy('Debt')} className={`${MNU.pillButton} ${currentSortBy === 'Debt' ? MNU.activeRingClass : ''}`}>{t('debt')}</button>
-              </div>
-            </div>
-
-            <div className={MNU.sectionRow}>
-              <span className={MNU.sectionLabelLeft}>{t('symbol')}</span>
-              <div className={MNU.optionsRightGroup}>
-                <div className={MNU.symbolPill}>
-                  <div className={MNU.symbolIconArea}>
-                    <SpriteIcon id="icon-arrow-left" className={ICN.rollerArrowSize} />
-                  </div>
-                  <div className={MNU.symbolRollWrapper}>
-                    <div
-                      className={MNU.symbolRollContainer}
-                      style={{ transform: `translateY(-${currencyIndex * 28}px)`, height: `${D.currencyOptions.length * 28}px`, transition: A.rollerTransition, top: '0px' }}
-                    >
-                      {D.currencyOptions.map(option => (
-                        <div key={option.label} className={MNU.symbolText}>{option.label}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={MNU.symbolIconArea}>
-                    <SpriteIcon id="icon-arrow-right" className={ICN.rollerArrowSize} />
-                  </div>
-                  <div className={MNU.symbolLeftTapZone}  onClick={() => cycleCurrency(-1)} />
-                  <div className={MNU.symbolRightTapZone} onClick={() => cycleCurrency(1)}  />
-                </div>
-              </div>
-            </div>
-
-            <div className={MNU.dateRangeSection}>
-              <div className={MNU.dateRangeButtonsRow}>
-                <button onClick={() => openCalendarModal('rangeFrom')} className={MNU.dateRangeBtn}>{fromMonth || t('from_month')}</button>
-                <button onClick={() => openCalendarModal('rangeTo')}   className={MNU.dateRangeBtn}>{toMonth   || t('to_month')}</button>
-              </div>
-              <button
-                onClick={handleDeleteSelectedRangeData}
-                disabled={!isDeleteRangeActive}
-                className={`${MNU.deleteBtn} ${isDeleteRangeActive ? MNU.deleteActiveRingClass : ''}`}
-              >
-                <SpriteIcon id="icon-trash" className={MNU.deleteIconClass(isDeleteRangeActive)} />
-                <span className={MNU.deleteText(isDeleteRangeActive)}>{t('delete_data')}</span>
-              </button>
-            </div>
-
-            <div className={MNU.footerRow}>
-              {/* TODO: wire up PDF export */}
-              <button className={MNU.actionBtn} onClick={() => {}}>
-                <SpriteIcon id="icon-download" className={MNU.actionBtnIconSize} /> {t('pdf')}
-              </button>
-              <button className={MNU.actionBtn} onClick={() => setIsMainMenuOpen(false)}>
-                {t('exit')}
-              </button>
-            </div>
-          </div>
-        </ModalWrapper>
-
         {/* ─── EXPENSE MODAL ─────────────────────────────────────────── */}
         {/* FIX [Bug #7]: `key` prop forces ExpenseModal to remount when the target
             expense changes. Without this, useState inside ExpenseModal ignores
             updated initialData when switching between expenses, showing stale values. */}
         <ModalWrapper
-          isOpen={expenseModal.type !== null && expenseModal.type !== 'calendar'}
+          isOpen={expenseModal.type !== null}
           onClose={closeExpenseModal}
         >
           <ExpenseModal
@@ -1424,193 +909,39 @@ export default function App() {
           />
         </ModalWrapper>
 
-        {/* ─── CALENDAR MODAL ────────────────────────────────────────── */}
-<ModalWrapper isOpen={expenseModal.type === 'calendar'} onClose={closeExpenseModal}>
-  <div 
-    style={{ 
-      ...MB.boxContainerStyle, 
-      ...MB.contentAnimation(A),
-      maxWidth: CAL.containerMaxWidth,
-      padding: CAL.containerPadding,
-    }} 
-    className={MB.boxContainer} 
-    onClick={e => e.stopPropagation()}
-  >
-    {/* Year Row - Year roller LEFT, Nav Pill RIGHT */}
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center',
-      gap: '16px',
-      height: '44px'
-    }}>
-      {/* Year Roller - LEFT aligned */}
-      <div style={{
-        height: '44px',
-        overflow: 'hidden',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        flex: 1,
-        minWidth: 0,
-      }}>
-        <div
-          style={{
-            position: 'absolute',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            transform: `translateY(-${currentTimelineIndex * 44}px)`,
-            height: `${TIMELINE_YEARS.length * 44}px`,
-            transition: A.rollerTransition,
-            top: '0px',
-            left: 0,
+        {/* ─── MAIN SETTINGS MODAL ───────────────────────────────────── */}
+        <ModalWrapper isOpen={isMainMenuOpen} onClose={() => setIsMainMenuOpen(false)}>
+          <SettingsModal
+            t={t}
+            monthNames={monthNames}
+            currentLanguage={currentLanguage}
+            onToggleLanguage={toggleLanguage}
+            currentSortBy={currentSortBy}
+            onToggleSort={toggleSortBy}
+            currencyIndex={currencyIndex}
+            onCycleCurrency={cycleCurrencyForward}
+            currencyOptions={D.currencyOptions}
+            onCycleTheme={cycleTheme}
+            onExport={handleExportData}
+            onImportFile={handleImportFile}
+            onConfirmDeleteRange={handleDeleteDataRange}
+            onExitAll={() => setIsMainMenuOpen(false)}
+          />
+        </ModalWrapper>
+
+        {/* ─── HEADER MONTH/YEAR PICKER (sets the dashboard's active month) ── */}
+        <MonthYearPickerModal
+          isOpen={isHeaderPickerOpen}
+          initialMonthIdx={currentMonthIdx}
+          initialYear={currentYear}
+          onConfirm={(monthIdx, year) => {
+            setCurrentMonthIdx(monthIdx);
+            setCurrentYear(year);
+            setIsHeaderPickerOpen(false);
           }}
-        >
-          {/* FIX [Design #1]: Year color now uses CAL.yearColor token instead of
-              directly accessing COLORS['main-color-1'], which broke the "no
-              hardcoded values outside DesignConfig" contract. */}
-          {TIMELINE_YEARS.map(year => (
-            <div
-              key={year}
-              style={{
-                fontSize: CAL.yearFontSize,
-                fontWeight: CAL.yearFontWeight,
-                color: CAL.yearColor,
-                height: '44px',
-                lineHeight: '44px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                paddingLeft: '4px',
-              }}
-            >
-              {year}
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Navigation Pill - RIGHT aligned */}
-      <NavigationPill
-        type="year"
-        currentValue={tempYear}
-        totalOptions={TIMELINE_YEARS.length}
-        onPrev={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))}
-        onNext={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))}
-        onGoToday={() => setTempYear(systemDate.getFullYear())}
-        canGoToday={tempYear !== systemDate.getFullYear()}
-        variant="transparent"
-      />
-    </div>
-    
-    {/* Gap */}
-    <div style={{ height: '20px' }} />
-    
-    {/* Month Grid - 3 rows × 4 columns */}
-    {/* FIX [Design #2]: Month button styles now read from CAL tokens instead of
-        duplicating raw values (height, radius, bg, color, fontSize, etc.). */}
-    <div style={{ 
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: CAL.monthGridGap,
-    }}>
-      {monthNames.map((monthName, idx) => {
-        let shortMonth;
-        try { shortMonth = translations['months_short'][currentLanguage][idx]; }
-        catch (e) { shortMonth = monthName.substring(0, 3).toUpperCase(); }
-        
-        return (
-          <button
-            key={monthName}
-            onClick={() => setTempMonthIdx(idx)}
-            style={{
-              height: CAL.monthButtonHeight,
-              borderRadius: CAL.monthButtonRadius,
-              backgroundColor: CAL.monthButtonBg,
-              border: tempMonthIdx === idx ? CAL.monthButtonActiveRing : 'none',
-              color: CAL.monthButtonColor,
-              fontSize: CAL.monthButtonFontSize,
-              fontWeight: CAL.monthButtonFontWeight,
-              letterSpacing: CAL.monthButtonLetterSpacing,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s',
-              outline: 'none',
-              cursor: 'pointer',
-              padding: '0 4px',
-              minWidth: 0,
-              width: '100%',
-            }}
-            aria-label={monthName}
-            aria-pressed={tempMonthIdx === idx}
-          >
-            {shortMonth}
-          </button>
-        );
-      })}
-    </div>
-    
-    {/* Gap */}
-    <div style={{ height: '20px' }} />
-    
-    {/* Footer Buttons */}
-    {/* FIX [Design #3]: Footer button styles now read from CAL tokens instead of
-        duplicating raw hex values and pixel sizes inline. */}
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center',
-      gap: CAL.footerGap,
-    }}>
-      <button 
-        onClick={handleConfirmCalendar}
-        style={{
-          flex: '1',
-          height: CAL.footerButtonHeight,
-          borderRadius: CAL.footerButtonRadius,
-          backgroundColor: CAL.footerButtonBg,
-          border: CAL.footerOKRing,
-          color: CAL.footerButtonColor,
-          fontSize: CAL.footerButtonFontSize,
-          fontWeight: CAL.footerButtonFontWeight,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'transform 0.2s',
-          outline: 'none',
-          cursor: 'pointer',
-        }}
-        className="active:scale-95"
-      >
-        {t('ok')}
-      </button>
-      
-      <button 
-        onClick={closeExpenseModal}
-        style={{
-          flex: '1',
-          height: CAL.footerButtonHeight,
-          borderRadius: CAL.footerButtonRadius,
-          backgroundColor: CAL.footerButtonBg,
-          border: 'none',
-          color: CAL.footerButtonColor,
-          fontSize: CAL.footerButtonFontSize,
-          fontWeight: CAL.footerButtonFontWeight,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'transform 0.2s',
-          outline: 'none',
-          cursor: 'pointer',
-        }}
-        className="active:scale-95"
-      >
-        {t('cancel')}
-      </button>
-    </div>
-  </div>
-</ModalWrapper>
+          onClose={() => setIsHeaderPickerOpen(false)}
+          t={t}
+        />
 
         {/* ─── CARD MODAL ────────────────────────────────────────────── */}
         <ModalWrapper isOpen={!!cardModalState.type} onClose={closeCardModal}>
@@ -1652,4 +983,4 @@ export default function App() {
       </div>
     </div>
   );
-};
+}
