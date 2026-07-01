@@ -224,7 +224,7 @@ const header = {
   syncIconWrapper:          "ml-2",
   bottomRow:                "flex items-center pl-[2px] pr-[2px] w-full",
   bottomRowStyle:           { display: 'flex', alignItems: 'center', gap: '16px' },
-  monthTextBtn:             "font-normal tracking-wide text-left text-2xl hover:opacity-80 transition-opacity select-none truncate",
+  monthTextBtn:             "font-normal tracking-wide text-left text-xl hover:opacity-80 transition-opacity select-none truncate",
   monthTextBtnStyle:        { flexShrink: 0 },
   monthTextBtnCurrentColor: COLORS['main-color-1'],
   monthTextBtnOtherColor:   COLORS['accent-color-2'],
