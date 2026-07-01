@@ -292,19 +292,19 @@ logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
   pillIcon:           `h-6 w-6 text-[${COLORS['main-color-1']}] shrink-0`,
   pillCenterText:     `flex-1 text-center font-medium text-base text-[${COLORS['main-color-1']}]`,
 
-  // Roller value (rows 2-4): sliding/rolling dynamic value display
-  rollerWrapper:     "h-6 overflow-hidden relative flex items-center flex-1 min-w-0 justify-end",
+  // Roller value (rows 2-5): sliding/rolling dynamic value display.
+  // Shrink-wraps to its content and sits left-aligned immediately after the
+  // label's 8px gap (rather than flex-growing to fill the row), so a single
+  // trailing flex-1 spacer is what pushes the trailing icon to the right edge.
+  rollerWrapper:     "h-6 overflow-hidden relative flex items-start min-w-0 justify-start shrink-0",
   rollerTrack:        (activeIdx, A) => ({
-    position: 'absolute',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     transform: `translateY(-${activeIdx * 24}px)`,
     transition: A.rollerTransition,
-    right: 0,
-    top: 0,
   }),
-  rollerItem:        `h-6 leading-6 font-medium text-base text-[${COLORS['accent-color-1']}] whitespace-nowrap text-right`,
+  rollerItem:        `h-6 leading-6 font-medium text-base text-[${COLORS['accent-color-1']}] whitespace-nowrap text-left`,
 };
 
 // ─── DELETE DATA RANGE SUB-MODAL ─────────────────────────────────────────

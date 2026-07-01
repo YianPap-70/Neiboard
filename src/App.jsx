@@ -921,6 +921,7 @@ export default function App() {
             currencyIndex={currencyIndex}
             onCycleCurrency={cycleCurrencyForward}
             currencyOptions={D.currencyOptions}
+            themeIndex={themeIndex}
             onCycleTheme={cycleTheme}
             onExport={handleExportData}
             onImportFile={handleImportFile}

@@ -501,7 +501,7 @@ function SettingsModal({
   currentLanguage, onToggleLanguage,
   currentSortBy, onToggleSort,
   currencyIndex, onCycleCurrency, currencyOptions,
-  onCycleTheme,
+  themeIndex, onCycleTheme,
   onExport, onImportFile,
   onConfirmDeleteRange,
   onExitAll,
@@ -597,7 +597,9 @@ function SettingsModal({
 
         {/* Row 5 — Theme selection */}
         <button className={SM.pillRow} style={rowPadStyle} onClick={onCycleTheme}>
-          <span className={SM.pillLabel}>{t('color_theme')}</span>
+          <span className={SM.pillLabel}>{t('color_theme')}:</span>
+          <div style={{ width: '8px' }} />
+          <RollerValue items={D.themes.map(theme => theme.name)} activeIndex={themeIndex} />
           <div style={{ flex: 1 }} />
           <SpriteIcon id="palette-icn" className={SM.pillIcon} />
         </button>
