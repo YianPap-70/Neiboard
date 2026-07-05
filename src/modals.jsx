@@ -505,6 +505,7 @@ function SettingsModal({
   onExport, onImportFile,
   onConfirmDeleteRange,
   onExitAll,
+  onReport,
 }) {
   const D  = window.DESIGN;
   const SM = D.settingsModal;
@@ -524,9 +525,8 @@ function SettingsModal({
     e.target.value = '';
   };
 
-  // TODO: wire up the resident/building status report once the report
-  // generation backend or PDF export pipeline is available.
-  const handleReportClick = () => {};
+  // Opens the printable / "Save as PDF" report overlay (report.jsx).
+  const handleReportClick = () => onReport?.();
 
   const handleConfirmDeleteAndReturn = (from, to) => {
     onConfirmDeleteRange(from, to);

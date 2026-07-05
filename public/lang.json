@@ -58,5 +58,10 @@
   "sort_apartment_tag": { "en": "Apartment / Tag", "gr": "διαμέρισμα / ετικέτα" },
   "from": { "en": "From", "gr": "Από" },
   "to": { "en": "To", "gr": "Έως" },
-  "reset": { "en": "Reset", "gr": "Επαναφορά" }
+  "reset": { "en": "Reset", "gr": "Επαναφορά" },
+  "building_expenses_heading": { "en": "Building Expenses", "gr": "Κοινόχρηστα Έξοδα" },
+  "previous_month_debts": { "en": "Previous Month Debts", "gr": "Οφειλές Προηγούμενων Μηνών" },
+  "previous_month_expenses": { "en": "Previous Month Expenses", "gr": "Έξοδα Προηγούμενων Μηνών" },
+  "print": { "en": "Print", "gr": "Εκτύπωση" },
+  "close": { "en": "Close", "gr": "Κλείσιμο" }
 }

@@ -24,6 +24,7 @@ import {
   CardProfileModal, DeleteCardConfirmModal, ExpenseModal,
   MonthYearPickerModal, DeleteRangeModal, SettingsModal,
 } from './modals.jsx';
+import ReportOverlay from './report.jsx';
 
 // ─── 3D FLIP BUTTON (CARDS ↔ BUILDING VIEW) ──────────────────────────────
 function WalletFlipButton({ onToggle, t }) {
@@ -386,6 +387,7 @@ export default function App() {
   const [currencyIndex,        setCurrencyIndex]        = useState(0);
   const [themeIndex,           setThemeIndex]           = useState(0);
   const [isHeaderPickerOpen,   setIsHeaderPickerOpen]   = useState(false);
+  const [isReportOpen,         setIsReportOpen]         = useState(false);
 
   // ─── PERSISTENCE-AWARE INITIAL LOAD ─────────────────────────────────────
   // FIX [Bug #1] (carried forward): effect derives everything it needs from
@@ -927,6 +929,7 @@ export default function App() {
             onImportFile={handleImportFile}
             onConfirmDeleteRange={handleDeleteDataRange}
             onExitAll={() => setIsMainMenuOpen(false)}
+            onReport={() => { setIsMainMenuOpen(false); setIsReportOpen(true); }}
           />
         </ModalWrapper>
 
@@ -980,6 +983,22 @@ export default function App() {
             )}
           </div>
         </ModalWrapper>
+
+        {/* ─── PRINTABLE / PDF REPORT ─────────────────────────────────── */}
+        <ReportOverlay
+          isOpen={isReportOpen}
+          onClose={() => setIsReportOpen(false)}
+          t={t}
+          residents={processedResidents}
+          buildingExpenses={buildingExpenses}
+          currentMonthString={currentMonthString}
+          currentMonthKey={currentMonthKey}
+          currentYear={currentYear}
+          currentMonthIdx={currentMonthIdx}
+          isPastExpense={isPastExpense}
+          activeCurrencySymbol={activeCurrencySymbol}
+          totalAllDebts={totalAllDebts}
+        />
 
       </div>
     </div>
