@@ -28,31 +28,49 @@ const BLACK = '#000000';
 const GRAY  = '#6b6b6b';
 const LINE  = '#dddddd';
 
+// Some sprite icons (e.g. icon-warning-filled) are multi-part: one part
+// follows `currentColor` (which the `color` style already forces black),
+// but other parts reference the app's themed CSS variables directly. This
+// object forces every one of those variables to black too, so no icon
+// sub-part can ever leak the app's live color theme onto the print-only,
+// black-and-white report.
+const REPORT_COLOR_OVERRIDE = {
+  '--main-color-1': BLACK, '--main-color-2': BLACK, '--main-color-3': BLACK,
+  '--main-color-4': BLACK, '--main-color-5': BLACK, '--main-color-6': BLACK,
+  '--accent-color-1': BLACK, '--accent-color-2': BLACK, '--accent-color-3': BLACK,
+};
+
 // ─── PRINT / PAGE STYLESHEET (injected once) ─────────────────────────────
-// @media print hides the entire live app and every bit of preview chrome,
-// leaving only #report-page-root (and its children) visible — so nothing
-// from the themed app can ever leak onto the printed page.
+// On screen, the interactive preview overlay is what's visible, and the
+// print-only clone sits hidden (display:none) elsewhere in the body.
+// When printing, we flip that: hide the live app (#root) and the preview
+// overlay, and show only the plain, normal-flow print-only clone. Because
+// that clone is never nested inside a `position: fixed` / `absolute`
+// ancestor, it lays out exactly like ordinary page content and can never
+// get clipped by a stray fixed-size wrapper — the browser sizes it purely
+// from @page margins.
 (function injectReportStyles() {
-  if (document.getElementById('report-print-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'report-print-styles';
+  let style = document.getElementById('report-print-styles');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'report-print-styles';
+    document.head.appendChild(style);
+  }
+  // Always (re)write the content — never skip — so a stale rule left over
+  // from a previous hot-reload/edit can never linger in <head> and quietly
+  // hide everything with no matching element left to reveal it.
   style.textContent = `
+    .report-print-only { display: none; }
     @media print {
-      body * { visibility: hidden; }
-      #report-page-root, #report-page-root * { visibility: visible; }
-      #report-page-root {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-      }
+      #root { display: none !important; }
+      .report-preview-overlay { display: none !important; }
+      .report-print-only { display: block !important; }
     }
     @page {
       size: A4;
       margin: 10mm;
     }
   `;
-  document.head.appendChild(style);
 })();
 
 // ─── SMALL PRESENTATIONAL PIECES ──────────────────────────────────────────
@@ -210,16 +228,13 @@ function ReportDocument({
 
   return (
     <div
-      id="report-page-root"
       style={{
         fontFamily: REPORT_FONT,
         color: BLACK,
         background: '#ffffff',
-        width: '210mm',
-        minHeight: '297mm',
-        margin: '0 auto',
-        padding: '14mm 12mm',
+        padding: '10mm 8mm',
         boxSizing: 'border-box',
+        ...REPORT_COLOR_OVERRIDE,
       }}
     >
       {/* ─── PAGE HEADER ─────────────────────────────────────────────── */}
@@ -232,7 +247,7 @@ function ReportDocument({
             {activeCurrencySymbol}{activeCurrencySymbol ? ' ' : ''}{formatAmount(totalAllDebts)}
           </span>
         </div>
-        <SpriteIcon id="neiboard-logo" style={{ height: '26px', width: 'auto', aspectRatio: '91 / 24', color: BLACK }} />
+        <SpriteIcon id="neiboard-logo" style={{ height: '40px', width: 'auto', aspectRatio: '91 / 24', color: BLACK }} />
       </div>
 
       {/* ─── RESIDENTS ───────────────────────────────────────────────── */}
@@ -280,9 +295,10 @@ function ReportDocument({
 }
 
 // ─── PREVIEW OVERLAY (portal root) ────────────────────────────────────────
-// Fixed top bar (Print / Close) + a scrollable gray backdrop holding the
-// white A4 page. The bar and backdrop are never printed — the print
-// stylesheet above hides everything except #report-page-root itself.
+// Renders the interactive on-screen preview (fixed toolbar + scrollable
+// simulated A4 page) plus a plain, hidden print-only clone. Only the
+// print-only clone is ever shown to the printer/PDF engine — see the
+// injected stylesheet above.
 export default function ReportOverlay({
   isOpen, onClose, t,
   residents, buildingExpenses,
@@ -310,63 +326,86 @@ export default function ReportOverlay({
   };
 
   return ReactDOM.createPortal(
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        display: 'flex', flexDirection: 'column',
-        background: '#3a3a3a',
-      }}
-    >
-      {/* Preview toolbar — hidden automatically when printing */}
+    <>
+      {/* ─── ON-SCREEN INTERACTIVE PREVIEW ──────────────────────────── */}
       <div
+        className="report-preview-overlay"
         style={{
-          flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px',
-          padding: '12px 16px',
-          background: '#222222',
-          borderBottom: '1px solid #444',
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', flexDirection: 'column',
+          background: '#3a3a3a',
         }}
       >
-        <button
-          onClick={handlePrint}
+        {/* Preview toolbar */}
+        <div
           style={{
-            height: '40px', padding: '0 20px', borderRadius: '9999px',
-            border: 'none', background: '#ffffff', color: '#111111',
-            fontFamily: REPORT_FONT, fontWeight: 700, fontSize: '14px',
-            cursor: 'pointer',
+            flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px',
+            padding: '12px 16px',
+            background: '#222222',
+            borderBottom: '1px solid #444',
           }}
         >
-          {t('pdf')} / {t('print')}
-        </button>
-        <button
-          onClick={onClose}
-          style={{
-            height: '40px', padding: '0 20px', borderRadius: '9999px',
-            border: '1px solid #666', background: 'transparent', color: '#ffffff',
-            fontFamily: REPORT_FONT, fontWeight: 600, fontSize: '14px',
-            cursor: 'pointer',
-          }}
-        >
-          {t('close')}
-        </button>
-      </div>
+          <button
+            onClick={handlePrint}
+            style={{
+              height: '40px', padding: '0 20px', borderRadius: '9999px',
+              border: 'none', background: '#ffffff', color: '#111111',
+              fontFamily: REPORT_FONT, fontWeight: 700, fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {t('pdf')} / {t('print')}
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              height: '40px', padding: '0 20px', borderRadius: '9999px',
+              border: '1px solid #666', background: 'transparent', color: '#ffffff',
+              fontFamily: REPORT_FONT, fontWeight: 600, fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {t('close')}
+          </button>
+        </div>
 
-      {/* Scrollable preview area */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '24px 0' }}>
-        <div style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.4)', width: '210mm', margin: '0 auto' }}>
-          <ReportDocument
-            t={t}
-            residents={residents}
-            buildingExpenses={buildingExpenses}
-            currentMonthString={currentMonthString}
-            currentMonthKey={currentMonthKey}
-            isPastExpense={isPastExpense}
-            activeCurrencySymbol={activeCurrencySymbol}
-            totalAllDebts={totalAllDebts}
-          />
+        {/* Scrollable preview area — purely visual, a simulated A4 page */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '24px 0' }}>
+          <div style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.4)', width: '210mm', margin: '0 auto' }}>
+            <ReportDocument
+              t={t}
+              residents={residents}
+              buildingExpenses={buildingExpenses}
+              currentMonthString={currentMonthString}
+              currentMonthKey={currentMonthKey}
+              isPastExpense={isPastExpense}
+              activeCurrencySymbol={activeCurrencySymbol}
+              totalAllDebts={totalAllDebts}
+            />
+          </div>
         </div>
       </div>
-    </div>,
+
+      {/* ─── PRINT-ONLY CLONE ────────────────────────────────────────── */}
+      {/* Hidden (display:none) at all times on screen. Lives in plain,
+          normal document flow — no fixed/absolute ancestor — so when the
+          print stylesheet flips it to display:block for printing, the
+          browser sizes it purely from the @page margin, and it can never
+          be clipped by a stray fixed-width wrapper. */}
+      <div className="report-print-only">
+        <ReportDocument
+          t={t}
+          residents={residents}
+          buildingExpenses={buildingExpenses}
+          currentMonthString={currentMonthString}
+          currentMonthKey={currentMonthKey}
+          isPastExpense={isPastExpense}
+          activeCurrencySymbol={activeCurrencySymbol}
+          totalAllDebts={totalAllDebts}
+        />
+      </div>
+    </>,
     document.body
   );
 }
