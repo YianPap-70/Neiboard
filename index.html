@@ -6,27 +6,23 @@
   <title>Neiboard App</title>
   
   <!-- Google Fonts -->
+  <!--
+    NOTE FOR LATER ANDROID WRAPPING: this font, and the Tailwind CSS script
+    right below it, are both loaded from the internet every time the app
+    starts. That's fine in a normal browser, but if this page is ever opened
+    inside the native Android app without an internet connection (or the
+    very first time before anything's cached), the whole app would show up
+    unstyled and without its font. Before shipping the Android version,
+    these two should be swapped for copies bundled inside the app itself
+    (a downloaded font file, and a built version of Tailwind's CSS) instead
+    of being fetched from these addresses. This wasn't changed here because
+    it requires touching the project's build setup, which wasn't part of
+    the files reviewed.
+  -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS via CDN (simplest approach for now) -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  
-  <!-- Preload icons.svg before React mounts -->
-  <script>
-    fetch('/icons.svg')
-      .then(r => {
-        if (!r.ok) throw new Error('icons.svg not found');
-        return r.text();
-      })
-      .then(svg => {
-        const div = document.createElement('div');
-        div.style.display = 'none';
-        div.setAttribute('aria-hidden', 'true');
-        div.innerHTML = svg;
-        document.body.insertBefore(div, document.body.firstChild);
-      })
-      .catch(err => console.warn('Failed to load icons.svg:', err));
-  </script>
 </head>
 <body>
   <div id="root"></div>
@@ -34,7 +30,10 @@
   <!-- Load DesignConfig FIRST so window.DESIGN is available -->
   <script type="module" src="/src/DesignConfig.js"></script>
   
-  <!-- Then load the main app -->
+  <!-- Then load the main app. main.jsx now also takes care of loading the
+       icon sprite sheet — it's bundled into the app's code instead of being
+       fetched here, so it can never fail to load once the app is running
+       inside a native Android wrapper. -->
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
