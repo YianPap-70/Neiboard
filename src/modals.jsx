@@ -8,7 +8,7 @@
 // =========================================================================
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { systemDate, TIMELINE_YEARS } from './utils.js';
+import { getSystemDate, TIMELINE_YEARS } from './utils.js';
 import { SpriteIcon, NavigationPill, AutoTextarea, ModalWrapper, RollerValue } from './primitives.jsx';
 
 // ─── CARD PROFILE MODAL (ADD / EDIT RESIDENT) ────────────────────────────
@@ -130,7 +130,9 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
   const [isPaid,      setIsPaid]      = useState(initialData.paid        ?? false);
   const [mode,        setMode]        = useState(initialData.type); // 'add' | 'edit' | 'delete' | 'buildingDelete'
 
-  // FIX [Bug #4]: Amount validation state — drives shake animation and error ring.
+  // Tracks whether the amount the user typed is invalid (empty, not a
+  // number, or zero/negative). When true, the amount field gets a red ring
+  // and a brief shake animation to draw attention to the problem.
   const [amountError, setAmountError] = useState(false);
   const amountWrapperRef = useRef(null);
 
@@ -182,7 +184,9 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
             <span className={EM.headerTitle}>{t(isAdd ? 'add_amount' : 'edit_amount')}</span>
           </div>
 
-          {/* FIX [Bug #4]: ref for shake animation; error ring via inline style override */}
+          {/* Wraps the amount input so we can trigger its shake animation
+              directly (see handleConfirm above) and swap in the red error
+              ring style when the entered amount is invalid. */}
           <div
             ref={amountWrapperRef}
             className={EM.amountWrapper}
@@ -334,8 +338,8 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
             totalOptions={TIMELINE_YEARS.length}
             onPrev={() => setTempYear(y => Math.max(TIMELINE_YEARS[0], y - 1))}
             onNext={() => setTempYear(y => Math.min(TIMELINE_YEARS[TIMELINE_YEARS.length - 1], y + 1))}
-            onGoToday={() => setTempYear(systemDate.getFullYear())}
-            canGoToday={tempYear !== systemDate.getFullYear()}
+            onGoToday={() => setTempYear(getSystemDate().getFullYear())}
+            canGoToday={tempYear !== getSystemDate().getFullYear()}
             variant="transparent"
           />
         </div>
@@ -485,8 +489,8 @@ function DeleteRangeModal({
 
       <MonthYearPickerModal
         isOpen={pickerTarget !== null}
-        initialMonthIdx={activePickerDate?.monthIdx ?? systemDate.getMonth()}
-        initialYear={activePickerDate?.year ?? systemDate.getFullYear()}
+        initialMonthIdx={activePickerDate?.monthIdx ?? getSystemDate().getMonth()}
+        initialYear={activePickerDate?.year ?? getSystemDate().getFullYear()}
         onConfirm={handlePickerConfirm}
         onClose={() => setPickerTarget(null)}
         t={t}

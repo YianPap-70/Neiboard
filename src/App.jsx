@@ -11,10 +11,11 @@
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
-  systemDate, STORAGE_KEY, STORAGE_VERSION,
+  getSystemDate, STORAGE_KEY, STORAGE_VERSION,
   loadPersistedData, savePersistedData, formatDateStamp,
   TIMELINE_YEARS, DEFAULT_MONTH_NAMES,
   formatAmount, smoothScrollTo, generateInitialResidents,
+  makeId, isValidBackupShape,
 } from './utils.js';
 import {
   SpriteIcon, NavigationPill, Drawer, ModalWrapper,
@@ -25,6 +26,19 @@ import {
   MonthYearPickerModal, DeleteRangeModal, SettingsModal,
 } from './modals.jsx';
 import ReportOverlay from './report.jsx';
+
+// Translations are bundled directly into the app (rather than fetched over
+// the network at startup) so the app never depends on a network request —
+// or on a file path that happens to resolve correctly — just to show text.
+// This matters a lot once the app is wrapped for Android: fetching local
+// files like this can silently fail inside a native WebView depending on
+// how the app is packaged, which would otherwise leave the whole app stuck
+// on a loading screen forever.
+//
+// NOTE: this import assumes lang.json lives in the same folder as this file
+// (next to App.jsx, main.jsx, etc). If it currently lives in a separate
+// "public" folder, move it next to these files for this import to work.
+import translationsData from './lang.json';
 
 // ─── 3D FLIP BUTTON (CARDS ↔ BUILDING VIEW) ──────────────────────────────
 function WalletFlipButton({ onToggle, t }) {
@@ -325,9 +339,17 @@ export default function App() {
   const COLORS = D.colors;
 
   // ─── LOCALIZATION ──────────────────────────────────────────────────────
-  const [translations,     setTranslations]     = useState(null);
-  const [currentLanguage,  setCurrentLanguage]  = useState('en');
+  // `translations` comes from the bundled lang.json import above, so it's
+  // always available immediately — there's no "still loading" state to
+  // handle for this anymore.
+  const translations = translationsData;
+  const [currentLanguage, setCurrentLanguage] = useState('en');
 
+  // Looks up a piece of UI text by key, in the currently selected language,
+  // falling back to English and then to the raw key itself if a translation
+  // is ever missing. `replacements` lets a caller fill in placeholders, e.g.
+  // t('debts_for_month', { month: 'May 2026' }) turns "Debts / {month}" into
+  // "Debts / May 2026".
   const t = useCallback((key, replacements = {}) => {
     if (!translations || !translations[key]) return key;
     let value = translations[key][currentLanguage] || translations[key]['en'] || key;
@@ -339,24 +361,21 @@ export default function App() {
   }, [translations, currentLanguage]);
 
   useEffect(() => {
-    fetch('/lang.json')
-      .then(res => res.json())
-      .then(data => setTranslations(data))
-      .catch(err => console.error('Failed to load lang.json:', err));
-  }, []);
-
-  useEffect(() => {
     if (LAYOUT?.appBackgroundHex) document.body.style.backgroundColor = LAYOUT.appBackgroundHex;
   }, []);
 
   // ─── DATE / MONTH STATE ────────────────────────────────────────────────
-  const monthNames         = translations ? t('months') : DEFAULT_MONTH_NAMES;
-  const [currentMonthIdx,  setCurrentMonthIdx]  = useState(systemDate.getMonth());
-  const [currentYear,      setCurrentYear]      = useState(systemDate.getFullYear());
+  const monthNames = translations?.months ? t('months') : DEFAULT_MONTH_NAMES;
+  const [currentMonthIdx,  setCurrentMonthIdx]  = useState(() => getSystemDate().getMonth());
+  const [currentYear,      setCurrentYear]      = useState(() => getSystemDate().getFullYear());
   const currentMonthString = monthNames.length ? `${monthNames[currentMonthIdx]} ${currentYear}` : '';
   const currentMonthKey    = currentYear * 12 + currentMonthIdx;
 
-  const isFilteredAwayFromToday = currentMonthIdx !== systemDate.getMonth() || currentYear !== systemDate.getFullYear();
+  // Recomputed on every render (rather than compared against a date that
+  // was only ever captured once) so this stays correct even if the app has
+  // been sitting open for days — which is normal for a native Android app
+  // that isn't reloaded just because the calendar day changed.
+  const isFilteredAwayFromToday = currentMonthIdx !== getSystemDate().getMonth() || currentYear !== getSystemDate().getFullYear();
 
   const handlePrevMonth = () => {
     if (currentMonthIdx === 0)  { setCurrentMonthIdx(11); setCurrentYear(y => y - 1); }
@@ -368,8 +387,8 @@ export default function App() {
   };
   const handleGoToCurrentMonth = () => {
     if (isFilteredAwayFromToday) {
-      setCurrentMonthIdx(systemDate.getMonth());
-      setCurrentYear(systemDate.getFullYear());
+      setCurrentMonthIdx(getSystemDate().getMonth());
+      setCurrentYear(getSystemDate().getFullYear());
     }
   };
 
@@ -390,16 +409,15 @@ export default function App() {
   const [isReportOpen,         setIsReportOpen]         = useState(false);
 
   // ─── PERSISTENCE-AWARE INITIAL LOAD ─────────────────────────────────────
-  // FIX [Bug #1] (carried forward): effect derives everything it needs from
-  // `translations` directly rather than closing over outer-scope values.
-  // On first run: hydrate from localStorage if a saved blob exists; otherwise
-  // fall back to the original demo-data generator (first-run experience).
-  // NOTE: must be declared after the state hooks above (currentSortBy,
-  // currencyIndex, themeIndex, currentLanguage) since their setters/values
-  // are referenced directly in these effects' bodies and dependency arrays.
+  // Runs once, right after the app first mounts: loads previously saved data
+  // from localStorage if there is any; otherwise fills the app with sample
+  // demo residents so there's something to look at on a first run.
+  // This effect intentionally has an empty dependency array ([]) so it only
+  // ever runs a single time — translations are always available immediately
+  // now (see the bundled `translationsData` import above), so there's no
+  // need to wait for anything to finish loading first.
   const initializedRef = useRef(false);
   useEffect(() => {
-    if (!translations) return;
     if (residents.length > 0 || buildingExpenses.length > 0) return;
 
     const persisted = loadPersistedData();
@@ -412,14 +430,14 @@ export default function App() {
       if (typeof s.currencyIndex === 'number') setCurrencyIndex(s.currencyIndex);
       if (typeof s.themeIndex === 'number') setThemeIndex(s.themeIndex);
     } else {
-      const names  = translations['months']['en'];
-      const now    = new Date();
-      const key    = now.getFullYear() * 12 + now.getMonth();
-      const str    = `${names[now.getMonth()]} ${now.getFullYear()}`;
+      const names = translationsData['months']['en'];
+      const now   = getSystemDate();
+      const key   = now.getFullYear() * 12 + now.getMonth();
+      const str   = `${names[now.getMonth()]} ${now.getFullYear()}`;
       setResidents(generateInitialResidents(names, str, key));
     }
     initializedRef.current = true;
-  }, [translations]);
+  }, []);
 
   // ─── DEBOUNCED PERSISTENCE SAVE ──────────────────────────────────────────
   // Skips writes until the initial hydration above has run, so we never
@@ -443,13 +461,18 @@ export default function App() {
 
   const headerRef       = useRef(null);
   const cardRefs        = useRef({});
-  // FIX [Bug #6]: Refs to track and cancel in-flight setTimeout handles,
-  // preventing stale callbacks from firing after rapid view-toggle or card taps.
+  // Remember the currently-scheduled "view transition finished" and
+  // "scroll to this card" timers, so that if the user taps again before a
+  // timer fires, we can cancel the old one first. Without this, rapidly
+  // tapping the flip button or a resident card would queue up multiple
+  // timers that all eventually fire, causing the view-transition state or
+  // scroll position to jump around unexpectedly.
   const viewTransTimerRef = useRef(null);
   const scrollTimerRef    = useRef(null);
 
-  // FIX [Bug #6]: Clear the previous timer before scheduling a new one so rapid
-  // clicks on the flip button don't stack multiple state-reset callbacks.
+  // Flips between the resident-cards view and the building-expenses view,
+  // with a short animated transition in between. Cancels any transition
+  // still in progress from a previous tap before starting a new one.
   const handleToggleView = useCallback(() => {
     clearTimeout(viewTransTimerRef.current);
     const duration = parseFloat(A.viewTransitionDuration) * 1000;
@@ -493,39 +516,85 @@ export default function App() {
   };
 
   // ─── SETTINGS: EXPORT / IMPORT DATA BACKUP ──────────────────────────────
+  // Builds the full backup payload (all residents, building expenses, and
+  // settings) as a plain object. Shared by both the export button and the
+  // native bridge below, so there's only one place that defines what a
+  // backup contains.
+  const buildBackupPayload = () => ({
+    version: STORAGE_VERSION,
+    residents,
+    buildingExpenses,
+    settings: { language: currentLanguage, sortBy: currentSortBy, currencyIndex, themeIndex },
+  });
+
+  // Saves a backup file of all the app's data.
+  //
+  // In a normal web browser, this creates the file in memory and triggers a
+  // regular browser download.
+  //
+  // Inside a native Android wrapper, browser downloads like this often
+  // aren't shown to the person using the app unless the native side is set
+  // up to handle them — so instead, if the native app has installed a
+  // `window.NativeBridge.saveBackupFile` function, we hand the data to that
+  // function and let the native side decide how to save it (e.g. showing
+  // Android's own "Save file" screen). If that bridge isn't there (for
+  // example, during regular web development), it falls back to the normal
+  // browser download exactly as before.
   const handleExportData = () => {
-    const payload = JSON.stringify({
-      version: STORAGE_VERSION,
-      residents,
-      buildingExpenses,
-      settings: { language: currentLanguage, sortBy: currentSortBy, currencyIndex, themeIndex },
-    });
+    const payload = JSON.stringify(buildBackupPayload());
+    const fileName = `neiboard-backup-${formatDateStamp(getSystemDate())}.json`;
+
+    if (window.NativeBridge && typeof window.NativeBridge.saveBackupFile === 'function') {
+      window.NativeBridge.saveBackupFile(fileName, payload);
+      return;
+    }
+
     const blob = new Blob([payload], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `neiboard-backup-${formatDateStamp(new Date())}.json`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const handleImportFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        if (!parsed || !Array.isArray(parsed.residents) || !Array.isArray(parsed.buildingExpenses)) {
-          console.error('Invalid backup file: missing residents/buildingExpenses arrays.');
-          return;
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ...parsed }));
-        window.location.reload();
-      } catch (err) {
-        console.error('Failed to parse imported backup file:', err);
+  // Reads a backup JSON file the person selected (or one handed to us by a
+  // native "open file" bridge) and restores it. `isValidBackupShape` checks
+  // that every resident and expense actually has the fields the rest of the
+  // app expects, so a corrupted or hand-edited file can't sneak in broken
+  // data that would crash the app later.
+  const restoreFromBackupText = (jsonText) => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (!isValidBackupShape(parsed)) {
+        console.error('Invalid backup file: it is missing fields the app needs, or has the wrong shape.');
+        window.alert('That backup file could not be read — it may be damaged or from an incompatible version of the app.');
+        return;
       }
-    };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ...parsed }));
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to parse imported backup file:', err);
+      window.alert('That file could not be read as a Neiboard backup.');
+    }
+  };
+
+  // Triggered by the "Import Data" button. On the web this reads a file the
+  // person picked with the browser's own file picker. Inside a native
+  // Android wrapper, opening a file picker from inside a WebView normally
+  // requires the native side to handle it — so if a
+  // `window.NativeBridge.pickBackupFile` function has been installed, we
+  // ask it to obtain the file's text for us instead, and restore from that.
+  const handleImportFile = (file) => {
+    if (window.NativeBridge && typeof window.NativeBridge.pickBackupFile === 'function') {
+      window.NativeBridge.pickBackupFile().then(restoreFromBackupText);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => restoreFromBackupText(e.target.result);
     reader.readAsText(file);
   };
 
@@ -577,9 +646,12 @@ export default function App() {
   }, [residents, currentSortBy]);
 
   // ─── CARD SCROLL HELPER ────────────────────────────────────────────────
-  // FIX [Bug #2]: Track the scroll timer in a ref and clear it before scheduling
-  // a new one. Without this, rapid card taps queue multiple timers that all fire,
-  // causing jumpy scroll behaviour and attempting to scroll to unmounted elements.
+  // Waits for the expand-drawer animation to finish, then smoothly scrolls
+  // so the tapped resident card sits just below the sticky header. Clears
+  // any previously scheduled scroll first, so tapping several cards quickly
+  // in a row only ever scrolls to the most recently tapped one, instead of
+  // stacking up several scroll attempts (some of which could otherwise try
+  // to scroll to a card that isn't on screen anymore).
   const scrollCardIntoView = (residentId) => {
     clearTimeout(scrollTimerRef.current);
     const drawerDurationMs = parseFloat(A.drawerDuration) * 1000;
@@ -663,7 +735,7 @@ export default function App() {
         if (res.id !== expenseModal.residentId) return res;
         let expenses = [...res.expenses];
         if (expenseModal.type === 'add') {
-          expenses.push({ id: 'exp-' + Date.now(), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey });
+          expenses.push({ id: makeId('exp'), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey });
         } else if (expenseModal.type === 'edit' && expenseModal.expenseId) {
           expenses = expenses.map(exp =>
             exp.id === expenseModal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid } : exp
@@ -695,7 +767,7 @@ export default function App() {
     const parsedAmount = parseFloat(amount) || 0;
     const desc         = description.trim() || t('building_expense_default');
     if (expenseModal.type === 'add') {
-      setBuildingExpenses(prev => [...prev, { id: 'bexp-' + Date.now(), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey }]);
+      setBuildingExpenses(prev => [...prev, { id: makeId('bexp'), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey }]);
     } else if (expenseModal.type === 'edit' && expenseModal.expenseId) {
       setBuildingExpenses(prev => prev.map(exp =>
         exp.id === expenseModal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid } : exp
@@ -722,7 +794,7 @@ export default function App() {
   };
 
   const createResident = ({ name, apartment, notes }) => ({
-    id:        'R-' + Date.now(),
+    id:        makeId('R'),
     name:      name      || t('new_resident_default'),
     apartment: apartment || '—',
     notes:     notes     || '',
@@ -761,16 +833,37 @@ export default function App() {
 
   const cardModalContentAnim = MB.contentAnimation(A);
 
-  // ─── LOADING SCREEN ────────────────────────────────────────────────────
-  if (!translations) {
-    return (
-      <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
-        <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
-          <div style={LAYOUT.loadingTextStyle}>Loading...</div>
-        </div>
-      </div>
-    );
-  }
+  // ─── ANDROID BACK-BUTTON SUPPORT (for later native wrapping) ───────────
+  // This app has several full-screen overlays (settings, the month/year
+  // picker, the expense/card modals, the printable report) but no browser
+  // history entries for them, since it's a single-page app. On a phone,
+  // people expect the back button/gesture to close whatever's currently
+  // open on top, one layer at a time, instead of leaving the app entirely.
+  //
+  // A regular web browser's back button can't know about any of this. So
+  // instead, this effect installs a function at window.NativeBridge.
+  // handleBackPress that the native Android wrapper can call whenever the
+  // system back button/gesture is pressed. It closes whatever overlay is
+  // currently on top (checked in the order they'd visually sit above one
+  // another) and reports back whether it closed something:
+  //   - returns true  -> the native app should NOT exit/navigate back,
+  //                      because we just closed something in-app instead.
+  //   - returns false -> nothing was open, so the native app should go
+  //                      ahead with its normal back behavior (e.g. exiting).
+  // This re-registers on every render so it always has access to the
+  // latest state, without the caller needing to know anything about that.
+  useEffect(() => {
+    window.NativeBridge = window.NativeBridge || {};
+    window.NativeBridge.handleBackPress = () => {
+      if (isReportOpen)               { setIsReportOpen(false); return true; }
+      if (isHeaderPickerOpen)         { setIsHeaderPickerOpen(false); return true; }
+      if (cardModalState.type)        { closeCardModal(); return true; }
+      if (expenseModal.type !== null) { closeExpenseModal(); return true; }
+      if (isMainMenuOpen)             { setIsMainMenuOpen(false); return true; }
+      if (expandedResident !== null)  { setExpandedResident(null); setOpenPreviousDrawer({}); return true; }
+      return false;
+    };
+  });
 
   // ─── VIEW TRANSITION RENDER ────────────────────────────────────────────
   const isTransitioning = buildingViewAnimState === 'transitioning';
@@ -821,7 +914,7 @@ export default function App() {
 
   // ─── MAIN RENDER ───────────────────────────────────────────────────────
   return (
-    <div style={{ fontFamily: D.fontFamily }} className={LAYOUT.appWrapper}>
+    <div style={{ fontFamily: D.fontFamily, ...LAYOUT.appWrapperStyle }} className={LAYOUT.appWrapper}>
       <div style={LAYOUT.appMaxWidthStyle} className={LAYOUT.appInnerContainer}>
 
         {/* ─── STICKY HEADER ─────────────────────────────────────────── */}
@@ -893,9 +986,14 @@ export default function App() {
         {contentArea}
 
         {/* ─── EXPENSE MODAL ─────────────────────────────────────────── */}
-        {/* FIX [Bug #7]: `key` prop forces ExpenseModal to remount when the target
-            expense changes. Without this, useState inside ExpenseModal ignores
-            updated initialData when switching between expenses, showing stale values. */}
+        {/* The `key` prop below forces React to throw away and recreate
+            ExpenseModal whenever the target expense changes, instead of
+            reusing the same component instance. This matters because
+            ExpenseModal keeps its own internal copy of the amount/
+            description/paid fields in useState — without a changing key,
+            switching from editing one expense straight to another would
+            keep showing the first expense's values until the modal is
+            fully closed and reopened. */}
         <ModalWrapper
           isOpen={expenseModal.type !== null}
           onClose={closeExpenseModal}

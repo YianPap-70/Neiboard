@@ -313,10 +313,31 @@ export default function ReportOverlay({
 
   if (!isOpen) return null;
 
+  // Triggers the "Save as PDF" / print flow.
+  //
+  // On a normal web browser, window.print() opens the browser's own
+  // print/PDF dialog and that's the whole story.
+  //
+  // On Android, once this app is wrapped inside a native app, there is no
+  // built-in print dialog inside a WebView — the native Android side has to
+  // provide one (using Android's PrintManager) and hand control back to this
+  // page. To make that easy to wire up later without changing this file
+  // again, this function first looks for a bridge function the native app
+  // can install (`window.NativeBridge.printReport`). If that bridge exists,
+  // it's used instead of the browser's print dialog. If it doesn't exist
+  // (i.e. we're just running in a regular browser, like during development),
+  // it falls back to the normal window.print() behavior exactly as before.
   const handlePrint = () => {
     const monthNum = String((currentMonthIdx ?? 0) + 1).padStart(2, '0');
+    const suggestedFileName = `neiboard-report-${currentYear}-${monthNum}`;
+
+    if (window.NativeBridge && typeof window.NativeBridge.printReport === 'function') {
+      window.NativeBridge.printReport(suggestedFileName);
+      return;
+    }
+
     const originalTitle = document.title;
-    document.title = `neiboard-report-${currentYear}-${monthNum}`;
+    document.title = suggestedFileName;
     const restore = () => {
       document.title = originalTitle;
       window.removeEventListener('afterprint', restore);
@@ -336,12 +357,16 @@ export default function ReportOverlay({
           background: '#3a3a3a',
         }}
       >
-        {/* Preview toolbar */}
+        {/* Preview toolbar — extra top padding reserves space for the
+            phone's status bar / camera cutout so the buttons are never
+            hidden underneath it (matters most once this runs full-screen
+            inside a native Android wrapper). */}
         <div
           style={{
             flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px',
             padding: '12px 16px',
+            paddingTop: 'max(12px, env(safe-area-inset-top))',
             background: '#222222',
             borderBottom: '1px solid #444',
           }}
