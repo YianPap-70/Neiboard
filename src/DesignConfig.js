@@ -61,6 +61,7 @@ const THEMES = [
 // even before the theme system initializes. Each additional theme is scoped
 // under html[data-theme="N"] and overrides the same variable names.
 (function injectThemeVariables() {
+  if (document.querySelector('style[data-design-theme-vars]')) return;
   const toCssVars = (tokens) =>
     Object.entries(tokens).map(([key, val]) => `--${key}: ${val};`).join('\n    ');
 
@@ -111,9 +112,14 @@ const LABELS = {
 const RADIUS_STANDARD = '12px';
 const MODAL_MAX_WIDTH = '376px';
 
-// ─── ANIMATION KEYFRAMES (INJECTED INTO DOCUMENT) ────────────────────────
-(function injectAnimationKeyframes() {
+// ─── GLOBAL STYLES (KEYFRAMES + ANDROID-FRIENDLY TOUCH BEHAVIOR) ─────────
+// Injected once into <head>. The `id` check means this safely does nothing
+// if it somehow runs a second time (e.g. during development hot-reloading),
+// instead of piling up duplicate <style> tags.
+(function injectGlobalStyles() {
+  if (document.getElementById('design-config-global-styles')) return;
   const style = document.createElement('style');
+  style.id = 'design-config-global-styles';
   style.textContent = `
   @keyframes fadeIn {
     from { opacity: 0; }
@@ -146,6 +152,29 @@ const MODAL_MAX_WIDTH = '376px';
     60%  { transform: translateX(-4px); }
     80%  { transform: translateX(4px); }
     100% { transform: translateX(0); }
+  }
+
+  /* Stops the whole page from bouncing/glowing past its edges when someone
+     scrolls past the top or bottom — mainly noticeable as an odd rubber-band
+     or glow effect inside an Android WebView, where the app is expected to
+     feel like a native screen rather than a scrollable web page. */
+  html, body {
+    overscroll-behavior: contain;
+  }
+
+  /* Buttons, cards, and rows throughout this app are tap targets, not text
+     to select. Without this, a long-press on Android (which normally starts
+     text selection or shows a copy/share menu) can interrupt what should be
+     a simple tap-and-hold interaction. Text inputs and textareas are
+     explicitly excluded so people can still select and edit what they type. */
+  button, a, [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
   }
   `;
   document.head.appendChild(style);
@@ -204,6 +233,10 @@ const animation = {
 const layout = {
   appBackgroundHex:  COLORS['main-color-6'],
   appWrapper:        "min-h-screen antialiased flex justify-center pb-12",
+  // Adds a little extra bottom space equal to the phone's gesture-nav-bar
+  // height (env(safe-area-inset-bottom)) so the last card/button on screen
+  // isn't crowded by the system's home-gesture bar.
+  appWrapperStyle:   { paddingBottom: 'env(safe-area-inset-bottom)' },
   appInnerContainer: "w-full relative px-4 text-left",
   appMaxWidthStyle:  { maxWidth: '440px' },
   loadingTextStyle:  { color: COLORS['main-color-1'], textAlign: 'center', marginTop: '100px' },
@@ -211,8 +244,13 @@ const layout = {
 
 // ─── HEADER COMPONENT ────────────────────────────────────────────────────
 const header = {
-  stickyContainer:          "sticky top-0 z-40 w-full mx-auto pt-3 pb-2 flex flex-col gap-2",
-  stickyContainerStyle:     { backgroundColor: COLORS['main-color-6'] },
+  stickyContainer:          "sticky top-0 z-40 w-full mx-auto pb-2 flex flex-col gap-2",
+  // paddingTop reserves extra space above the header equal to the phone's
+  // status bar / camera cutout height (env(safe-area-inset-top)), so the
+  // hamburger/add/sync buttons are never drawn underneath it. `max(12px, ...)`
+  // keeps the original ~12px of breathing room on devices that report no
+  // safe-area inset at all (e.g. a regular desktop browser).
+  stickyContainerStyle:     { backgroundColor: COLORS['main-color-6'], paddingTop: 'max(12px, env(safe-area-inset-top))' },
   touchTargetBtn:           "w-[52px] h-[52px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity cursor-pointer",
   touchTargetBtnDisabled:   "w-[52px] h-[52px] flex items-center justify-center shrink-0 cursor-default opacity-40 pointer-events-none",
   topRow:                   "flex items-center pl-[2px] pr-[2px] w-full",

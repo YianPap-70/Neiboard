@@ -8,10 +8,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { formatAmount } from './utils.js';
 
-// ─── SPRITE ICON COMPONENT ────────────────────────────────────────────────
-
-// FIX [Unnecessary #1]: Removed duplicate section header comment that appeared twice.
 // ─── NAVIGATION PILL (UNIFIED) ────────────────────────────────────────────
+// A pill-shaped group of 3 buttons — previous / jump-to-today / next — used
+// for both month navigation (in the header) and year navigation (in the
+// month/year picker). `type` only changes the accessibility labels
+// ("Previous month" vs "Previous year"); `variant` controls whether it's
+// drawn solid or see-through.
 function NavigationPill({ 
   type, 
   currentValue, 
@@ -23,7 +25,6 @@ function NavigationPill({
   variant = 'default'
 }) {
   const NP = window.DESIGN.navigationPill;
-  // FIX [Unnecessary #2]: Removed unused `const A = window.DESIGN.animation` declaration.
 
   return (
     <div className={NP.container} style={NP.containerStyle(variant)}>
@@ -63,6 +64,10 @@ function NavigationPill({
   );
 }
 
+// ─── SPRITE ICON ──────────────────────────────────────────────────────────
+// Renders one icon from the shared icon sprite sheet (icons.svg), which is
+// loaded once into a hidden part of the page — see main.jsx. `id` must match
+// one of the `<symbol id="...">` entries in that sprite sheet.
 function SpriteIcon({ id, className = '', style }) {
   return (
     <svg className={className} style={style} aria-hidden="true" focusable="false">
@@ -103,10 +108,13 @@ function Drawer({ isOpen, children }) {
   const A          = window.DESIGN.animation;
   const drawerCfg  = window.DESIGN.drawer;
 
-  // FIX [Bug #3]: Removed `children` from the dependency array.
-  // React creates a new children object on every render, so including it caused
-  // the observer to disconnect and reconnect constantly — even for unrelated state
-  // changes. The ResizeObserver already handles content size changes internally.
+  // Watches the content's actual height and updates the drawer's animated
+  // height to match, so the drawer works with content of any length without
+  // being told the height in advance. Only re-attaches the watcher when the
+  // drawer opens/closes (`isOpen`) — not on every render — because `children`
+  // is a new object every time React re-renders, and re-attaching the
+  // watcher on every render would be wasteful and unnecessary: the
+  // ResizeObserver already reacts to content size changes on its own.
   useEffect(() => {
     if (!contentRef.current) return;
     const el     = contentRef.current;
