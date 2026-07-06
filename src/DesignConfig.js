@@ -422,7 +422,7 @@ const historyDrawer = {
   rowItemDividerStyle:        `border-t border-solid border-[${COLORS['main-color-2']}]`,
   metaSubTextGroup:           "flex flex-col min-w-0 pr-2 pointer-events-none",
   pastMonthLabel:             `font-medium truncate text-[12px] text-[${COLORS['main-color-2']}]`,
-  toggleBar:                  `w-full flex items-center justify-between cursor-pointer hover:opacity-90 select-none bg-[${COLORS['main-color-3']}] py-2 px-4`,
+  toggleBar:                  `w-full flex items-center justify-between cursor-pointer hover:opacity-90 select-none bg-[${COLORS['main-color-4']}] py-2 px-4`,
   toggleBarLabelArea:         "flex items-center min-w-0 gap-1.5",
   toggleBarText:              LABELS.secondary,
   toggleBarAmount:            `font-bold shrink-0 text-base text-[${COLORS['main-color-1']}]/70`,
