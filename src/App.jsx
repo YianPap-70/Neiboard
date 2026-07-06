@@ -920,7 +920,7 @@ export default function App() {
   <div className={HDR.topRow}>
     <div className={HDR.leftActionGroup}>
   <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
-    <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
+    <SpriteIcon id="main-settings" className={ICN.actionIconSize} />
   </button>
   <WalletFlipButton onToggle={handleToggleView} t={t} />
   <button
