@@ -59,7 +59,7 @@
   "from": { "en": "From", "gr": "Από" },
   "to": { "en": "To", "gr": "Έως" },
   "reset": { "en": "Reset", "gr": "Επαναφορά" },
-  "building_expenses_heading": { "en": "Building Expenses", "gr": "Κοινόχρηστα Έξοδα" },
+  "building_expenses_heading": { "en": "Expenses", "gr": "Έξοδα" },
   "previous_month_debts": { "en": "Previous Month Debts", "gr": "Οφειλές Προηγούμενων Μηνών" },
   "previous_month_expenses": { "en": "Previous Month Expenses", "gr": "Έξοδα Προηγούμενων Μηνών" },
   "print": { "en": "Print", "gr": "Εκτύπωση" },
