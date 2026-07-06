@@ -522,7 +522,7 @@ const cardModal = {
   fieldPadding:         '12px 16px',
   nameFieldInput:       `font-bold text-[18px] text-[${COLORS['main-color-1']}]`,
   apartmentFieldInput:  `font-normal text-[18px] text-[${COLORS['main-color-1']}]`,
-  placeholderStyle:     `text-[16px] font-normal text-[${COLORS['main-color-2']}]`,
+  placeholderStyle: `text-[16px] font-normal placeholder:text-[${COLORS['main-color-2']}]`,
   notesSection:         "flex flex-col",
   notesTitleRow:        "flex items-center gap-2 mb-2",
   notesIcon:            `w-6 h-6 text-[${COLORS['main-color-2']}]`,
