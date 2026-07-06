@@ -304,10 +304,7 @@ function ResidentListView({
                 </Drawer>
 
                 <div onClick={() => onTogglePreviousDrawer(resident.id)} style={DRW.toggleBarRoundingStyle} className={DRW.toggleBar}>
-                  <span style={CARD.caretRotationStyle(isDrawerOpen, A)}>
-                    <SpriteIcon id="icon-caret" className={ICN.caretIconSize} />
-                  </span>
-                  <div className={DRW.toggleBarLabelArea}>
+                  <div className={DRW.toggleBarLabelArea} style={{ marginLeft: 'auto' }}>
                     <span className={DRW.toggleBarText}>{t('previous_months_total')}</span>
                     <span className={DRW.toggleBarAmount}>
                       <CurrencySymbol activeSymbol={activeCurrencySymbol} className={DRW.toggleBarCurrencyMod} />
@@ -682,7 +679,8 @@ export default function App() {
       setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: true }));
       scrollCardIntoView(residentId);
     } else {
-      setOpenPreviousDrawer(prev => ({ ...prev, [residentId]: !prev[residentId] }));
+      setExpandedResident(null);
+      setOpenPreviousDrawer({});
     }
   };
 
@@ -921,36 +919,29 @@ export default function App() {
 <header ref={headerRef} style={HDR.stickyContainerStyle} className={HDR.stickyContainer}>
   <div className={HDR.topRow}>
     <div className={HDR.leftActionGroup}>
-      <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
-        <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
-      </button>
-      <WalletFlipButton onToggle={handleToggleView} t={t} />
-      <button
-        className={isBuildingView ? HDR.touchTargetBtnDisabled : HDR.touchTargetBtn}
-        onClick={isBuildingView ? undefined : handleOpenAddCard}
-      >
-        <SpriteIcon
-          id="icon-button-add-user"
-          className={ICN.actionIconSize}
-          style={isBuildingView ? { color: COLORS['main-color-3'] } : {}}
-        />
-      </button>
-    </div>
+  <button className={HDR.touchTargetBtn} onClick={() => setIsMainMenuOpen(true)}>
+    <SpriteIcon id="icon-hamburger" className={ICN.actionIconSize} />
+  </button>
+  <WalletFlipButton onToggle={handleToggleView} t={t} />
+  <button
+    className={isBuildingView ? HDR.touchTargetBtnDisabled : HDR.touchTargetBtn}
+    onClick={isBuildingView ? undefined : handleOpenAddCard}
+  >
+    <SpriteIcon
+      id="icon-button-add-user"
+      className={ICN.actionIconSize}
+      style={isBuildingView ? { color: COLORS['main-color-3'] } : {}}
+    />
+  </button>
+</div>
 
-    <div className={HDR.debtSection}>
-      <span className={HDR.totalDebtLabel}>{t('total_debt')}</span>
-      <span className={HDR.totalDebtAmount}>
-        <CurrencySymbol activeSymbol={activeCurrencySymbol} className={HDR.currencySizeMod} />
-        {formatAmount(totalAllDebts)}
-      </span>
-    </div>
-
-    <div className={HDR.syncIconWrapper}>
-      {/* TODO: wire up cloud sync when backend is available */}
-      <button className={HDR.touchTargetBtn} onClick={() => {}}>
-        <SpriteIcon id="icon-synced" className={ICN.syncIconSize} style={IC.synced} />
-      </button>
-    </div>
+<div className={HDR.debtSection} style={{ marginLeft: 'auto' }}>
+  <span className={HDR.totalDebtLabel}>{t('total_debt')}</span>
+  <span className={HDR.totalDebtAmount}>
+    <CurrencySymbol activeSymbol={activeCurrencySymbol} className={HDR.currencySizeMod} />
+    {formatAmount(totalAllDebts)}
+  </span>
+</div>
   </div>
 
   {/* BOTTOM ROW - Fixed layout */}
