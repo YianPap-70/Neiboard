@@ -35,9 +35,9 @@ const LINE  = '#dddddd';
 // sub-part can ever leak the app's live color theme onto the print-only,
 // black-and-white report.
 const REPORT_COLOR_OVERRIDE = {
-  '--main-color-1': BLACK, '--main-color-2': BLACK, '--main-color-3': BLACK,
-  '--main-color-4': BLACK, '--main-color-5': BLACK, '--main-color-6': BLACK,
-  '--accent-color-1': BLACK, '--accent-color-2': BLACK, '--accent-color-3': BLACK,
+  '--color-text-prim': BLACK, '--color-text-dim': BLACK, '--color-cardback-dim': BLACK,
+  '--color-cardback-dim': BLACK, '--color-cardback-prim': BLACK, '--color-background': BLACK,
+  '--color-accent-1': BLACK, '--color-accent-2': BLACK, '--color-accent-3': BLACK,
 };
 
 // ─── PRINT / PAGE STYLESHEET (injected once) ─────────────────────────────

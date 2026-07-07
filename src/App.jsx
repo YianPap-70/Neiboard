@@ -930,7 +930,7 @@ export default function App() {
     <SpriteIcon
       id="icon-button-add-user"
       className={ICN.actionIconSize}
-      style={isBuildingView ? { color: COLORS['main-color-3'] } : {}}
+      style={isBuildingView ? { color: COLORS['color-cardback-dim'] } : {}}
     />
   </button>
 </div>
