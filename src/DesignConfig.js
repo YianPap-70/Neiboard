@@ -17,7 +17,6 @@ const THEMES = [
     tokens: {
       'color-text-prim': '#E1E3F8',
       'color-text-dim': '#9596B1',
-      'color-cardback-dim': '#49496A',
       'color-cardback-dim': '#3D3D5F',
       'color-cardback-prim': '#333355',
       'color-background': '#11112E',
@@ -31,7 +30,6 @@ const THEMES = [
     tokens: {
       'color-text-prim': '#EAF6F6',
       'color-text-dim': '#8FB6BD',
-      'color-cardback-dim': '#2E6E73',
       'color-cardback-dim': '#235459',
       'color-cardback-prim': '#1B4347',
       'color-background': '#0B2326',
@@ -45,7 +43,6 @@ const THEMES = [
     tokens: {
       'color-text-prim': '#FBE9E1',
       'color-text-dim': '#C49A8F',
-      'color-cardback-dim': '#6B3A36',
       'color-cardback-dim': '#542D2A',
       'color-cardback-prim': '#412221',
       'color-background': '#1F0F0E',
