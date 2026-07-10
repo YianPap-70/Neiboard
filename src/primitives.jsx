@@ -34,7 +34,7 @@ function NavigationPill({
         style={NP.btnStyle}
         aria-label={type === 'year' ? "Previous year" : "Previous month"}
       >
-        <SpriteIcon id="icon-arrow-left" className={NP.icon} style={NP.iconStyle} />
+        <SpriteIcon id="arrow-left-icon" className={NP.icon} style={NP.iconStyle} />
       </button>
       
       {/* Go Today button - always shown */}
@@ -46,7 +46,7 @@ function NavigationPill({
         disabled={!canGoToday}
       >
         <SpriteIcon 
-          id="icon-go-today" 
+          id="gotoday-icon" 
           className={NP.icon} 
           style={canGoToday ? NP.iconStyle : NP.iconDisabledStyle} 
         />
@@ -58,7 +58,7 @@ function NavigationPill({
         style={NP.btnStyle}
         aria-label={type === 'year' ? "Next year" : "Next month"}
       >
-        <SpriteIcon id="icon-arrow-right" className={NP.icon} style={NP.iconStyle} />
+        <SpriteIcon id="arrow-right-icon" className={NP.icon} style={NP.iconStyle} />
       </button>
     </div>
   );

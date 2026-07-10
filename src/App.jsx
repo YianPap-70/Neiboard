@@ -181,9 +181,9 @@ function ResidentListView({
         const allCurrentPaid      = hasCurrentExpenses && currentMonthExpenses.every(exp => exp.paid);
         const hasNoDebts          = !hasCurrentExpenses || allCurrentPaid;
 
-        const monthLabelText  = hasNoDebts
-          ? `${t('no_debts')} / ${currentMonthString}`
-          : t('debts_for_month', { month: currentMonthString });
+        const monthLabelText = hasNoDebts
+  ? t('no_debts', { month: currentMonthString })
+  : t('debts_for_month', { month: currentMonthString });
         const monthLabelClass = hasNoDebts ? CARD.monthActionLabelNoDebt : CARD.monthActionLabel;
 
         const combinedCurrentExpenses  = [...currentMonthExpenses].sort((a, b) => a.paid - b.paid);
