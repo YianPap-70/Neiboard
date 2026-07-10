@@ -75,10 +75,6 @@ function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPas
   const currentExpenses    = expenses.filter(exp => exp.monthKey === currentMonthKey);
   const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
 
-  const allUnpaid   = expenses.filter(exp => !exp.paid);
-  const showTotal   = allUnpaid.length >= 2;
-  const totalUnpaid = allUnpaid.reduce((sum, exp) => sum + exp.amount, 0);
-
   const hasCurrent = currentExpenses.length > 0;
   const hasPast    = pastUnpaidExpenses.length > 0;
 
@@ -87,16 +83,10 @@ function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPas
 
       <div className={BE.cardContainer} style={{ marginBottom: hasPast ? BE.cardContainerGap : undefined }}>
         <div className={BE.labelRow} style={{ paddingTop: BE.sectionPaddingTop, marginBottom: hasCurrent ? '0px' : BE.addBtnGap }}>
-          <span className={BE.sectionLabel}>
-            {hasCurrent ? t('expenses') : t('no_expenses_this_month_building')}
-          </span>
-          {showTotal && (
-            <span className={BE.totalLabel}>
-              {t('total')}<CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.totalCurrencyMod} />
-              <span className={BE.totalAmount}>{formatAmount(totalUnpaid)}</span>
-            </span>
-          )}
-        </div>
+  <span className={BE.sectionLabel}>
+    {hasCurrent ? t('expenses') : t('no_expenses_this_month_building')}
+  </span>
+       </div>
 
         {hasCurrent && (
           <div className={BE.itemsWrapper} style={{ marginBottom: BE.addBtnGap }}>
@@ -617,10 +607,15 @@ export default function App() {
   };
 
   const totalAllDebts = useMemo(
-    () => residents.reduce((total, resident) =>
-      total + resident.expenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0), 0),
-    [residents]
-  );
+  () => residents.reduce((total, resident) =>
+    total + resident.expenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0), 0),
+  [residents]
+);
+
+const totalBuildingDebt = useMemo(
+  () => buildingExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0),
+  [buildingExpenses]
+);
 
   const isPastExpense = useCallback(
     (monthKey) => monthKey < currentMonthKey,
@@ -936,10 +931,12 @@ export default function App() {
 </div>
 
 <div className={HDR.debtSection} style={{ marginLeft: 'auto' }}>
-  <span className={HDR.totalDebtLabel}>{t('total_debt')}</span>
+  <span className={HDR.totalDebtLabel}>
+    {isBuildingView ? t('expenses') : t('total_debt')}
+  </span>
   <span className={HDR.totalDebtAmount}>
     <CurrencySymbol activeSymbol={activeCurrencySymbol} className={HDR.currencySizeMod} />
-    {formatAmount(totalAllDebts)}
+    {formatAmount(isBuildingView ? totalBuildingDebt : totalAllDebts)}
   </span>
 </div>
   </div>
