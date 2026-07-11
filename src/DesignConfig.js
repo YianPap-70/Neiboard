@@ -99,7 +99,7 @@ const COLORS = {
 // ─── UNIFIED LABEL SYSTEM ──────────────────────────────────────────────────
 const LABELS = {
   primary:           `font-medium truncate text-sm text-[${COLORS['color-text-dim']}]`,
-  primarySuccess:    `font-medium truncate text-sm text-[${COLORS['color-accent-1']}]`,
+  primarySuccess:    `font-medium truncate text-sm text-[${COLORS['color-text-dim']}]`,
   secondary:         `font-normal truncate text-sm text-[${COLORS['color-text-prim']}]/70`,
   empty:             `text-center py-4 text-sm text-[${COLORS['color-text-dim']}]`,
   modal:             `font-medium text-sm text-[${COLORS['color-text-dim']}] tracking-wide`,
