@@ -319,12 +319,7 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
               {TIMELINE_YEARS.map(year => (
                 <div
                   key={year}
-                  style={{
-                    fontSize: CAL.yearFontSize, fontWeight: CAL.yearFontWeight,
-                    color: CAL.yearColor, height: '44px', lineHeight: '44px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                    paddingLeft: '4px',
-                  }}
+                  className="text-[36px] font-normal text-[#E1E3F8] h-11 leading-11 flex items-center justify-start pl-1"
                 >
                   {year}
                 </div>
@@ -355,15 +350,19 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
                 key={monthName}
                 onClick={() => setTempMonthIdx(idx)}
                 style={{
-                  height: CAL.monthButtonHeight, borderRadius: CAL.monthButtonRadius,
+                  height: CAL.monthButtonHeight,
+                  borderRadius: CAL.monthButtonRadius,
                   backgroundColor: CAL.monthButtonBg,
                   border: tempMonthIdx === idx ? CAL.monthButtonActiveRing : 'none',
-                  color: CAL.monthButtonColor, fontSize: CAL.monthButtonFontSize,
-                  fontWeight: CAL.monthButtonFontWeight, letterSpacing: CAL.monthButtonLetterSpacing,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.3s', outline: 'none', cursor: 'pointer',
-                  padding: '0 4px', minWidth: 0, width: '100%',
+                  color: CAL.monthButtonColor,
+                  transition: 'all 0.3s',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  padding: '0 4px',
+                  minWidth: 0,
+                  width: '100%',
                 }}
+                className="text-[13px] font-normal tracking-wide flex items-center justify-center"
                 aria-label={monthName}
                 aria-pressed={tempMonthIdx === idx}
               >
@@ -382,12 +381,11 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
             style={{
               flex: '1', height: CAL.footerButtonHeight, borderRadius: CAL.footerButtonRadius,
               backgroundColor: CAL.footerButtonBg, border: CAL.footerOKRing,
-              color: CAL.footerButtonColor, fontSize: CAL.footerButtonFontSize,
-              fontWeight: CAL.footerButtonFontWeight, display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
+              color: CAL.footerButtonColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform 0.2s', outline: 'none', cursor: 'pointer',
             }}
-            className="active:scale-95"
+            className="text-[16px] font-normal active:scale-95"
           >
             {t('ok')}
           </button>
@@ -397,12 +395,11 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
             style={{
               flex: '1', height: CAL.footerButtonHeight, borderRadius: CAL.footerButtonRadius,
               backgroundColor: CAL.footerButtonBg, border: 'none',
-              color: CAL.footerButtonColor, fontSize: CAL.footerButtonFontSize,
-              fontWeight: CAL.footerButtonFontWeight, display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
+              color: CAL.footerButtonColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform 0.2s', outline: 'none', cursor: 'pointer',
             }}
-            className="active:scale-95"
+            className="text-[16px] font-normal active:scale-95"
           >
             {t('cancel')}
           </button>

@@ -23,7 +23,6 @@ import ReactDOM from 'react-dom';
 import { SpriteIcon } from './primitives.jsx';
 import { formatAmount } from './utils.js';
 
-const REPORT_FONT = "'Roboto', Arial, Helvetica, sans-serif";
 const BLACK = '#000000';
 const GRAY  = '#6b6b6b';
 const LINE  = '#dddddd';
@@ -80,50 +79,29 @@ const REPORT_COLOR_OVERRIDE = {
 function ReportRow({ description, amount, paid, monthLabel, symbol, isFirst }) {
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px',
-        padding: '9px 0',
-        borderTop: isFirst ? 'none' : `1px solid ${LINE}`,
-        breakInside: 'avoid',
-      }}
+      className={`flex items-center justify-between gap-3 py-2 ${isFirst ? '' : 'border-t border-[#dddddd]'}`}
+      style={{ breakInside: 'avoid' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-        <div style={{ width: '16px', height: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
           <SpriteIcon
             id={paid ? 'icon-check' : 'icon-warning-filled'}
             style={{ width: '16px', height: '16px', color: BLACK }}
           />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div className="flex flex-col min-w-0">
           <span
-            style={{
-              fontSize: '13px',
-              fontWeight: 500,
-              color: BLACK,
-              textDecoration: paid ? 'line-through' : 'none',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
+            className={`text-[13px] font-normal text-black ${paid ? 'line-through' : ''} whitespace-nowrap overflow-hidden text-ellipsis`}
           >
             {description}
           </span>
           {monthLabel && (
-            <span style={{ fontSize: '10.5px', color: GRAY, marginTop: '1px' }}>{monthLabel}</span>
+            <span className="text-[10.5px] text-[#6b6b6b] mt-0.5">{monthLabel}</span>
           )}
         </div>
       </div>
       <span
-        style={{
-          fontSize: '13.5px',
-          fontWeight: 600,
-          color: BLACK,
-          flexShrink: 0,
-          textDecoration: paid ? 'line-through' : 'none',
-        }}
+        className={`text-[13.5px] font-normal text-black flex-shrink-0 ${paid ? 'line-through' : ''}`}
       >
         {symbol}{symbol ? ' ' : ''}{formatAmount(amount)}
       </span>
@@ -134,18 +112,9 @@ function ReportRow({ description, amount, paid, monthLabel, symbol, isFirst }) {
 // Right-aligned, larger-font total line shown at the end of a section.
 function ReportTotalRow({ label, amount, symbol }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'baseline',
-        gap: '8px',
-        paddingTop: '10px',
-        marginTop: '2px',
-      }}
-    >
-      <span style={{ fontSize: '14px', fontWeight: 700, color: BLACK }}>{label}:</span>
-      <span style={{ fontSize: '19px', fontWeight: 700, color: BLACK }}>
+    <div className="flex justify-end items-baseline gap-2 pt-2.5 mt-0.5">
+      <span className="text-[14px] font-normal text-black">{label}:</span>
+      <span className="text-[19px] font-normal text-black">
         {symbol}{symbol ? ' ' : ''}{formatAmount(amount)}
       </span>
     </div>
@@ -170,7 +139,7 @@ function ReportEntitySection({
 
   if (isEmpty) {
     return (
-      <div style={{ padding: '9px 0', fontSize: '13px', color: GRAY, fontStyle: 'italic' }}>
+      <div className="py-2 text-[13px] text-[#6b6b6b] italic">
         {emptyLabel}
       </div>
     );
@@ -194,8 +163,8 @@ function ReportEntitySection({
       )}
 
       {hasPast && (
-        <div style={{ marginTop: hasCurrent ? '14px' : '0' }}>
-          <div style={{ fontSize: '12.5px', fontWeight: 700, color: BLACK, marginBottom: '2px' }}>
+        <div className={hasCurrent ? 'mt-3.5' : ''}>
+          <div className="text-[12.5px] font-normal text-black mb-0.5">
             {previousLabel}
           </div>
           {pastUnpaidItems.map((exp, idx) => (
@@ -229,7 +198,6 @@ function ReportDocument({
   return (
     <div
       style={{
-        fontFamily: REPORT_FONT,
         color: BLACK,
         background: '#ffffff',
         padding: '10mm 8mm',
@@ -238,12 +206,12 @@ function ReportDocument({
       }}
     >
       {/* ─── PAGE HEADER ─────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div style={{ fontSize: '18px' }}>
-          <span style={{ fontWeight: 700 }}>{currentMonthString}</span>
-          <span style={{ color: GRAY, margin: '0 6px' }}>/</span>
-          <span style={{ color: GRAY }}>{t('total_debt')}: </span>
-          <span style={{ fontWeight: 700 }}>
+      <div className="flex items-start justify-between mb-5">
+        <div className="text-[18px]">
+          <span className="font-normal">{currentMonthString}</span>
+          <span className="text-[#6b6b6b] mx-1.5">/</span>
+          <span className="text-[#6b6b6b]">{t('total_debt')}: </span>
+          <span className="font-normal">
             {activeCurrencySymbol}{activeCurrencySymbol ? ' ' : ''}{formatAmount(totalAllDebts)}
           </span>
         </div>
@@ -256,11 +224,11 @@ function ReportDocument({
         const pastUnpaid    = resident.expenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
 
         return (
-          <div key={resident.id} style={{ breakInside: 'avoid', marginBottom: '22px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '19px', fontWeight: 700 }}>{resident.name}</span>
-              <span style={{ color: GRAY, fontSize: '13px' }}>/</span>
-              <span style={{ color: GRAY, fontSize: '13px' }}>{resident.apartment}</span>
+          <div key={resident.id} className="break-inside-avoid mb-5.5">
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-[19px] font-normal">{resident.name}</span>
+              <span className="text-[#6b6b6b] text-[13px]">/</span>
+              <span className="text-[#6b6b6b] text-[13px]">{resident.apartment}</span>
             </div>
 
             <ReportEntitySection
@@ -276,8 +244,8 @@ function ReportDocument({
       })}
 
       {/* ─── BUILDING EXPENSES ───────────────────────────────────────── */}
-      <div style={{ breakInside: 'avoid', marginTop: '8px' }}>
-        <div style={{ fontSize: '19px', fontWeight: 700, marginBottom: '4px', borderTop: `2px solid ${BLACK}`, paddingTop: '18px' }}>
+      <div className="break-inside-avoid mt-2">
+        <div className="text-[19px] font-normal mb-1 pt-4.5 border-t-2 border-black">
           {t('building_expenses_heading')}
         </div>
 
@@ -373,23 +341,13 @@ export default function ReportOverlay({
         >
           <button
             onClick={handlePrint}
-            style={{
-              height: '40px', padding: '0 20px', borderRadius: '9999px',
-              border: 'none', background: '#ffffff', color: '#111111',
-              fontFamily: REPORT_FONT, fontWeight: 700, fontSize: '14px',
-              cursor: 'pointer',
-            }}
+            className="h-10 px-5 rounded-full border-none bg-white text-[#111111] font-normal text-[14px] cursor-pointer"
           >
             {t('pdf')} / {t('print')}
           </button>
           <button
             onClick={onClose}
-            style={{
-              height: '40px', padding: '0 20px', borderRadius: '9999px',
-              border: '1px solid #666', background: 'transparent', color: '#ffffff',
-              fontFamily: REPORT_FONT, fontWeight: 600, fontSize: '14px',
-              cursor: 'pointer',
-            }}
+            className="h-10 px-5 rounded-full border border-[#666] bg-transparent text-white font-normal text-[14px] cursor-pointer"
           >
             {t('close')}
           </button>
