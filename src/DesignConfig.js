@@ -315,13 +315,13 @@ const settingsModal = {
   headerRowGap:      '20px',
   logoIcon:          `text-[${COLORS['color-text-prim']}]`,
 logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
-  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] text-[${COLORS['color-text-prim']}] font-medium text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
+  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-1 ring-[${COLORS['color-accent-1']}] text-[${COLORS['color-text-prim']}] font-medium text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
   reportIcon:        "h-6 w-6",
 
   // Shared "pill row" base used by rows 2-9
-  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-1 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
-  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-accent-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-1 ring-[${COLORS['color-accent-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillPaddingX:       '16px',
   pillLabel:          `font-medium text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap`,
   pillIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}] shrink-0`,
@@ -349,17 +349,17 @@ const deleteRangeModal = {
   rowGap:            '16px',
 
   boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer font-medium text-base text-[${COLORS['color-text-prim']}]`,
-  boundaryBtnSetRing: `ring-2 ring-[${COLORS['color-accent-2']}]`,
+  boundaryBtnSetRing: `ring-1 ring-[${COLORS['color-accent-2']}]`,
 
-  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['color-text-prim']}]`,
+  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-1 ring-[${COLORS['color-accent-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['color-text-prim']}]`,
   resetIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
   deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent outline-none select-none transition-all duration-300 font-medium text-base`,
-  deleteBtnDisabled:   `ring-2 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
-  deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-accent-3']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
+  deleteBtnDisabled:   `ring-1 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
+  deleteBtnEnabled:    `ring-1 ring-[${COLORS['color-accent-3']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
   deleteIcon:          `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
-  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['color-text-prim']}]`,
+  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-1 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-medium text-base text-[${COLORS['color-text-prim']}]`,
 };
 
 // ─── RESIDENT CARD COMPONENT ─────────────────────────────────────────────
@@ -458,14 +458,14 @@ const modal = {
     descriptionWrapper:       `h-[52px] px-4 rounded-[6px] bg-[${COLORS['color-cardback-dim']}] w-full flex items-center`,
     descriptionInput:         `bg-transparent w-full focus:outline-none text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
     statusPill:               `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
-    statusPillRingUnpaid:     `ring-2 ring-[${COLORS['color-accent-3']}]`,
-    statusPillRingPaid:       `ring-2 ring-[${COLORS['color-accent-1']}]`,
+    statusPillRingUnpaid:     `ring-1 ring-[${COLORS['color-accent-3']}]`,
+    statusPillRingPaid:       `ring-1 ring-[${COLORS['color-accent-1']}]`,
     statusPillText:           `text-[16px] font-medium text-[${COLORS['color-text-prim']}]`,
     actionRow:                `flex items-center gap-3 w-full`,
     actionBtn:                `h-[52px] rounded-[9999px] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
-    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
+    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}]`,
     cancelBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}]`,
-    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
+    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
     deleteIcon:               `w-6 h-6 text-[${COLORS['color-text-prim']}]`,
   },
   deletePromptTitle:          `font-bold mb-6 text-xl text-[${COLORS['color-text-prim']}] text-center`,
@@ -531,16 +531,16 @@ const cardModal = {
   buttonRow:            "flex items-center gap-3 w-full mt-0",
   buttonGap:            '16px',
   baseBtn:              `h-[44px] rounded-[9999px] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
+  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}]`,
   nextBtn:              `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-background']}]`,
   cancelTextBtn:        `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
-  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
   trashIconSize:        `w-5 h-5 text-[${COLORS['color-text-prim']}]`,
   deleteConfirmBoxStyle:{ borderRadius: RADIUS_STANDARD, maxWidth: MODAL_MAX_WIDTH, padding: '20px' },
   deleteConfirmTitle:   `font-bold text-xl text-[${COLORS['color-text-prim']}] text-center mb-6 leading-snug`,
   deleteConfirmRow:     "flex items-center gap-4",
-  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  deleteConfirmNoBtn:   `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-3']}] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  deleteConfirmNoBtn:   `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}] font-bold text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
 };
 
 // ─── WALLET FLIP BUTTON (3D TOGGLE) ──────────────────────────────────────
@@ -595,7 +595,7 @@ const buildingExpenses = {
   totalLabel:           LABELS.primary,
   totalAmount:          `font-bold text-[18px] text-[${COLORS['color-accent-2']}] ml-1`,
   totalCurrencyMod:     `font-bold text-[${COLORS['color-accent-2']}] text-[0.7em] mr-0.5`,
-  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}] font-bold text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
+  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}] font-bold text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   addBtnWrapper:        "flex",
   addBtnGap:            '30px',
   itemsWrapper:         "flex flex-col",
