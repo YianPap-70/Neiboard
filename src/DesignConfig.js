@@ -15,12 +15,12 @@ const THEMES = [
   {
     name: 'Midnight', // default
     tokens: {
-      'color-text-prim': '#E1E3F8',
-      'color-text-dim': '#9596B1',
-      'color-cardback-dim': '#3D3D5F',
-      'color-cardback-prim': '#333355',
-      'color-extra': '#4A4A70',
-      'color-background': '#11112E',
+      'color-text-prim': '#BDD4E0',
+      'color-text-dim': '#78909F',
+      'color-cardback-dim': '#374F5F',
+      'color-cardback-prim': '#2C3E4D',
+      'color-extra': '#466A7C',
+      'color-background': '#18202A',
       'color-accent-1': '#9CE66B',
       'color-accent-2': '#F2C454',
       'color-accent-3': '#E25344',
