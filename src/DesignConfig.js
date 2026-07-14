@@ -41,12 +41,12 @@ const THEMES = [
     },
   },
   {
-    name: 'Mocha',
+    name: 'Brown',
     tokens: {
       'color-text-prim': '#FFF2E9',
       'color-text-dim': '#CEB7AB',
-      'color-cardback-dim': '#54453D',
-      'color-cardback-prim': '#41362F',
+      'color-cardback-dim': '#514038',
+      'color-cardback-prim': '#3F322B',
       'color-extra': '#695850',
       'color-background': '#1E1B19',
       'color-accent-1': '#91DB61',
