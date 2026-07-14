@@ -41,17 +41,17 @@ const THEMES = [
     },
   },
   {
-    name: 'Ember',
+    name: 'Mocha',
     tokens: {
-      'color-text-prim': '#FBE9E1',
-      'color-text-dim': '#C49A8F',
-      'color-cardback-dim': '#542D2A',
-      'color-cardback-prim': '#412221',
-      'color-extra': '#53537F',
-      'color-background': '#1F0F0E',
-      'color-accent-1': '#E6A96B',
-      'color-accent-2': '#F2D454',
-      'color-accent-3': '#E2447A',
+      'color-text-prim': '#FFF2E9',
+      'color-text-dim': '#CEB7AB',
+      'color-cardback-dim': '#665248',
+      'color-cardback-prim': '#4F4037',
+      'color-extra': '#99775F',
+      'color-background': '#1E1B19',
+      'color-accent-1': '#91DB61',
+      'color-accent-2': '#FFC543',
+      'color-accent-3': '#F2662F',
     },
   },
 ];
@@ -306,6 +306,14 @@ const spacing = {
   headerToListGap: '16px',
 };
 
+// ─── DIVIDER / SEPARATOR LINES ─────────────────────────────────────────────
+// A single, consistent separator used between expense items (current and past)
+// in all views: resident cards, history drawers, and building expenses.
+// Applied as a top border on all but the first item in a list.
+const divider = {
+  itemDivider: `border-t border-solid border-[${COLORS['color-text-dim']}]/50`,
+};
+
 // ─── MAIN SETTINGS MODAL (9-ROW REDESIGN) ────────────────────────────────
 const settingsModal = {
   contentAnimation: (A) => ({ animation: `menuContentIn ${A.modalDuration} ${A.modalCurve}` }),
@@ -318,13 +326,13 @@ const settingsModal = {
   headerRowGap:      '20px',
   logoIcon:          `text-[${COLORS['color-text-prim']}]`,
 logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
-  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-1 ring-[${COLORS['color-accent-1']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
+  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
   reportIcon:        "h-6 w-6",
 
   // Shared "pill row" base used by rows 2-9
-  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-1 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-extra']}] outline-none select-none transition-all duration-300 cursor-pointer`,
-  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-1 ring-[${COLORS['color-accent-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-accent-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillPaddingX:       '16px',
   pillLabel:          `font-normal text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap`,
   pillIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}] shrink-0`,
@@ -352,17 +360,17 @@ const deleteRangeModal = {
   rowGap:            '16px',
 
   boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
-  boundaryBtnSetRing: `ring-1 ring-[${COLORS['color-accent-2']}]`,
+  boundaryBtnSetRing: `ring-2 ring-[${COLORS['color-accent-2']}]`,
 
-  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-1 ring-[${COLORS['color-accent-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
   resetIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
   deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent outline-none select-none transition-all duration-300 font-normal text-base`,
-  deleteBtnDisabled:   `ring-1 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
-  deleteBtnEnabled:    `ring-1 ring-[${COLORS['color-accent-3']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
+  deleteBtnDisabled:   `ring-2 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
+  deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-accent-3']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
   deleteIcon:          `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
-  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-1 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
 };
 
 // ─── RESIDENT CARD COMPONENT ─────────────────────────────────────────────
@@ -395,7 +403,7 @@ const residentCard = {
   addExpenseBtn:           `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   noExpensesFallback:      LABELS.empty,
   itemRowWrapper:          "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-white/5",
-  itemRowDividerStyle:     `border-t border-solid border-[${COLORS['color-text-dim']}]/50`,
+  itemRowDividerStyle: divider.itemDivider,
   interactiveIconArea:     "flex items-center min-w-0 gap-3 pointer-events-none",
   iconStateBtn:            "shrink-0 h-5 flex items-center pointer-events-none",
   expenseDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-accent-1']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
@@ -419,7 +427,7 @@ const historyDrawer = {
   drawerWrapper:              `bg-[${COLORS['color-cardback-dim']}] px-4`,
   rowItemWrapper:             "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
   rowItemFirst:               "pt-3 pb-3",
-  rowItemDividerStyle:        `border-t border-solid border-[${COLORS['color-text-dim']}]`,
+  rowItemDividerStyle: divider.itemDivider,
   metaSubTextGroup:           "flex flex-col min-w-0 pr-2 pointer-events-none",
   pastMonthLabel:             `font-normal truncate text-[12px] text-[${COLORS['color-text-dim']}]`,
   toggleBar:                  `w-full flex items-center justify-between cursor-pointer hover:opacity-90 select-none bg-[${COLORS['color-cardback-dim']}] py-2 px-4`,
@@ -461,14 +469,14 @@ const modal = {
     descriptionWrapper:       `h-[52px] px-4 rounded-[6px] bg-[${COLORS['color-cardback-dim']}] w-full flex items-center`,
     descriptionInput:         `bg-transparent w-full focus:outline-none text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
     statusPill:               `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
-    statusPillRingUnpaid:     `ring-1 ring-[${COLORS['color-accent-3']}]`,
-    statusPillRingPaid:       `ring-1 ring-[${COLORS['color-accent-1']}]`,
+    statusPillRingUnpaid:     `ring-2 ring-[${COLORS['color-accent-3']}]`,
+    statusPillRingPaid:       `ring-2 ring-[${COLORS['color-accent-1']}]`,
     statusPillText:           `text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
     actionRow:                `flex items-center gap-3 w-full`,
     actionBtn:                `h-[52px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
-    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}]`,
+    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
     cancelBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}]`,
-    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
+    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
     deleteIcon:               `w-6 h-6 text-[${COLORS['color-text-prim']}]`,
   },
   deletePromptTitle:          `font-normal mb-6 text-xl text-[${COLORS['color-text-prim']}] text-center`,
@@ -534,15 +542,15 @@ const cardModal = {
   buttonRow:            "flex items-center gap-3 w-full mt-0",
   buttonGap:            '16px',
   baseBtn:              `h-[44px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}]`,
+  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
   nextBtn:              `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-background']}]`,
   cancelTextBtn:        `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
-  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
   trashIconSize:        `w-5 h-5 text-[${COLORS['color-text-prim']}]`,
   deleteConfirmBoxStyle:{ borderRadius: RADIUS_STANDARD, maxWidth: MODAL_MAX_WIDTH, padding: '20px' },
   deleteConfirmTitle:   `font-normal text-xl text-[${COLORS['color-text-prim']}] text-center mb-6 leading-snug`,
   deleteConfirmRow:     "flex items-center gap-4",
-  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-extra']}] ring-1 ring-[${COLORS['color-accent-3']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-extra']}] ring-2 ring-[${COLORS['color-accent-3']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
   deleteConfirmNoBtn:   `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-extra']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
 };
 
@@ -598,12 +606,12 @@ const buildingExpenses = {
   totalLabel:           LABELS.primary,
   totalAmount:          `font-normal text-[18px] text-[${COLORS['color-accent-2']}] ml-1`,
   totalCurrencyMod:     `font-normal text-[${COLORS['color-accent-2']}] text-[0.7em] mr-0.5`,
-  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-1 ring-[${COLORS['color-accent-1']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
+  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   addBtnWrapper:        "flex",
   addBtnGap:            '30px',
   itemsWrapper:         "flex flex-col",
   itemRow:              "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
-  itemRowDivider:       `border-t border-solid border-[${COLORS['color-text-dim']}]/50`,
+  itemRowDivider: divider.itemDivider,
   itemLeft:             "flex items-center min-w-0 gap-3 pointer-events-none",
   itemIconArea:         "shrink-0 h-5 flex items-center pointer-events-none",
   itemDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-accent-1']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
@@ -645,6 +653,7 @@ const DESIGN = {
   residentCard,
   drawer,
   autoTextarea,
+  divider,
   historyDrawer,
   modalBase,
   modal,
