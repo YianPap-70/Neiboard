@@ -45,9 +45,9 @@ const THEMES = [
     tokens: {
       'color-text-prim': '#FFF2E9',
       'color-text-dim': '#CEB7AB',
-      'color-cardback-dim': '#665248',
-      'color-cardback-prim': '#4F4037',
-      'color-extra': '#99775F',
+      'color-cardback-dim': '#54453D',
+      'color-cardback-prim': '#41362F',
+      'color-extra': '#695850',
       'color-background': '#1E1B19',
       'color-accent-1': '#91DB61',
       'color-accent-2': '#FFC543',
