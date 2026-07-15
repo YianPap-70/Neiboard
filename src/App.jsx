@@ -865,14 +865,23 @@ const totalBuildingDebt = useMemo(() => {
     closeExpenseModal();
   };
 
-    const handleConfirmBuildingExpense = ({ amount, description, paid, isRecurring }) => {
+      const handleConfirmBuildingExpense = ({ amount, description, paid, isRecurring }) => {
     const parsedAmount = parseFloat(amount) || 0;
     const desc = description.trim() || t('building_expense_default');
 
     if (isRecurring) {
       // --- RECURRING EXPENSE ---
-      const { templateId } = expenseModal;
+      const { templateId, expenseId } = expenseModal;
+      
       if (expenseModal.type === 'add' || !templateId) {
+        // CASE: Add new recurring, OR edit a one-time expense and toggle to recurring
+        
+        // If we are editing a ONE-TIME expense and turning it into a recurring,
+        // we need to remove the original one-time expense from buildingExpenses.
+        if (expenseModal.type === 'edit' && expenseId) {
+          setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseId));
+        }
+        
         // Create a new template
         const newTemplate = {
           id: makeId('ft'),
@@ -882,25 +891,30 @@ const totalBuildingDebt = useMemo(() => {
           startMonthKey: currentMonthKey,
         };
         setFixedTemplates(prev => [...prev, newTemplate]);
+        
       } else if (expenseModal.type === 'editFixed') {
-        // Editing existing template
+        // CASE: Editing an existing recurring template
         const existingTemplate = fixedTemplates.find(t => t.id === templateId);
         if (!existingTemplate) return;
-        // If amount changed, add an override for the month being edited (or current month)
+        
         const targetMonthKey = expenseModal.monthKey ?? currentMonthKey;
+        
+        // Amount change → add override
         if (existingTemplate.baseAmount !== parsedAmount) {
           setFixedAmountOverrides(prev => [
             ...prev,
             { id: makeId('fo'), templateId, monthKey: targetMonthKey, newAmount: parsedAmount }
           ]);
         }
-        // Description change: update the template directly
+        
+        // Description change → update template
         if (existingTemplate.description !== desc) {
           setFixedTemplates(prev =>
             prev.map(t => t.id === templateId ? { ...t, description: desc } : t)
           );
         }
-        // Paid status: toggle for the specific month (targetMonthKey)
+        
+        // Paid status: toggle for the specific month
         const existingPaid = fixedPaidStatuses.find(p => p.templateId === templateId && p.monthKey === targetMonthKey);
         if (paid && !existingPaid) {
           setFixedPaidStatuses(prev => [...prev, { id: makeId('fp'), templateId, monthKey: targetMonthKey, paid: true }]);
@@ -908,14 +922,12 @@ const totalBuildingDebt = useMemo(() => {
           setFixedPaidStatuses(prev => prev.filter(p => !(p.templateId === templateId && p.monthKey === targetMonthKey)));
         }
       }
+      
     } else {
       // --- ONE-TIME EXPENSE ---
-      // IMPORTANT: if we are editing a recurring expense and turning it into a one-time,
-      // we must stop the recurrence and keep only the current month's instance.
-
       const { templateId, expenseId, monthKey } = expenseModal;
 
-      // If this was a recurring expense being edited (editFixed), we need to stop it
+      // If this was a recurring expense being turned into one-time (editFixed)
       if (expenseModal.type === 'editFixed' && templateId) {
         // 1. Mark the template as deleted from this month onward
         const stopMonth = monthKey ?? currentMonthKey;
@@ -925,11 +937,7 @@ const totalBuildingDebt = useMemo(() => {
           )
         );
 
-        // 2. Remove this expense from any future occurrences (it will be filtered out by deletedAt)
-        //    No need to delete the template – deletedAt takes care of it.
-
-        // 3. Create a one-time expense for the current month (or the month being edited)
-        //    This keeps the edited version in the current month as a standalone expense.
+        // 2. Create a one-time expense for the current month
         setBuildingExpenses(prev => [
           ...prev,
           { 
@@ -942,17 +950,20 @@ const totalBuildingDebt = useMemo(() => {
           }
         ]);
 
-        // 4. Remove the old recurring instance from buildingExpenses if it exists (it was generated dynamically)
-        //    The old instance is not stored in buildingExpenses, so we don't need to remove it.
-        //    It will simply stop appearing in future months because the template is deleted.
-
         closeExpenseModal();
         return;
       }
 
-      // Otherwise, it's a regular one-time add or edit (no recurring involved)
+      // CASE: Regular one-time add or edit (no recurring involved)
       if (expenseModal.type === 'add') {
-        setBuildingExpenses(prev => [...prev, { id: makeId('bexp'), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey }]);
+        setBuildingExpenses(prev => [...prev, { 
+          id: makeId('bexp'), 
+          description: desc, 
+          amount: parsedAmount, 
+          paid, 
+          month: currentMonthString, 
+          monthKey: currentMonthKey 
+        }]);
       } else if (expenseModal.type === 'edit' && expenseId) {
         setBuildingExpenses(prev => prev.map(exp =>
           exp.id === expenseId ? { ...exp, description: desc, amount: parsedAmount, paid } : exp

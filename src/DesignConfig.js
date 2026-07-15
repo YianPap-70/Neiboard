@@ -619,7 +619,7 @@ const buildingExpenses = {
   itemRow:              "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
   itemRowDivider: divider.itemDivider,
     itemLeft:             "flex items-center min-w-0 gap-0 pointer-events-none",
-  itemIconAreaStyle:    { marginRight: '2px' },
+  itemIconAreaStyle:    { marginRight: '12px' },
   recurringIcon:        { class: "w-6 h-6", style: { marginRight: '12px' } },
     recurringIconColor: {
     unpaid: 'var(--color-text-prim)',
