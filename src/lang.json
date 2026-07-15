@@ -63,6 +63,8 @@
   "building_expenses_heading": { "en": "Expenses", "gr": "Έξοδα" },
   "previous_month_debts": { "en": "Previous Month Debts", "gr": "Οφειλές Προηγούμενων Μηνών" },
   "previous_month_expenses": { "en": "Previous Month Expenses", "gr": "Έξοδα Προηγούμενων Μηνών" },
-  "print": { "en": "Print", "gr": "Εκτύπωση" },
-  "close": { "en": "Close", "gr": "Κλείσιμο" }
+    "print": { "en": "Print", "gr": "Εκτύπωση" },
+  "close": { "en": "Close", "gr": "Κλείσιμο" },
+  "recurring": { "en": "Recurring", "gr": "Επαναλαμβανόμενο" },
+  "one_time": { "en": "One-time", "gr": "Μια φορά" }
 }

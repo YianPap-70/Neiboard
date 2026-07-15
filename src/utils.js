@@ -42,11 +42,18 @@ const STORAGE_VERSION = 1;
 function migrateStoredData(data) {
   const migrated = { ...data };
 
-  // Example of how a future migration would look:
-  // if (migrated.version === 1) {
-  //   migrated.residents = migrated.residents.map(r => ({ ...r, someNewField: false }));
-  //   migrated.version = 2;
-  // }
+  // Ensure the three new arrays exist
+  if (!migrated.fixedTemplates) migrated.fixedTemplates = [];
+  if (!migrated.fixedAmountOverrides) migrated.fixedAmountOverrides = [];
+  if (!migrated.fixedPaidStatuses) migrated.fixedPaidStatuses = [];
+
+  // Add startMonthKey to existing templates (default to 0 for old data)
+migrated.fixedTemplates = migrated.fixedTemplates.map(t => ({
+  ...t,
+  startMonthKey: t.startMonthKey ?? 0,
+}));
+
+  // Future migrations can be added here
 
   migrated.version = STORAGE_VERSION;
   return migrated;
@@ -86,6 +93,37 @@ function isValidBackupShape(parsed) {
   if (!Array.isArray(parsed.residents) || !Array.isArray(parsed.buildingExpenses)) return false;
   if (!parsed.residents.every(isValidResident)) return false;
   if (!parsed.buildingExpenses.every(isValidExpense)) return false;
+
+  // New arrays are optional – if they exist, validate their shape
+  const templates = parsed.fixedTemplates || [];
+  const overrides = parsed.fixedAmountOverrides || [];
+  const paidStatuses = parsed.fixedPaidStatuses || [];
+
+  if (!Array.isArray(templates) || !templates.every(t =>
+  t && typeof t === 'object' &&
+  typeof t.id === 'string' &&
+  typeof t.description === 'string' &&
+  typeof t.baseAmount === 'number' &&
+  (t.deletedAt === null || typeof t.deletedAt === 'number') &&
+  typeof t.startMonthKey === 'number'
+)) return false;
+
+  if (!Array.isArray(overrides) || !overrides.every(o =>
+    o && typeof o === 'object' &&
+    typeof o.id === 'string' &&
+    typeof o.templateId === 'string' &&
+    typeof o.monthKey === 'number' &&
+    typeof o.newAmount === 'number'
+  )) return false;
+
+  if (!Array.isArray(paidStatuses) || !paidStatuses.every(p =>
+    p && typeof p === 'object' &&
+    typeof p.id === 'string' &&
+    typeof p.templateId === 'string' &&
+    typeof p.monthKey === 'number' &&
+    typeof p.paid === 'boolean'
+  )) return false;
+
   return true;
 }
 

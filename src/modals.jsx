@@ -117,7 +117,7 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
 // ─── UNIFIED EXPENSE MODAL ────────────────────────────────────────────────
 // Handles add / edit / delete for both resident and building expenses.
 // Works on an internal copy of the data; changes are only committed on OK.
-function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t }) {
+function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onStopRecurring, t }) {
   const D      = window.DESIGN;
   const EM     = D.modal.expenseModal;
   const MB     = D.modalBase;
@@ -128,7 +128,8 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
   const [amount,      setAmount]      = useState(initialData.amount      || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [isPaid,      setIsPaid]      = useState(initialData.paid        ?? false);
-  const [mode,        setMode]        = useState(initialData.type); // 'add' | 'edit' | 'delete' | 'buildingDelete'
+  const [isRecurring, setIsRecurring] = useState(initialData.isRecurring || false);
+  const [mode,        setMode]        = useState(initialData.type); // 'add' | 'edit' | 'editFixed' | 'delete' | 'buildingDelete'
 
   // Tracks whether the amount the user typed is invalid (empty, not a
   // number, or zero/negative). When true, the amount field gets a red ring
@@ -137,7 +138,7 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
   const amountWrapperRef = useRef(null);
 
   const isAdd    = mode === 'add';
-  const isEdit   = mode === 'edit';
+  const isEdit   = mode === 'edit' || mode === 'editFixed';   // treat both as edit
   const isDelete = mode === 'delete' || mode === 'buildingDelete';
 
   const ringClass = isPaid ? EM.statusPillRingPaid : EM.statusPillRingUnpaid;
@@ -145,12 +146,9 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
   const handleConfirm = () => {
     const parsed = parseFloat(amount);
     if (!amount || isNaN(parsed) || parsed <= 0) {
-      // Trigger shake animation: remove then re-add the animation style so it
-      // re-fires even if the user clicks OK multiple times without changing input.
       const el = amountWrapperRef.current;
       if (el) {
         el.style.animation = 'none';
-        // Force reflow to restart the animation
         void el.offsetWidth;
         el.style.animation = A.inputShake;
       }
@@ -158,7 +156,7 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
       return;
     }
     setAmountError(false);
-    onConfirm({ amount, description, paid: isPaid });
+    onConfirm({ amount, description, paid: isPaid, isRecurring });
   };
 
   const handleEnter = (e) => { if (e.key === 'Enter') handleConfirm(); };
@@ -168,6 +166,9 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
     setAmount(e.target.value);
     if (amountError) setAmountError(false);
   };
+
+  // Determine if we should show a "Stop" button instead of trash
+  const isFixedEdit = mode === 'editFixed' && isRecurring;
 
   if (!isAdd && !isEdit && !isDelete) return null;
 
@@ -216,8 +217,24 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
             />
           </div>
 
-          <div style={{ height: D.modal.descriptionToActionsGap }} />
+                    {/* ─── RECURRING TOGGLE (BUILDING ONLY) ────────────── */}
+          {context === 'building' && (
+            <>
+              <div style={{ height: D.modal.descriptionToRecurringGap }} />
+              <button
+                onClick={() => setIsRecurring(prev => !prev)}
+                className={`${EM.recurringPill} ${isRecurring ? EM.recurringPillRingActive : EM.recurringPillRingInactive}`}
+              >
+                <span className={EM.recurringPillText}>
+                  {isRecurring ? t('recurring') : t('one_time')}
+                </span>
+              </button>
+              <div style={{ height: D.modal.recurringToPaidGap }} />
+            </>
+          )}
 
+          {/* ─── PAID/UNPAID TOGGLE ────────────────────────────── */}
+          {context !== 'building' && <div style={{ height: D.modal.descriptionToRecurringGap }} />}
           <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
             <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
           </button>
@@ -228,9 +245,17 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, t })
             <button onClick={handleConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>{t('ok')}</button>
             <button onClick={onClose}       className={`${EM.actionBtn} ${EM.cancelBtn}`}>{t('cancel')}</button>
             {isEdit && (
-              <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
-                <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
-              </button>
+              isFixedEdit && typeof onStopRecurring === 'function' ? (
+                // Show a "Stop" button for recurring expenses
+                <button onClick={onStopRecurring} className={EM.deleteBtn}>
+                  <SpriteIcon id="icon-stop" className={EM.deleteIcon} /> {/* you may need an icon, or reuse trash */}
+                </button>
+              ) : (
+                // Trash button for one‑time expenses or when stop not available
+                <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
+                  <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
+                </button>
+              )
             )}
           </div>
         </div>

@@ -69,43 +69,74 @@ function WalletFlipButton({ onToggle, t }) {
 
 
 // ─── BUILDING EXPENSES VIEW ───────────────────────────────────────────────
-function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
+function BuildingExpenses({ regularExpenses, fixedExpenses, currentMonthString, currentMonthKey, isPastExpense, activeCurrencySymbol, openBuildingModal, t }) {
   const BE = window.DESIGN.buildingExpenses;
+  const today = getSystemDate();
+  const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+  const isFutureMonth = currentMonthKey > todayMonthKey;
 
-  const currentExpenses    = expenses.filter(exp => exp.monthKey === currentMonthKey);
-  const pastUnpaidExpenses = expenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
+  // Combine regular and fixed expenses; fixed ones are marked with isRecurring
+  const allExpenses = [...regularExpenses, ...fixedExpenses];
 
+  // Separate current vs past unpaid (for regular + fixed)
+  const currentExpenses = allExpenses.filter(exp => exp.monthKey === currentMonthKey);
+  const pastUnpaidExpenses = allExpenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
+
+  // For future month, we exclude unpaid fixed expenses from totals but still show them greyed out
   const hasCurrent = currentExpenses.length > 0;
-  const hasPast    = pastUnpaidExpenses.length > 0;
+  const hasPast = pastUnpaidExpenses.length > 0;
 
   return (
     <div className={BE.listContainer}>
 
       <div className={BE.cardContainer} style={{ marginBottom: hasPast ? BE.cardContainerGap : undefined }}>
         <div className={BE.labelRow} style={{ paddingTop: BE.sectionPaddingTop, marginBottom: hasCurrent ? '0px' : BE.addBtnGap }}>
-  <span className={BE.sectionLabel}>
-    {hasCurrent ? t('expenses') : t('no_expenses_this_month_building')}
-  </span>
-       </div>
+          <span className={BE.sectionLabel}>
+            {hasCurrent ? t('expenses') : t('no_expenses_this_month_building')}
+          </span>
+        </div>
 
         {hasCurrent && (
           <div className={BE.itemsWrapper} style={{ marginBottom: BE.addBtnGap }}>
-            {currentExpenses.map((exp, idx) => (
-              <div
-                key={exp.id}
-                className={`${BE.itemRow} ${idx > 0 ? BE.itemRowDivider : ''}`}
-                onClick={() => openBuildingModal('edit', exp.id, exp.amount.toString(), exp.description, exp.paid)}
-              >
-                <div className={BE.itemLeft}>
-                  <div className={BE.itemIconArea}><PaidStatusIcon paid={exp.paid} /></div>
-                  <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+            {currentExpenses.map((exp, idx) => {
+              // Determine if clickable: only when not future-unpaid
+              const isClickable = !(exp.isRecurring && exp.isFutureUnpaid);
+              const rowClassName = `${BE.itemRow} ${idx > 0 ? BE.itemRowDivider : ''}`;
+
+              return (
+                <div
+                  key={exp.id}
+                  className={rowClassName}
+                  onClick={() => {
+                    if (isClickable) {
+                      openBuildingModal(exp.isRecurring ? 'editFixed' : 'edit', exp);
+                    }
+                  }}
+                  style={exp.isFutureUnpaid ? { opacity: 0.5, cursor: 'default' } : {}}
+                >
+                  <div className={BE.itemLeft}>
+                    <div className={BE.itemIconArea} style={BE.itemIconAreaStyle}><PaidStatusIcon paid={exp.paid} /></div>
+                    {exp.isRecurring && !exp.isFutureUnpaid && (
+  <SpriteIcon
+    id="recurring-icn"
+    className={BE.recurringIcon.class}
+    style={{
+      ...BE.recurringIcon.style,
+      color: BE.recurringIconColor[exp.paid ? 'paid' : 'unpaid']
+    }}
+  />
+)}
+                    <span className={BE.itemDescription(exp.paid)}>
+                      {exp.description}
+                    </span>
+                  </div>
+                  <span className={BE.itemAmount(exp.paid)}>
+                    <CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.itemCurrencyMod} />
+                    <AmountSpan amount={exp.amount} isPaid={exp.paid} />
+                  </span>
                 </div>
-                <span className={BE.itemAmount(exp.paid)}>
-                  <CurrencySymbol activeSymbol={activeCurrencySymbol} className={BE.itemCurrencyMod} />
-                  <AmountSpan amount={exp.amount} isPaid={exp.paid} />
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -124,12 +155,24 @@ function BuildingExpenses({ expenses, currentMonthString, currentMonthKey, isPas
               <div
                 key={exp.id}
                 className={`${BE.itemRow} ${idx > 0 ? BE.itemRowDivider : ''}`}
-                onClick={() => openBuildingModal('edit', exp.id, exp.amount.toString(), exp.description, exp.paid)}
+                onClick={() => openBuildingModal(exp.isRecurring ? 'editFixed' : 'edit', exp)}
               >
                 <div className={BE.itemLeft}>
-                  <div className={BE.itemIconArea}><PaidStatusIcon paid={exp.paid} /></div>
+                  <div className={BE.itemIconArea} style={BE.itemIconAreaStyle}><PaidStatusIcon paid={exp.paid} /></div>
+                  {exp.isRecurring && (
+  <SpriteIcon
+    id="recurring-icn"
+    className={BE.recurringIcon.class}
+    style={{
+      ...BE.recurringIcon.style,
+      color: BE.recurringIconColor[exp.paid ? 'paid' : 'unpaid']
+    }}
+  />
+)}
                   <div className={BE.prevItemTextCol}>
-                    <span className={BE.itemDescription(exp.paid)}>{exp.description}</span>
+                    <span className={BE.itemDescription(exp.paid)}>
+                      {exp.description}
+                    </span>
                     <span className={BE.prevMonthSubLabel}>{exp.month}</span>
                   </div>
                 </div>
@@ -382,6 +425,9 @@ export default function App() {
   // ─── DATA STATE ────────────────────────────────────────────────────────
   const [residents,       setResidents]       = useState([]);
   const [buildingExpenses, setBuildingExpenses] = useState([]);
+  const [fixedTemplates, setFixedTemplates] = useState([]);
+  const [fixedAmountOverrides, setFixedAmountOverrides] = useState([]);
+  const [fixedPaidStatuses, setFixedPaidStatuses] = useState([]);
 
   // ─── VIEW STATE ────────────────────────────────────────────────────────
   const [isMainMenuOpen,       setIsMainMenuOpen]       = useState(false);
@@ -411,6 +457,9 @@ export default function App() {
     if (persisted) {
       setResidents(persisted.residents);
       setBuildingExpenses(persisted.buildingExpenses);
+      setFixedTemplates(persisted.fixedTemplates || []);
+      setFixedAmountOverrides(persisted.fixedAmountOverrides || []);
+      setFixedPaidStatuses(persisted.fixedPaidStatuses || []);
       const s = persisted.settings || {};
       if (s.language === 'en' || s.language === 'gr') setCurrentLanguage(s.language);
       if (s.sortBy === 'Tag' || s.sortBy === 'Debt') setCurrentSortBy(s.sortBy);
@@ -435,6 +484,9 @@ export default function App() {
       savePersistedData({
         residents,
         buildingExpenses,
+        fixedTemplates,
+        fixedAmountOverrides,
+        fixedPaidStatuses,
         settings: {
           language: currentLanguage,
           sortBy: currentSortBy,
@@ -444,7 +496,7 @@ export default function App() {
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [residents, buildingExpenses, currentLanguage, currentSortBy, currencyIndex, themeIndex]);
+  }, [residents, buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, currentLanguage, currentSortBy, currencyIndex, themeIndex]);
 
   const headerRef       = useRef(null);
   const cardRefs        = useRef({});
@@ -511,6 +563,9 @@ export default function App() {
     version: STORAGE_VERSION,
     residents,
     buildingExpenses,
+    fixedTemplates,
+    fixedAmountOverrides,
+    fixedPaidStatuses,
     settings: { language: currentLanguage, sortBy: currentSortBy, currencyIndex, themeIndex },
   });
 
@@ -604,6 +659,8 @@ export default function App() {
     setBuildingExpenses(prev =>
       prev.filter(exp => exp.monthKey < startKey || exp.monthKey > endKey)
     );
+    // Also delete fixed templates that were created within the range? We'll keep them separate for now.
+    // For simplicity, we'll not delete fixed templates automatically; users can stop them manually.
   };
 
   const totalAllDebts = useMemo(
@@ -612,10 +669,29 @@ export default function App() {
   [residents]
 );
 
-const totalBuildingDebt = useMemo(
-  () => buildingExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0),
-  [buildingExpenses]
-);
+const totalBuildingDebt = useMemo(() => {
+  const today = getSystemDate();
+  const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+  // Regular expenses: always count unpaid
+  const regularUnpaid = buildingExpenses.filter(exp => !exp.paid).reduce((sum, exp) => sum + exp.amount, 0);
+  // Fixed expenses: count unpaid only if they are NOT future (monthKey <= todayMonthKey)
+  const fixedUnpaid = fixedTemplates.reduce((sum, template) => {
+    // Skip if deleted before today
+    if (template.deletedAt !== null && template.deletedAt <= todayMonthKey) return sum;
+    // Find amount for today (or closest override)
+    let amount = template.baseAmount;
+    const override = fixedAmountOverrides
+      .filter(o => o.templateId === template.id && o.monthKey <= todayMonthKey)
+      .sort((a, b) => b.monthKey - a.monthKey)[0];
+    if (override) amount = override.newAmount;
+    // Check if this month's instance is paid
+    const paidEntry = fixedPaidStatuses.find(p => p.templateId === template.id && p.monthKey === todayMonthKey);
+    const isPaid = paidEntry ? paidEntry.paid : false;
+    if (!isPaid) return sum + amount;
+    return sum;
+  }, 0);
+  return regularUnpaid + fixedUnpaid;
+}, [buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses]);
 
   const isPastExpense = useCallback(
     (monthKey) => monthKey < currentMonthKey,
@@ -692,6 +768,7 @@ const totalBuildingDebt = useMemo(
   const [expenseModal, setExpenseModal] = useState({
     type: null, context: null, residentId: null,
     expenseId: null, amount: '', description: '', paid: false,
+    isRecurring: false, templateId: null, monthKey: null,
   });
 
   const closeExpenseModal = () => setExpenseModal(m => ({ ...m, type: null }));
@@ -706,6 +783,9 @@ const totalBuildingDebt = useMemo(
       amount:      options.amount      ?? '',
       description: options.description ?? '',
       paid:        options.paid        ?? false,
+      isRecurring: options.isRecurring ?? false,
+      templateId:  options.templateId  ?? null,
+      monthKey:    options.monthKey    ?? null,
     });
   };
 
@@ -713,8 +793,37 @@ const totalBuildingDebt = useMemo(
     openExpenseModal('resident', type, { residentId, expenseId, amount, description, paid });
   };
 
-  const openBuildingModal = (type, expenseId = null, amount = '', description = '', paid = false) => {
-    openExpenseModal('building', type, { expenseId, amount, description, paid });
+  const openBuildingModal = (type, expenseOrId, amount = '', description = '', paid = false) => {
+    // If second argument is an object (expense), extract fields
+    if (typeof expenseOrId === 'object' && expenseOrId !== null) {
+      const exp = expenseOrId;
+      setExpenseModal({
+        type, // 'edit' or 'editFixed'
+        context: 'building',
+        residentId: null,
+        expenseId: exp.id,
+        amount: exp.amount.toString(),
+        description: exp.description,
+        paid: exp.paid,
+        isRecurring: exp.isRecurring || false,
+        templateId: exp.templateId || null,
+        monthKey: exp.monthKey || null,
+      });
+      return;
+    }
+    // Otherwise, it's an add or edit with explicit fields
+    setExpenseModal({
+      type,
+      context: 'building',
+      residentId: null,
+      expenseId: expenseOrId || null,
+      amount: amount || '',
+      description: description || '',
+      paid: paid || false,
+      isRecurring: false,
+      templateId: null,
+      monthKey: null,
+    });
   };
 
   // ─── EXPENSE HANDLERS ──────────────────────────────────────────────────
@@ -756,15 +865,99 @@ const totalBuildingDebt = useMemo(
     closeExpenseModal();
   };
 
-  const handleConfirmBuildingExpense = ({ amount, description, paid }) => {
+    const handleConfirmBuildingExpense = ({ amount, description, paid, isRecurring }) => {
     const parsedAmount = parseFloat(amount) || 0;
-    const desc         = description.trim() || t('building_expense_default');
-    if (expenseModal.type === 'add') {
-      setBuildingExpenses(prev => [...prev, { id: makeId('bexp'), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey }]);
-    } else if (expenseModal.type === 'edit' && expenseModal.expenseId) {
-      setBuildingExpenses(prev => prev.map(exp =>
-        exp.id === expenseModal.expenseId ? { ...exp, description: desc, amount: parsedAmount, paid } : exp
-      ));
+    const desc = description.trim() || t('building_expense_default');
+
+    if (isRecurring) {
+      // --- RECURRING EXPENSE ---
+      const { templateId } = expenseModal;
+      if (expenseModal.type === 'add' || !templateId) {
+        // Create a new template
+        const newTemplate = {
+          id: makeId('ft'),
+          description: desc,
+          baseAmount: parsedAmount,
+          deletedAt: null,
+          startMonthKey: currentMonthKey,
+        };
+        setFixedTemplates(prev => [...prev, newTemplate]);
+      } else if (expenseModal.type === 'editFixed') {
+        // Editing existing template
+        const existingTemplate = fixedTemplates.find(t => t.id === templateId);
+        if (!existingTemplate) return;
+        // If amount changed, add an override for the month being edited (or current month)
+        const targetMonthKey = expenseModal.monthKey ?? currentMonthKey;
+        if (existingTemplate.baseAmount !== parsedAmount) {
+          setFixedAmountOverrides(prev => [
+            ...prev,
+            { id: makeId('fo'), templateId, monthKey: targetMonthKey, newAmount: parsedAmount }
+          ]);
+        }
+        // Description change: update the template directly
+        if (existingTemplate.description !== desc) {
+          setFixedTemplates(prev =>
+            prev.map(t => t.id === templateId ? { ...t, description: desc } : t)
+          );
+        }
+        // Paid status: toggle for the specific month (targetMonthKey)
+        const existingPaid = fixedPaidStatuses.find(p => p.templateId === templateId && p.monthKey === targetMonthKey);
+        if (paid && !existingPaid) {
+          setFixedPaidStatuses(prev => [...prev, { id: makeId('fp'), templateId, monthKey: targetMonthKey, paid: true }]);
+        } else if (!paid && existingPaid) {
+          setFixedPaidStatuses(prev => prev.filter(p => !(p.templateId === templateId && p.monthKey === targetMonthKey)));
+        }
+      }
+    } else {
+      // --- ONE-TIME EXPENSE ---
+      // IMPORTANT: if we are editing a recurring expense and turning it into a one-time,
+      // we must stop the recurrence and keep only the current month's instance.
+
+      const { templateId, expenseId, monthKey } = expenseModal;
+
+      // If this was a recurring expense being edited (editFixed), we need to stop it
+      if (expenseModal.type === 'editFixed' && templateId) {
+        // 1. Mark the template as deleted from this month onward
+        const stopMonth = monthKey ?? currentMonthKey;
+        setFixedTemplates(prev =>
+          prev.map(t =>
+            t.id === templateId ? { ...t, deletedAt: stopMonth } : t
+          )
+        );
+
+        // 2. Remove this expense from any future occurrences (it will be filtered out by deletedAt)
+        //    No need to delete the template – deletedAt takes care of it.
+
+        // 3. Create a one-time expense for the current month (or the month being edited)
+        //    This keeps the edited version in the current month as a standalone expense.
+        setBuildingExpenses(prev => [
+          ...prev,
+          { 
+            id: makeId('bexp'), 
+            description: desc, 
+            amount: parsedAmount, 
+            paid, 
+            month: currentMonthString, 
+            monthKey: stopMonth 
+          }
+        ]);
+
+        // 4. Remove the old recurring instance from buildingExpenses if it exists (it was generated dynamically)
+        //    The old instance is not stored in buildingExpenses, so we don't need to remove it.
+        //    It will simply stop appearing in future months because the template is deleted.
+
+        closeExpenseModal();
+        return;
+      }
+
+      // Otherwise, it's a regular one-time add or edit (no recurring involved)
+      if (expenseModal.type === 'add') {
+        setBuildingExpenses(prev => [...prev, { id: makeId('bexp'), description: desc, amount: parsedAmount, paid, month: currentMonthString, monthKey: currentMonthKey }]);
+      } else if (expenseModal.type === 'edit' && expenseId) {
+        setBuildingExpenses(prev => prev.map(exp =>
+          exp.id === expenseId ? { ...exp, description: desc, amount: parsedAmount, paid } : exp
+        ));
+      }
     }
     closeExpenseModal();
   };
@@ -774,6 +967,66 @@ const totalBuildingDebt = useMemo(
     setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseModal.expenseId));
     closeExpenseModal();
   };
+
+  // ─── STOP RECURRING (set deletedAt) ─────────────────────────────────────
+  const handleStopRecurring = () => {
+    const { templateId, monthKey } = expenseModal;
+    if (!templateId) return;
+    // Confirm before stopping
+    if (!window.confirm('Stop this recurring expense? It will no longer appear from this month onward.')) return;
+    const stopMonth = monthKey ?? currentMonthKey;
+    setFixedTemplates(prev =>
+      prev.map(t =>
+        t.id === templateId ? { ...t, deletedAt: stopMonth } : t
+      )
+    );
+    closeExpenseModal();
+  };
+
+  // ─── GENERATE FIXED (RECURRING) EXPENSES FOR A GIVEN MONTH ──────────────
+  const generateFixedExpenses = useCallback((monthKey) => {
+    const result = [];
+    const today = getSystemDate();
+    const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+    const isFutureMonth = monthKey > todayMonthKey;
+
+    // Loop through all templates
+    fixedTemplates.forEach(template => {
+      // Skip if deleted before this month
+      if (template.deletedAt !== null && template.deletedAt <= monthKey) return;
+
+      // Skip if this month is before the template's start
+if (template.startMonthKey > monthKey) return;
+
+      // Find the applicable amount override (highest monthKey <= monthKey)
+      let amount = template.baseAmount;
+      const applicableOverride = fixedAmountOverrides
+        .filter(o => o.templateId === template.id && o.monthKey <= monthKey)
+        .sort((a, b) => b.monthKey - a.monthKey)[0];
+      if (applicableOverride) amount = applicableOverride.newAmount;
+
+      // Find paid status for this specific month
+      const paidEntry = fixedPaidStatuses.find(p => p.templateId === template.id && p.monthKey === monthKey);
+      const isPaid = paidEntry ? paidEntry.paid : false;
+
+      // For future unpaid items, they are greyed out and excluded from totals
+      const isFutureUnpaid = isFutureMonth && !isPaid;
+
+      result.push({
+        id: `fixed-${template.id}-${monthKey}`,
+        description: template.description,
+        amount: amount,
+        paid: isPaid,
+        monthKey: monthKey,
+        month: `${monthNames[monthKey % 12]} ${Math.floor(monthKey / 12)}`, // For display
+        isRecurring: true,
+        templateId: template.id,
+        isFutureUnpaid: isFutureUnpaid,
+      });
+    });
+
+    return result;
+  }, [fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, monthNames]);
 
   // ─── CARD MODAL STATE ──────────────────────────────────────────────────
   const [cardModalState, setCardModalState] = useState({ type: null, residentId: null });
@@ -886,7 +1139,8 @@ const totalBuildingDebt = useMemo(
 
   const buildingView = (
     <BuildingExpenses
-      expenses={buildingExpenses}
+      regularExpenses={buildingExpenses}
+      fixedExpenses={generateFixedExpenses(currentMonthKey)}
       currentMonthString={currentMonthString}
       currentMonthKey={currentMonthKey}
       isPastExpense={isPastExpense}
@@ -988,11 +1242,18 @@ const totalBuildingDebt = useMemo(
         >
           <ExpenseModal
             key={expenseModal.expenseId ?? `new-${expenseModal.context}`}
-            initialData={{ type: expenseModal.type, amount: expenseModal.amount, description: expenseModal.description, paid: expenseModal.paid }}
+            initialData={{
+              type: expenseModal.type,
+              amount: expenseModal.amount,
+              description: expenseModal.description,
+              paid: expenseModal.paid,
+              isRecurring: expenseModal.isRecurring || false,
+            }}
             context={expenseModal.context}
             onConfirm={expenseModal.context === 'resident' ? handleConfirmResidentExpense : handleConfirmBuildingExpense}
             onClose={closeExpenseModal}
             onDelete={expenseModal.context === 'resident' ? handleDeleteResidentExpense : handleDeleteBuildingExpense}
+            onStopRecurring={expenseModal.context === 'building' && expenseModal.isRecurring ? handleStopRecurring : undefined}
             t={t}
           />
         </ModalWrapper>

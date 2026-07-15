@@ -182,7 +182,7 @@ const MODAL_MAX_WIDTH = '376px';
 
 // ─── ICON SIZE TOKENS ────────────────────────────────────────────────────
 const icons = {
-  statusIconSize:  "w-5 h-5",
+  statusIconSize:  "w-6 h-6",
   rollerArrowSize: "w-[18px] h-[18px]",
   caretIconSize:   `w-4 h-4 text-[${COLORS['color-text-prim']}]`,
   actionIconSize:  `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
@@ -468,6 +468,12 @@ const modal = {
     amountInput:              `bg-transparent w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[38px] font-normal text-[${COLORS['color-text-prim']}]`,
     descriptionWrapper:       `h-[52px] px-4 rounded-[6px] bg-[${COLORS['color-cardback-dim']}] w-full flex items-center`,
     descriptionInput:         `bg-transparent w-full focus:outline-none text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
+
+recurringPill:            `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
+    recurringPillRingActive:  `ring-1 ring-[${COLORS['color-accent-1']}]`,
+    recurringPillRingInactive:`ring-1 ring-[${COLORS['color-text-dim']}]/50`,
+    recurringPillText:        `text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
+
     statusPill:               `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
     statusPillRingUnpaid:     `ring-2 ring-[${COLORS['color-accent-3']}]`,
     statusPillRingPaid:       `ring-2 ring-[${COLORS['color-accent-1']}]`,
@@ -612,7 +618,13 @@ const buildingExpenses = {
   itemsWrapper:         "flex flex-col",
   itemRow:              "w-full flex items-center justify-between py-3 cursor-pointer select-none transition-colors active:bg-white/5",
   itemRowDivider: divider.itemDivider,
-  itemLeft:             "flex items-center min-w-0 gap-3 pointer-events-none",
+    itemLeft:             "flex items-center min-w-0 gap-0 pointer-events-none",
+  itemIconAreaStyle:    { marginRight: '2px' },
+  recurringIcon:        { class: "w-6 h-6", style: { marginRight: '12px' } },
+    recurringIconColor: {
+    unpaid: 'var(--color-text-prim)',
+    paid:   'var(--color-text-dim)',
+  },
   itemIconArea:         "shrink-0 h-5 flex items-center pointer-events-none",
   itemDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-accent-1']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
   itemAmount:           (isPaid) => `font-normal shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['color-text-dim']}]` : `text-[${COLORS['color-text-prim']}]`}`,
