@@ -42,10 +42,15 @@ const STORAGE_VERSION = 1;
 function migrateStoredData(data) {
   const migrated = { ...data };
 
-  // Ensure the three new arrays exist
+  // Ensure the arrays exist
   if (!migrated.fixedTemplates) migrated.fixedTemplates = [];
   if (!migrated.fixedAmountOverrides) migrated.fixedAmountOverrides = [];
   if (!migrated.fixedPaidStatuses) migrated.fixedPaidStatuses = [];
+  // fixedSkippedMonths: per-month exceptions where a recurring template is
+  // turned into a one-time expense for a single month, without affecting
+  // any other month of that same template. See isValidBackupShape below
+  // for the shape of each entry.
+  if (!migrated.fixedSkippedMonths) migrated.fixedSkippedMonths = [];
 
   // Add startMonthKey to existing templates (default to 0 for old data)
 migrated.fixedTemplates = migrated.fixedTemplates.map(t => ({
@@ -98,6 +103,7 @@ function isValidBackupShape(parsed) {
   const templates = parsed.fixedTemplates || [];
   const overrides = parsed.fixedAmountOverrides || [];
   const paidStatuses = parsed.fixedPaidStatuses || [];
+  const skippedMonths = parsed.fixedSkippedMonths || [];
 
   if (!Array.isArray(templates) || !templates.every(t =>
   t && typeof t === 'object' &&
@@ -122,6 +128,15 @@ function isValidBackupShape(parsed) {
     typeof p.templateId === 'string' &&
     typeof p.monthKey === 'number' &&
     typeof p.paid === 'boolean'
+  )) return false;
+
+  // Each entry marks one specific month where a recurring template should
+  // be treated as skipped/inactive, without affecting any other month.
+  if (!Array.isArray(skippedMonths) || !skippedMonths.every(sm =>
+    sm && typeof sm === 'object' &&
+    typeof sm.id === 'string' &&
+    typeof sm.templateId === 'string' &&
+    typeof sm.monthKey === 'number'
   )) return false;
 
   return true;
