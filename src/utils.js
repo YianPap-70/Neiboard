@@ -46,11 +46,14 @@ function migrateStoredData(data) {
   if (!migrated.fixedTemplates) migrated.fixedTemplates = [];
   if (!migrated.fixedAmountOverrides) migrated.fixedAmountOverrides = [];
   if (!migrated.fixedPaidStatuses) migrated.fixedPaidStatuses = [];
-  // fixedSkippedMonths: per-month exceptions where a recurring template is
-  // turned into a one-time expense for a single month, without affecting
-  // any other month of that same template. See isValidBackupShape below
-  // for the shape of each entry.
-  if (!migrated.fixedSkippedMonths) migrated.fixedSkippedMonths = [];
+
+  // lastMaterializedMonthKey: tracks the last month whose recurring
+  // occurrences have already been frozen into plain expenses (see
+  // materializeElapsedMonths in App.jsx). Missing/null on older saves is
+  // meaningful — it tells App.jsx "this has never run before, walk every
+  // template all the way from its own start" — so we deliberately leave it
+  // as null here rather than inventing a value.
+  if (migrated.lastMaterializedMonthKey === undefined) migrated.lastMaterializedMonthKey = null;
 
   // Add startMonthKey to existing templates (default to 0 for old data)
 migrated.fixedTemplates = migrated.fixedTemplates.map(t => ({
@@ -103,7 +106,6 @@ function isValidBackupShape(parsed) {
   const templates = parsed.fixedTemplates || [];
   const overrides = parsed.fixedAmountOverrides || [];
   const paidStatuses = parsed.fixedPaidStatuses || [];
-  const skippedMonths = parsed.fixedSkippedMonths || [];
 
   if (!Array.isArray(templates) || !templates.every(t =>
   t && typeof t === 'object' &&
@@ -130,14 +132,14 @@ function isValidBackupShape(parsed) {
     typeof p.paid === 'boolean'
   )) return false;
 
-  // Each entry marks one specific month where a recurring template should
-  // be treated as skipped/inactive, without affecting any other month.
-  if (!Array.isArray(skippedMonths) || !skippedMonths.every(sm =>
-    sm && typeof sm === 'object' &&
-    typeof sm.id === 'string' &&
-    typeof sm.templateId === 'string' &&
-    typeof sm.monthKey === 'number'
-  )) return false;
+  // Optional — tracks how much of the recurring-expense history has already
+  // been frozen into plain expenses. Absent/null is valid (older saves, or
+  // a brand-new install) and is handled by App.jsx, not here.
+  if (
+    parsed.lastMaterializedMonthKey !== undefined &&
+    parsed.lastMaterializedMonthKey !== null &&
+    typeof parsed.lastMaterializedMonthKey !== 'number'
+  ) return false;
 
   return true;
 }

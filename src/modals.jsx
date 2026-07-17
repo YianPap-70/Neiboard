@@ -117,7 +117,7 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
 // ─── UNIFIED EXPENSE MODAL ────────────────────────────────────────────────
 // Handles add / edit / delete for both resident and building expenses.
 // Works on an internal copy of the data; changes are only committed on OK.
-function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onStopRecurring, t }) {
+function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canToggleRecurring = true, t }) {
   const D      = window.DESIGN;
   const EM     = D.modal.expenseModal;
   const MB     = D.modalBase;
@@ -167,9 +167,6 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
     if (amountError) setAmountError(false);
   };
 
-  // Determine if we should show a "Stop" button instead of trash
-  const isFixedEdit = mode === 'editFixed' && isRecurring;
-
   if (!isAdd && !isEdit && !isDelete) return null;
 
   return (
@@ -217,8 +214,13 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
             />
           </div>
 
-                    {/* ─── RECURRING TOGGLE (BUILDING ONLY) ────────────── */}
-          {context === 'building' && (
+                    {/* ─── RECURRING TOGGLE (BUILDING ONLY, TODAY'S MONTH ONLY) ──── */}
+          {/* Recurring is only ever a "starting right now" decision — once
+              a month has passed, its expenses are just plain history, and
+              this control isn't shown for them at all (canToggleRecurring
+              is false). Same for a future month someone happens to be
+              looking at: only "now" can decide what repeats going forward. */}
+          {context === 'building' && canToggleRecurring && (
             <>
               <div style={{ height: D.modal.descriptionToRecurringGap }} />
               <button
@@ -234,7 +236,11 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
           )}
 
           {/* ─── PAID/UNPAID TOGGLE ────────────────────────────── */}
-          {context !== 'building' && <div style={{ height: D.modal.descriptionToRecurringGap }} />}
+          {/* The recurring pill above already adds its own trailing gap
+              when it's shown — this covers every other case, including a
+              building expense where the pill is hidden (canToggleRecurring
+              false), so spacing stays consistent either way. */}
+          {!(context === 'building' && canToggleRecurring) && <div style={{ height: D.modal.descriptionToRecurringGap }} />}
           <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
             <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
           </button>
@@ -245,17 +251,14 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
             <button onClick={handleConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>{t('ok')}</button>
             <button onClick={onClose}       className={`${EM.actionBtn} ${EM.cancelBtn}`}>{t('cancel')}</button>
             {isEdit && (
-              isFixedEdit && typeof onStopRecurring === 'function' ? (
-                // Show a "Stop" button for recurring expenses
-                <button onClick={onStopRecurring} className={EM.deleteBtn}>
-                  <SpriteIcon id="icon-stop" className={EM.deleteIcon} /> {/* you may need an icon, or reuse trash */}
-                </button>
-              ) : (
-                // Trash button for one‑time expenses or when stop not available
-                <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
-                  <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
-                </button>
-              )
+              // Trash deletes a plain expense as always. For a still-live
+              // recurring occurrence (today's month), the same button ends
+              // the recurring series from now on instead — App.jsx's
+              // onDelete handles that distinction, so there's just one
+              // control here rather than two to choose between.
+              <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
+                <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
+              </button>
             )}
           </div>
         </div>

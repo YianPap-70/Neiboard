@@ -40,6 +40,65 @@ import ReportOverlay from './report.jsx';
 // "public" folder, move it next to these files for this import to work.
 import translationsData from './lang.json';
 
+// ─── MATERIALIZE PAST RECURRING MONTHS INTO PLAIN EXPENSES ────────────────
+// Recurring status is only ever a "right now, going forward" decision (see
+// generateFixedExpenses inside the component below, and the recurring
+// toggle in the expense modal). The moment a month actually finishes, its
+// recurring occurrence — if there was one — gets written down as an
+// ordinary, permanent building expense, exactly as if the user had typed it
+// in by hand. From then on it's just history: no recurring icon, no
+// toggle, editable/deletable like any other one-time expense.
+//
+// This single function covers two situations with the same logic:
+//   1. An older save (or an imported backup) that predates this feature —
+//      lastMaterializedMonthKey is null, so every template is walked all
+//      the way from its own start month.
+//   2. A normal running session simply noticing that time has moved on
+//      since it last checked (including after being closed for a while) —
+//      only the months since the last check are walked.
+//
+// Pure function: given the data, returns what to add/update, but doesn't
+// touch React state itself — callers decide what to do with the result.
+function materializeElapsedMonths({
+  fixedTemplates, fixedAmountOverrides, fixedPaidStatuses,
+  lastMaterializedMonthKey, monthNames, todayMonthKey,
+}) {
+  const newExpenses = [];
+
+  fixedTemplates.forEach(template => {
+    const fromMonth = lastMaterializedMonthKey === null
+      ? template.startMonthKey
+      : Math.max(template.startMonthKey, lastMaterializedMonthKey + 1);
+
+    for (let monthKey = fromMonth; monthKey < todayMonthKey; monthKey++) {
+      // Skip months the template had already been stopped for by then
+      if (template.deletedAt !== null && template.deletedAt <= monthKey) continue;
+
+      // Applicable amount override for that month (highest monthKey <= it)
+      let amount = template.baseAmount;
+      const applicableOverride = fixedAmountOverrides
+        .filter(o => o.templateId === template.id && o.monthKey <= monthKey)
+        .sort((a, b) => b.monthKey - a.monthKey)[0];
+      if (applicableOverride) amount = applicableOverride.newAmount;
+
+      // Paid status as it stood for that specific month
+      const paidEntry = fixedPaidStatuses.find(p => p.templateId === template.id && p.monthKey === monthKey);
+      const isPaid = paidEntry ? paidEntry.paid : false;
+
+      newExpenses.push({
+        id: makeId('bexp'),
+        description: template.description,
+        amount,
+        paid: isPaid,
+        month: `${monthNames[monthKey % 12]} ${Math.floor(monthKey / 12)}`,
+        monthKey,
+      });
+    }
+  });
+
+  return { newExpenses, newLastMaterializedMonthKey: todayMonthKey - 1 };
+}
+
 // ─── 3D FLIP BUTTON (CARDS ↔ BUILDING VIEW) ──────────────────────────────
 function WalletFlipButton({ onToggle, t }) {
   const WFB = window.DESIGN.walletFlipBtn;
@@ -401,6 +460,15 @@ export default function App() {
   const currentMonthString = monthNames.length ? `${monthNames[currentMonthIdx]} ${currentYear}` : '';
   const currentMonthKey    = currentYear * 12 + currentMonthIdx;
 
+  // The real current month (today, by the device clock) — recomputed each
+  // render, same reasoning as isFilteredAwayFromToday below. Used to decide
+  // whether the recurring toggle should be available for whatever is being
+  // added/edited right now (see canToggleRecurring near the expense modal).
+  const todayMonthKey = (() => {
+    const d = getSystemDate();
+    return d.getFullYear() * 12 + d.getMonth();
+  })();
+
   // Recomputed on every render (rather than compared against a date that
   // was only ever captured once) so this stays correct even if the app has
   // been sitting open for days — which is normal for a native Android app
@@ -428,11 +496,11 @@ export default function App() {
   const [fixedTemplates, setFixedTemplates] = useState([]);
   const [fixedAmountOverrides, setFixedAmountOverrides] = useState([]);
   const [fixedPaidStatuses, setFixedPaidStatuses] = useState([]);
-  // Per-month exceptions: each entry says "this one month should NOT show
-  // this template's recurring expense" — used when a single past occurrence
-  // is switched from recurring to one-time, without touching any other
-  // month of that same template (see handleConfirmBuildingExpense below).
-  const [fixedSkippedMonths, setFixedSkippedMonths] = useState([]);
+  // Tracks the last month whose recurring occurrences have already been
+  // frozen into plain, permanent expenses (see materializeElapsedMonths
+  // above the component). null means this has never run yet — e.g. an
+  // older save from before this existed, or the very first launch.
+  const [lastMaterializedMonthKey, setLastMaterializedMonthKey] = useState(null);
 
   // ─── VIEW STATE ────────────────────────────────────────────────────────
   const [isMainMenuOpen,       setIsMainMenuOpen]       = useState(false);
@@ -459,26 +527,92 @@ export default function App() {
     if (residents.length > 0 || buildingExpenses.length > 0) return;
 
     const persisted = loadPersistedData();
+    const today = getSystemDate();
+    const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+    // Always used for baking historical month labels at load time — the
+    // demo-data branch below already did the same regardless of language
+    // settings, since those haven't been read from storage yet at this point.
+    const names = translationsData['months']['en'];
+
     if (persisted) {
+      const loadedTemplates      = persisted.fixedTemplates || [];
+      const loadedOverrides      = persisted.fixedAmountOverrides || [];
+      const loadedPaidStatuses   = persisted.fixedPaidStatuses || [];
+      const loadedLastMaterialized = typeof persisted.lastMaterializedMonthKey === 'number'
+        ? persisted.lastMaterializedMonthKey
+        : null;
+
+      // Freeze any recurring occurrences whose month has already fully
+      // passed into plain expenses. Covers both an older save that never
+      // did this (loadedLastMaterialized is null, so every template is
+      // walked from its own start) and simply reopening the app after
+      // time has passed since it last checked.
+      const { newExpenses, newLastMaterializedMonthKey } = materializeElapsedMonths({
+        fixedTemplates: loadedTemplates,
+        fixedAmountOverrides: loadedOverrides,
+        fixedPaidStatuses: loadedPaidStatuses,
+        lastMaterializedMonthKey: loadedLastMaterialized,
+        monthNames: names,
+        todayMonthKey,
+      });
+
       setResidents(persisted.residents);
-      setBuildingExpenses(persisted.buildingExpenses);
-      setFixedTemplates(persisted.fixedTemplates || []);
-      setFixedAmountOverrides(persisted.fixedAmountOverrides || []);
-      setFixedPaidStatuses(persisted.fixedPaidStatuses || []);
-      setFixedSkippedMonths(persisted.fixedSkippedMonths || []);
+      setBuildingExpenses([...persisted.buildingExpenses, ...newExpenses]);
+      setFixedTemplates(loadedTemplates);
+      setFixedAmountOverrides(loadedOverrides);
+      setFixedPaidStatuses(loadedPaidStatuses);
+      setLastMaterializedMonthKey(newLastMaterializedMonthKey);
+
       const s = persisted.settings || {};
       if (s.language === 'en' || s.language === 'gr') setCurrentLanguage(s.language);
       if (s.sortBy === 'Tag' || s.sortBy === 'Debt') setCurrentSortBy(s.sortBy);
       if (typeof s.currencyIndex === 'number') setCurrencyIndex(s.currencyIndex);
       if (typeof s.themeIndex === 'number') setThemeIndex(s.themeIndex);
     } else {
-      const names = translationsData['months']['en'];
-      const now   = getSystemDate();
-      const key   = now.getFullYear() * 12 + now.getMonth();
-      const str   = `${names[now.getMonth()]} ${now.getFullYear()}`;
-      setResidents(generateInitialResidents(names, str, key));
+      const str = `${names[today.getMonth()]} ${today.getFullYear()}`;
+      setResidents(generateInitialResidents(names, str, todayMonthKey));
+      // No recurring templates exist yet on a brand-new install, but we
+      // still set a baseline so future checks know where to start from.
+      setLastMaterializedMonthKey(todayMonthKey - 1);
     }
     initializedRef.current = true;
+  }, []);
+
+  // ─── PERIODIC "HAS A MONTH JUST ENDED?" CHECK ───────────────────────────
+  // The load effect above only covers the moment the app opens. Since this
+  // app can stay open for a long time without reloading (see getSystemDate's
+  // docstring in utils.js), a recurring expense's month could actually end
+  // while the app is just sitting open. This re-checks periodically so that
+  // still gets frozen into a plain expense promptly, without needing the
+  // app to be closed and reopened first. The ref below always holds the
+  // latest values so the interval (registered once) never reads stale data.
+  const materializationInputsRef = useRef(null);
+  useEffect(() => {
+    materializationInputsRef.current = {
+      fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, lastMaterializedMonthKey, monthNames,
+    };
+  });
+
+  useEffect(() => {
+    const checkAndMaterialize = () => {
+      if (!initializedRef.current || !materializationInputsRef.current) return;
+      const today = getSystemDate();
+      const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+      const { fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, lastMaterializedMonthKey, monthNames } =
+        materializationInputsRef.current;
+
+      // Nothing new could possibly have finished — skip the work.
+      if (lastMaterializedMonthKey !== null && lastMaterializedMonthKey >= todayMonthKey - 1) return;
+
+      const { newExpenses, newLastMaterializedMonthKey } = materializeElapsedMonths({
+        fixedTemplates, fixedAmountOverrides, fixedPaidStatuses,
+        lastMaterializedMonthKey, monthNames, todayMonthKey,
+      });
+      setBuildingExpenses(prev => [...prev, ...newExpenses]);
+      setLastMaterializedMonthKey(newLastMaterializedMonthKey);
+    };
+    const interval = setInterval(checkAndMaterialize, 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // ─── DEBOUNCED PERSISTENCE SAVE ──────────────────────────────────────────
@@ -493,7 +627,7 @@ export default function App() {
         fixedTemplates,
         fixedAmountOverrides,
         fixedPaidStatuses,
-        fixedSkippedMonths,
+        lastMaterializedMonthKey,
         settings: {
           language: currentLanguage,
           sortBy: currentSortBy,
@@ -503,7 +637,7 @@ export default function App() {
       });
     }, 400);
     return () => clearTimeout(timer);
-  }, [residents, buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, fixedSkippedMonths, currentLanguage, currentSortBy, currencyIndex, themeIndex]);
+  }, [residents, buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, lastMaterializedMonthKey, currentLanguage, currentSortBy, currencyIndex, themeIndex]);
 
   const headerRef       = useRef(null);
   const cardRefs        = useRef({});
@@ -573,7 +707,7 @@ export default function App() {
     fixedTemplates,
     fixedAmountOverrides,
     fixedPaidStatuses,
-    fixedSkippedMonths,
+    lastMaterializedMonthKey,
     settings: { language: currentLanguage, sortBy: currentSortBy, currencyIndex, themeIndex },
   });
 
@@ -686,11 +820,6 @@ const totalBuildingDebt = useMemo(() => {
   const fixedUnpaid = fixedTemplates.reduce((sum, template) => {
     // Skip if deleted before today
     if (template.deletedAt !== null && template.deletedAt <= todayMonthKey) return sum;
-    // Skip if this specific month was turned into a one-time exception
-    const isSkippedToday = fixedSkippedMonths.some(
-      sm => sm.templateId === template.id && sm.monthKey === todayMonthKey
-    );
-    if (isSkippedToday) return sum;
     // Find amount for today (or closest override)
     let amount = template.baseAmount;
     const override = fixedAmountOverrides
@@ -704,7 +833,7 @@ const totalBuildingDebt = useMemo(() => {
     return sum;
   }, 0);
   return regularUnpaid + fixedUnpaid;
-}, [buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, fixedSkippedMonths]);
+}, [buildingExpenses, fixedTemplates, fixedAmountOverrides, fixedPaidStatuses]);
 
   const isPastExpense = useCallback(
     (monthKey) => monthKey < currentMonthKey,
@@ -882,10 +1011,14 @@ const totalBuildingDebt = useMemo(() => {
     const parsedAmount = parseFloat(amount) || 0;
     const desc = description.trim() || t('building_expense_default');
 
+    // The recurring toggle only ever appears while editing/adding something
+    // in today's real current month (see canToggleRecurring below), so every
+    // recurring decision made here always applies starting from
+    // currentMonthKey — there's no past month to consider.
     if (isRecurring) {
       // --- RECURRING EXPENSE ---
       const { templateId, expenseId } = expenseModal;
-      
+
       if (expenseModal.type === 'add' || !templateId) {
         // If we are editing a ONE-TIME expense and turning it into a recurring,
         // we need to remove the original one-time expense from buildingExpenses.
@@ -893,86 +1026,73 @@ const totalBuildingDebt = useMemo(() => {
           setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseId));
         }
 
-        // Use the month the user was actually looking at when they made
-        // this recurring (which may be a past month), not always "today".
-        // A brand-new expense (type 'add') has no monthKey set, so that
-        // case still naturally falls back to the current month.
-        const targetMonth = expenseModal.monthKey ?? currentMonthKey;
-
-        // Create a new template
+        // Create a new template, starting now
         const newTemplate = {
           id: makeId('ft'),
           description: desc,
           baseAmount: parsedAmount,
           deletedAt: null,
-          startMonthKey: targetMonth,
+          startMonthKey: currentMonthKey,
         };
         setFixedTemplates(prev => [...prev, newTemplate]);
-        
-        // If the user marked it as paid, store that for the month it starts in
+
+        // If the user marked it as paid, store that for the current month
         if (paid) {
           setFixedPaidStatuses(prev => [
             ...prev,
-            { id: makeId('fp'), templateId: newTemplate.id, monthKey: targetMonth, paid: true }
+            { id: makeId('fp'), templateId: newTemplate.id, monthKey: currentMonthKey, paid: true }
           ]);
         }
       } else if (expenseModal.type === 'editFixed') {
-        // Editing existing template
+        // Editing existing template (still recurring)
         const existingTemplate = fixedTemplates.find(t => t.id === templateId);
         if (!existingTemplate) return;
-        
-        const targetMonthKey = expenseModal.monthKey ?? currentMonthKey;
-        
-        // Amount change → add override
+
+        // Amount change → add override for the current month
         if (existingTemplate.baseAmount !== parsedAmount) {
           setFixedAmountOverrides(prev => [
             ...prev,
-            { id: makeId('fo'), templateId, monthKey: targetMonthKey, newAmount: parsedAmount }
+            { id: makeId('fo'), templateId, monthKey: currentMonthKey, newAmount: parsedAmount }
           ]);
         }
-        
+
         // Description change → update template
         if (existingTemplate.description !== desc) {
           setFixedTemplates(prev =>
             prev.map(t => t.id === templateId ? { ...t, description: desc } : t)
           );
         }
-        
-        // Paid status: toggle for the specific month
-        const existingPaid = fixedPaidStatuses.find(p => p.templateId === templateId && p.monthKey === targetMonthKey);
+
+        // Paid status: toggle for the current month
+        const existingPaid = fixedPaidStatuses.find(p => p.templateId === templateId && p.monthKey === currentMonthKey);
         if (paid && !existingPaid) {
-          setFixedPaidStatuses(prev => [...prev, { id: makeId('fp'), templateId, monthKey: targetMonthKey, paid: true }]);
+          setFixedPaidStatuses(prev => [...prev, { id: makeId('fp'), templateId, monthKey: currentMonthKey, paid: true }]);
         } else if (!paid && existingPaid) {
-          setFixedPaidStatuses(prev => prev.filter(p => !(p.templateId === templateId && p.monthKey === targetMonthKey)));
+          setFixedPaidStatuses(prev => prev.filter(p => !(p.templateId === templateId && p.monthKey === currentMonthKey)));
         }
       }
     } else {
       // --- ONE-TIME EXPENSE ---
-      const { templateId, expenseId, monthKey } = expenseModal;
+      const { templateId, expenseId } = expenseModal;
 
-      // If this was a recurring expense being turned into one-time (editFixed)
+      // If this was a recurring expense being turned into one-time: the
+      // series ends as of now, but this month's charge is kept as an
+      // ordinary standalone expense (with whatever amount/paid state the
+      // user just set), so nothing already owed just disappears.
       if (expenseModal.type === 'editFixed' && templateId) {
-        // Only this single month is affected — every other month of this
-        // template (before and after) keeps recurring exactly as before.
-        const stopMonth = monthKey ?? currentMonthKey;
+        setFixedTemplates(prev =>
+          prev.map(t => t.id === templateId ? { ...t, deletedAt: currentMonthKey } : t)
+        );
 
-        // 1. Record this one month as an exception, so generateFixedExpenses
-        //    skips it for this template while leaving all other months alone.
-        setFixedSkippedMonths(prev => [
-          ...prev,
-          { id: makeId('fs'), templateId, monthKey: stopMonth }
-        ]);
-
-        // 2. Create a one-time expense to replace it for that same month.
         setBuildingExpenses(prev => [
           ...prev,
-          { 
-            id: makeId('bexp'), 
-            description: desc, 
-            amount: parsedAmount, 
-            paid, 
-            month: currentMonthString, 
-            monthKey: stopMonth 
+          {
+            id: makeId('bexp'),
+            description: desc,
+            amount: parsedAmount,
+            paid,
+            month: currentMonthString,
+            monthKey: currentMonthKey
           }
         ]);
 
@@ -999,32 +1119,37 @@ const totalBuildingDebt = useMemo(() => {
     closeExpenseModal();
   };
 
+  // Deletes whatever is currently open in the building expense modal. If
+  // it's a live recurring occurrence (today's month, still tied to a
+  // template), "delete" means ending that recurring series from now on,
+  // with no charge recorded for the current month — otherwise it's a plain
+  // one-time expense removed as normal.
   const handleDeleteBuildingExpense = () => {
-    if (!expenseModal.expenseId) return;
-    setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseModal.expenseId));
-    closeExpenseModal();
-  };
-
-  // ─── STOP RECURRING (set deletedAt) ─────────────────────────────────────
-  const handleStopRecurring = () => {
-    const { templateId, monthKey } = expenseModal;
-    if (!templateId) return;
-    // Confirm before stopping
-    if (!window.confirm('Stop this recurring expense? It will no longer appear from this month onward.')) return;
-    const stopMonth = monthKey ?? currentMonthKey;
-    setFixedTemplates(prev =>
-      prev.map(t =>
-        t.id === templateId ? { ...t, deletedAt: stopMonth } : t
-      )
-    );
+    const { templateId, expenseId } = expenseModal;
+    if (templateId) {
+      setFixedTemplates(prev =>
+        prev.map(t => t.id === templateId ? { ...t, deletedAt: currentMonthKey } : t)
+      );
+      closeExpenseModal();
+      return;
+    }
+    if (!expenseId) return;
+    setBuildingExpenses(prev => prev.filter(exp => exp.id !== expenseId));
     closeExpenseModal();
   };
 
   // ─── GENERATE FIXED (RECURRING) EXPENSES FOR A GIVEN MONTH ──────────────
+  // Only ever produces a live, on-the-fly projection for today's month or a
+  // future month. A past month's recurring occurrences, if any, have
+  // already been frozen into plain buildingExpenses entries by
+  // materializeElapsedMonths — they show up automatically through the
+  // normal buildingExpenses list, exactly like any hand-typed expense.
   const generateFixedExpenses = useCallback((monthKey) => {
-    const result = [];
     const today = getSystemDate();
     const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+    if (monthKey < todayMonthKey) return [];
+
+    const result = [];
     const isFutureMonth = monthKey > todayMonthKey;
 
     // Loop through all templates
@@ -1033,14 +1158,7 @@ const totalBuildingDebt = useMemo(() => {
       if (template.deletedAt !== null && template.deletedAt <= monthKey) return;
 
       // Skip if this month is before the template's start
-if (template.startMonthKey > monthKey) return;
-
-      // Skip if this single month was individually turned into a one-time
-      // expense — every other month of this template is unaffected.
-      const isSkippedThisMonth = fixedSkippedMonths.some(
-        sm => sm.templateId === template.id && sm.monthKey === monthKey
-      );
-      if (isSkippedThisMonth) return;
+      if (template.startMonthKey > monthKey) return;
 
       // Find the applicable amount override (highest monthKey <= monthKey)
       let amount = template.baseAmount;
@@ -1070,57 +1188,7 @@ if (template.startMonthKey > monthKey) return;
     });
 
     return result;
-  }, [fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, fixedSkippedMonths, monthNames]);
-
-  // ─── GENERATE PAST UNPAID FIXED (RECURRING) EXPENSES ────────────────────
-  // The live dashboard only ever needs the current month's recurring
-  // expenses (generateFixedExpenses above), but the printed report also has
-  // a "previous months" section, which needs every past month a recurring
-  // template was due and left unpaid. This walks each template's own
-  // history (from its own start month up to, but not including, the given
-  // month) applying the same deletedAt/skip/override rules, and returns
-  // only the unpaid occurrences — mirroring how past unpaid one-time
-  // expenses already work elsewhere in the app.
-  const generatePastUnpaidFixedExpenses = useCallback((beforeMonthKey) => {
-    const result = [];
-
-    fixedTemplates.forEach(template => {
-      for (let monthKey = template.startMonthKey; monthKey < beforeMonthKey; monthKey++) {
-        // Skip months the template had already been permanently stopped for
-        if (template.deletedAt !== null && template.deletedAt <= monthKey) continue;
-
-        // Skip months individually turned into a one-time expense
-        const isSkippedThisMonth = fixedSkippedMonths.some(
-          sm => sm.templateId === template.id && sm.monthKey === monthKey
-        );
-        if (isSkippedThisMonth) continue;
-
-        // Skip months that were already paid — only unpaid ones belong here
-        const paidEntry = fixedPaidStatuses.find(p => p.templateId === template.id && p.monthKey === monthKey);
-        if (paidEntry && paidEntry.paid) continue;
-
-        // Applicable amount override (highest monthKey <= this month)
-        let amount = template.baseAmount;
-        const applicableOverride = fixedAmountOverrides
-          .filter(o => o.templateId === template.id && o.monthKey <= monthKey)
-          .sort((a, b) => b.monthKey - a.monthKey)[0];
-        if (applicableOverride) amount = applicableOverride.newAmount;
-
-        result.push({
-          id: `fixed-${template.id}-${monthKey}`,
-          description: template.description,
-          amount,
-          paid: false,
-          monthKey,
-          month: `${monthNames[monthKey % 12]} ${Math.floor(monthKey / 12)}`,
-          isRecurring: true,
-          templateId: template.id,
-        });
-      }
-    });
-
-    return result;
-  }, [fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, fixedSkippedMonths, monthNames]);
+  }, [fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, monthNames]);
 
   // ─── CARD MODAL STATE ──────────────────────────────────────────────────
   const [cardModalState, setCardModalState] = useState({ type: null, residentId: null });
@@ -1347,7 +1415,10 @@ if (template.startMonthKey > monthKey) return;
             onConfirm={expenseModal.context === 'resident' ? handleConfirmResidentExpense : handleConfirmBuildingExpense}
             onClose={closeExpenseModal}
             onDelete={expenseModal.context === 'resident' ? handleDeleteResidentExpense : handleDeleteBuildingExpense}
-            onStopRecurring={expenseModal.context === 'building' && expenseModal.isRecurring ? handleStopRecurring : undefined}
+            canToggleRecurring={
+              expenseModal.context === 'building' &&
+              (expenseModal.monthKey ?? currentMonthKey) === todayMonthKey
+            }
             t={t}
           />
         </ModalWrapper>
@@ -1433,7 +1504,6 @@ if (template.startMonthKey > monthKey) return;
           residents={processedResidents}
           buildingExpenses={buildingExpenses}
           currentFixedExpenses={generateFixedExpenses(currentMonthKey)}
-          pastUnpaidFixedExpenses={isReportOpen ? generatePastUnpaidFixedExpenses(currentMonthKey) : []}
           currentMonthString={currentMonthString}
           currentMonthKey={currentMonthKey}
           currentYear={currentYear}
