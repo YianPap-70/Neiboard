@@ -167,7 +167,7 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
     if (amountError) setAmountError(false);
   };
 
-  if (!isAdd && !isEdit && !isDelete) return null;
+    if (!isAdd && !isEdit && !isDelete) return null;
 
   return (
     <>
@@ -182,9 +182,6 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
             <span className={EM.headerTitle}>{t(isAdd ? 'add_amount' : 'edit_amount')}</span>
           </div>
 
-          {/* Wraps the amount input so we can trigger its shake animation
-              directly (see handleConfirm above) and swap in the red error
-              ring style when the entered amount is invalid. */}
           <div
             ref={amountWrapperRef}
             className={EM.amountWrapper}
@@ -214,15 +211,15 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
             />
           </div>
 
-                    {/* ─── RECURRING TOGGLE (BUILDING ONLY, TODAY'S MONTH ONLY) ──── */}
-          {/* Recurring is only ever a "starting right now" decision — once
-              a month has passed, its expenses are just plain history, and
-              this control isn't shown for them at all (canToggleRecurring
-              is false). Same for a future month someone happens to be
-              looking at: only "now" can decide what repeats going forward. */}
+          <div style={{ height: D.modal.descriptionToStatusGap }} />
+
+          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
+            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
+          </button>
+
           {context === 'building' && canToggleRecurring && (
             <>
-              <div style={{ height: D.modal.descriptionToRecurringGap }} />
+              <div style={{ height: D.modal.statusToRecurringGap }} />
               <button
                 onClick={() => setIsRecurring(prev => !prev)}
                 className={`${EM.recurringPill} ${isRecurring ? EM.recurringPillRingActive : EM.recurringPillRingInactive}`}
@@ -231,31 +228,18 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
                   {isRecurring ? t('recurring') : t('one_time')}
                 </span>
               </button>
-              <div style={{ height: D.modal.recurringToPaidGap }} />
+              <div style={{ height: D.modal.recurringToActionsGap }} />
             </>
           )}
 
-          {/* ─── PAID/UNPAID TOGGLE ────────────────────────────── */}
-          {/* The recurring pill above already adds its own trailing gap
-              when it's shown — this covers every other case, including a
-              building expense where the pill is hidden (canToggleRecurring
-              false), so spacing stays consistent either way. */}
-          {!(context === 'building' && canToggleRecurring) && <div style={{ height: D.modal.descriptionToRecurringGap }} />}
-          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
-            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
-          </button>
-
-          <div style={{ height: D.modal.descriptionToActionsGap }} />
+          {!(context === 'building' && canToggleRecurring) && (
+            <div style={{ height: D.modal.descriptionToActionsGap }} />
+          )}
 
           <div className={EM.actionRow}>
             <button onClick={handleConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>{t('ok')}</button>
             <button onClick={onClose}       className={`${EM.actionBtn} ${EM.cancelBtn}`}>{t('cancel')}</button>
             {isEdit && (
-              // Trash deletes a plain expense as always. For a still-live
-              // recurring occurrence (today's month), the same button ends
-              // the recurring series from now on instead — App.jsx's
-              // onDelete handles that distinction, so there's just one
-              // control here rather than two to choose between.
               <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
                 <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
               </button>
@@ -272,15 +256,14 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
         >
           <h4 className={D.modal.deletePromptTitle}>{t('delete_expense_confirm')}</h4>
           <div className={D.modal.actionsFlexRow}>
-            <button onClick={onDelete}               style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>{t('yes')}</button>
-            <button onClick={() => setMode('edit')}  className={D.modal.deleteNoBtn}>{t('no')}</button>
+            <button onClick={onDelete} style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>{t('yes')}</button>
+            <button onClick={() => setMode('edit')} className={D.modal.deleteNoBtn}>{t('no')}</button>
           </div>
         </div>
       )}
     </>
   );
 }
-
 
 // ─── REUSABLE MONTH/YEAR PICKER OVERLAY ───────────────────────────────────
 // Independent utility modal for selecting a target month + year. It never

@@ -490,8 +490,11 @@ recurringPill:            `w-full h-[52px] rounded-[9999px] flex items-center ju
   deleteYesBtn:               `flex-1 font-normal transition-transform active:scale-95 h-12 rounded-[9999px] text-[${COLORS['color-text-prim']}]`,
   deleteYesBtnStyle:          { backgroundColor: COLORS['color-accent-3'] },
   deleteNoBtn:                `flex-1 font-normal transition-transform active:scale-95 h-12 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
-  amountToDescriptionGap:     '12px',
-  descriptionToActionsGap:    '16px',
+  amountToDescriptionGap: '16px',
+    descriptionToStatusGap: '16px',
+    statusToRecurringGap: '16px',
+    recurringToActionsGap: '16px',
+    descriptionToActionsGap: '16px',
   calendar: {
     containerMaxWidth:        '376px',
     containerPadding:         '16px',
