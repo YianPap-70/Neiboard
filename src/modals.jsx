@@ -117,7 +117,7 @@ function DeleteCardConfirmModal({ onConfirm, onCancel, animStyle, t }) {
 // ─── UNIFIED EXPENSE MODAL ────────────────────────────────────────────────
 // Handles add / edit / delete for both resident and building expenses.
 // Works on an internal copy of the data; changes are only committed on OK.
-function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onStopRecurring, t }) {
+function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canToggleRecurring = true, t }) {
   const D      = window.DESIGN;
   const EM     = D.modal.expenseModal;
   const MB     = D.modalBase;
@@ -167,10 +167,7 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
     if (amountError) setAmountError(false);
   };
 
-  // Determine if we should show a "Stop" button instead of trash
-  const isFixedEdit = mode === 'editFixed' && isRecurring;
-
-  if (!isAdd && !isEdit && !isDelete) return null;
+    if (!isAdd && !isEdit && !isDelete) return null;
 
   return (
     <>
@@ -185,9 +182,6 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
             <span className={EM.headerTitle}>{t(isAdd ? 'add_amount' : 'edit_amount')}</span>
           </div>
 
-          {/* Wraps the amount input so we can trigger its shake animation
-              directly (see handleConfirm above) and swap in the red error
-              ring style when the entered amount is invalid. */}
           <div
             ref={amountWrapperRef}
             className={EM.amountWrapper}
@@ -217,10 +211,15 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
             />
           </div>
 
-                    {/* ─── RECURRING TOGGLE (BUILDING ONLY) ────────────── */}
-          {context === 'building' && (
+          <div style={{ height: D.modal.descriptionToStatusGap }} />
+
+          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
+            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
+          </button>
+
+          {context === 'building' && canToggleRecurring && (
             <>
-              <div style={{ height: D.modal.descriptionToRecurringGap }} />
+              <div style={{ height: D.modal.statusToRecurringGap }} />
               <button
                 onClick={() => setIsRecurring(prev => !prev)}
                 className={`${EM.recurringPill} ${isRecurring ? EM.recurringPillRingActive : EM.recurringPillRingInactive}`}
@@ -229,33 +228,21 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
                   {isRecurring ? t('recurring') : t('one_time')}
                 </span>
               </button>
-              <div style={{ height: D.modal.recurringToPaidGap }} />
+              <div style={{ height: D.modal.recurringToActionsGap }} />
             </>
           )}
 
-          {/* ─── PAID/UNPAID TOGGLE ────────────────────────────── */}
-          {context !== 'building' && <div style={{ height: D.modal.descriptionToRecurringGap }} />}
-          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
-            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
-          </button>
-
-          <div style={{ height: D.modal.descriptionToActionsGap }} />
+          {!(context === 'building' && canToggleRecurring) && (
+            <div style={{ height: D.modal.descriptionToActionsGap }} />
+          )}
 
           <div className={EM.actionRow}>
             <button onClick={handleConfirm} className={`${EM.actionBtn} ${EM.okBtn}`}>{t('ok')}</button>
             <button onClick={onClose}       className={`${EM.actionBtn} ${EM.cancelBtn}`}>{t('cancel')}</button>
             {isEdit && (
-              isFixedEdit && typeof onStopRecurring === 'function' ? (
-                // Show a "Stop" button for recurring expenses
-                <button onClick={onStopRecurring} className={EM.deleteBtn}>
-                  <SpriteIcon id="icon-stop" className={EM.deleteIcon} /> {/* you may need an icon, or reuse trash */}
-                </button>
-              ) : (
-                // Trash button for one‑time expenses or when stop not available
-                <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
-                  <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
-                </button>
-              )
+              <button onClick={() => setMode(config.deleteModeType)} className={EM.deleteBtn}>
+                <SpriteIcon id="icon-trash" className={EM.deleteIcon} />
+              </button>
             )}
           </div>
         </div>
@@ -269,15 +256,14 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, onSt
         >
           <h4 className={D.modal.deletePromptTitle}>{t('delete_expense_confirm')}</h4>
           <div className={D.modal.actionsFlexRow}>
-            <button onClick={onDelete}               style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>{t('yes')}</button>
-            <button onClick={() => setMode('edit')}  className={D.modal.deleteNoBtn}>{t('no')}</button>
+            <button onClick={onDelete} style={D.modal.deleteYesBtnStyle} className={D.modal.deleteYesBtn}>{t('yes')}</button>
+            <button onClick={() => setMode('edit')} className={D.modal.deleteNoBtn}>{t('no')}</button>
           </div>
         </div>
       )}
     </>
   );
 }
-
 
 // ─── REUSABLE MONTH/YEAR PICKER OVERLAY ───────────────────────────────────
 // Independent utility modal for selecting a target month + year. It never

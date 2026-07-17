@@ -42,10 +42,18 @@ const STORAGE_VERSION = 1;
 function migrateStoredData(data) {
   const migrated = { ...data };
 
-  // Ensure the three new arrays exist
+  // Ensure the arrays exist
   if (!migrated.fixedTemplates) migrated.fixedTemplates = [];
   if (!migrated.fixedAmountOverrides) migrated.fixedAmountOverrides = [];
   if (!migrated.fixedPaidStatuses) migrated.fixedPaidStatuses = [];
+
+  // lastMaterializedMonthKey: tracks the last month whose recurring
+  // occurrences have already been frozen into plain expenses (see
+  // materializeElapsedMonths in App.jsx). Missing/null on older saves is
+  // meaningful — it tells App.jsx "this has never run before, walk every
+  // template all the way from its own start" — so we deliberately leave it
+  // as null here rather than inventing a value.
+  if (migrated.lastMaterializedMonthKey === undefined) migrated.lastMaterializedMonthKey = null;
 
   // Add startMonthKey to existing templates (default to 0 for old data)
 migrated.fixedTemplates = migrated.fixedTemplates.map(t => ({
@@ -123,6 +131,15 @@ function isValidBackupShape(parsed) {
     typeof p.monthKey === 'number' &&
     typeof p.paid === 'boolean'
   )) return false;
+
+  // Optional — tracks how much of the recurring-expense history has already
+  // been frozen into plain expenses. Absent/null is valid (older saves, or
+  // a brand-new install) and is handled by App.jsx, not here.
+  if (
+    parsed.lastMaterializedMonthKey !== undefined &&
+    parsed.lastMaterializedMonthKey !== null &&
+    typeof parsed.lastMaterializedMonthKey !== 'number'
+  ) return false;
 
   return true;
 }

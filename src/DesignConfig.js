@@ -19,11 +19,11 @@ const THEMES = [
       'color-text-dim': '#78909F',
       'color-cardback-dim': '#374F5F',
       'color-cardback-prim': '#2C3E4D',
-      'color-extra': '#466A7C',
+      'color-button1': '#466A7C',
       'color-background': '#18202A',
-      'color-accent-1': '#9CE66B',
-      'color-accent-2': '#F2C454',
-      'color-accent-3': '#E25344',
+      'color-ok': '#9CE66B',
+      'color-warn1': '#F2C454',
+      'color-warn2': '#E25344',
     },
   },
   {
@@ -33,11 +33,11 @@ const THEMES = [
       'color-text-dim': '#848484',
       'color-cardback-dim': '#3D4146',
       'color-cardback-prim': '#2B2F35',
-      'color-extra': '#466566',
+      'color-button1': '#466566',
       'color-background': '#000000',
-      'color-accent-1': '#4AA04A',
-      'color-accent-2': '#F4A640',
-      'color-accent-3': '#BC392B',
+      'color-ok': '#4AA04A',
+      'color-warn1': '#F4A640',
+      'color-warn2': '#BC392B',
     },
   },
   {
@@ -47,11 +47,11 @@ const THEMES = [
       'color-text-dim': '#CEB7AB',
       'color-cardback-dim': '#514038',
       'color-cardback-prim': '#3F322B',
-      'color-extra': '#695850',
+      'color-button1': '#695850',
       'color-background': '#1E1B19',
-      'color-accent-1': '#91DB61',
-      'color-accent-2': '#FFC543',
-      'color-accent-3': '#F2662F',
+      'color-ok': '#91DB61',
+      'color-warn1': '#FFC543',
+      'color-warn2': '#F2662F',
     },
   },
 ];
@@ -91,12 +91,12 @@ const COLORS = {
   'color-text-prim': 'var(--color-text-prim)',
   'color-text-dim': 'var(--color-text-dim)',
   'color-cardback-dim': 'var(--color-cardback-dim)',
-  'color-extra': 'var(--color-extra)',
+  'color-button1': 'var(--color-button1)',
   'color-cardback-prim': 'var(--color-cardback-prim)',
   'color-background': 'var(--color-background)',
-  'color-accent-1': 'var(--color-accent-1)',
-  'color-accent-2': 'var(--color-accent-2)',
-  'color-accent-3': 'var(--color-accent-3)',
+  'color-ok': 'var(--color-ok)',
+  'color-warn1': 'var(--color-warn1)',
+  'color-warn2': 'var(--color-warn2)',
 };
 
 // ─── UNIFIED LABEL SYSTEM ──────────────────────────────────────────────────
@@ -106,7 +106,7 @@ const LABELS = {
   secondary:         `font-normal truncate text-sm text-[${COLORS['color-text-prim']}]/70`,
   empty:             `text-center py-4 text-sm text-[${COLORS['color-text-dim']}]`,
   modal:             `font-normal text-sm text-[${COLORS['color-text-dim']}] tracking-wide`,
-  strikethroughPaid: `line-through decoration-[${COLORS['color-accent-1']}] decoration-1`,
+  strikethroughPaid: `line-through decoration-[${COLORS['color-ok']}] decoration-1`,
 };
 
 const RADIUS_STANDARD = '12px';
@@ -188,18 +188,18 @@ const icons = {
   actionIconSize:  `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
   syncIconSize:    "w-8 h-8",
   iconColorClasses: {
-    check:   `text-[${COLORS['color-accent-1']}]`,
-    warning: `text-[${COLORS['color-accent-2']}]`,
+    check:   `text-[${COLORS['color-ok']}]`,
+    warning: `text-[${COLORS['color-warn1']}]`,
   }
 };
 
 // ─── MULTI-COLOR ICON STYLES ─────────────────────────────────────────────
 const iconColors = {
-  warningFilled: { '--color-accent-1': COLORS['color-accent-2'] },
-  check:         { '--color-accent-1': COLORS['color-accent-1'] },
-  avatarDebt:    { '--avatar-debt-badge': COLORS['color-accent-2'], '--avatar-debt-body': COLORS['color-text-dim'] },
-  avatarNoDebt:  { '--avatar-nodebt-check': COLORS['color-accent-1'], '--avatar-nodebt-body': COLORS['color-text-dim'] },
-  synced:        { '--color-accent-1': COLORS['color-accent-1'] },
+  warningFilled: { '--color-ok': COLORS['color-warn1'] },
+  check:         { '--color-ok': COLORS['color-ok'] },
+  avatarDebt:    { '--avatar-debt-badge': COLORS['color-warn1'], '--avatar-debt-body': COLORS['color-text-dim'] },
+  avatarNoDebt:  { '--avatar-nodebt-check': COLORS['color-ok'], '--avatar-nodebt-body': COLORS['color-text-dim'] },
+  synced:        { '--color-ok': COLORS['color-ok'] },
 };
 
 // ─── GLOBAL SETTINGS ─────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ const header = {
   leftActionGroup:          "flex items-center gap-2",
   debtSection:              "flex items-baseline gap-2 ml-auto",
   totalDebtLabel:           `font-normal whitespace-nowrap text-sm leading-none text-[${COLORS['color-text-prim']}]`,
-  totalDebtAmount:          `truncate font-normal text-sm/[1.25rem] text-[${COLORS['color-accent-2']}]`,
+  totalDebtAmount:          `truncate font-normal text-sm/[1.25rem] text-[${COLORS['color-warn1']}]`,
   currencySizeMod:          "text-[0.9em] mr-1",
   syncIconWrapper:          "ml-2",
   bottomRow:                "flex items-center pl-[2px] pr-[2px] w-full",
@@ -265,7 +265,7 @@ const header = {
   monthTextBtn:             "font-normal tracking-wide text-left text-xl hover:opacity-80 transition-opacity select-none truncate",
   monthTextBtnStyle:        { flexShrink: 0 },
   monthTextBtnCurrentColor: COLORS['color-text-prim'],
-  monthTextBtnOtherColor:   COLORS['color-accent-2'],
+  monthTextBtnOtherColor:   COLORS['color-warn1'],
 };
 
 // ─── NAVIGATION PILL (UNIFIED FOR MONTHS & YEARS) ──────────────────────
@@ -326,13 +326,13 @@ const settingsModal = {
   headerRowGap:      '20px',
   logoIcon:          `text-[${COLORS['color-text-prim']}]`,
 logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
-  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
+  reportBtn:         `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-ok']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
   reportIcon:        "h-6 w-6",
 
   // Shared "pill row" base used by rows 2-9
   pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
-  pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-extra']}] outline-none select-none transition-all duration-300 cursor-pointer`,
-  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-accent-3']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-button1']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-warn2']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillPaddingX:       '16px',
   pillLabel:          `font-normal text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap`,
   pillIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}] shrink-0`,
@@ -350,7 +350,7 @@ logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
     transform: `translateY(-${activeIdx * 24}px)`,
     transition: A.rollerTransition,
   }),
-  rollerItem:        `h-6 leading-6 font-normal text-base text-[${COLORS['color-accent-1']}] whitespace-nowrap text-left`,
+  rollerItem:        `h-6 leading-6 font-normal text-base text-[${COLORS['color-ok']}] whitespace-nowrap text-left`,
 };
 
 // ─── DELETE DATA RANGE SUB-MODAL ─────────────────────────────────────────
@@ -360,14 +360,14 @@ const deleteRangeModal = {
   rowGap:            '16px',
 
   boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
-  boundaryBtnSetRing: `ring-2 ring-[${COLORS['color-accent-2']}]`,
+  boundaryBtnSetRing: `ring-2 ring-[${COLORS['color-warn1']}]`,
 
-  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-accent-1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-ok']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
   resetIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
   deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent outline-none select-none transition-all duration-300 font-normal text-base`,
   deleteBtnDisabled:   `ring-2 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
-  deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-accent-3']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
+  deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-warn2']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
   deleteIcon:          `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
   exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
@@ -389,9 +389,9 @@ const residentCard = {
   textMetaArea:            "min-w-0 flex-1",
   residentName:            `font-normal tracking-wide truncate text-lg text-[${COLORS['color-text-prim']}]`,
   apartmentNumber:         `font-normal truncate text-sm text-[${COLORS['color-text-dim']}]`,
-  totalDebtText:           `font-normal text-[22px]/[22px] text-[${COLORS['color-accent-2']}]`,
+  totalDebtText:           `font-normal text-[22px]/[22px] text-[${COLORS['color-warn1']}]`,
   totalDebtCurrencyMod:    "text-[0.7em]/[22px] mr-0.5 font-normal",
-  noDebtText:              `font-normal text-[16px] text-[${COLORS['color-accent-1']}]`,
+  noDebtText:              `font-normal text-[16px] text-[${COLORS['color-ok']}]`,
   caretRotationStyle:      (isExpanded, A) => ({
     display: 'inline-block',
     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -406,7 +406,7 @@ const residentCard = {
   itemRowDividerStyle: divider.itemDivider,
   interactiveIconArea:     "flex items-center min-w-0 gap-3 pointer-events-none",
   iconStateBtn:            "shrink-0 h-5 flex items-center pointer-events-none",
-  expenseDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-accent-1']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
+  expenseDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-ok']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
   expenseValueAmount:      (isPaid) => `font-normal shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['color-text-dim']}]` : `text-[${COLORS['color-text-prim']}]`}`,
   expenseValueCurrencyMod: "text-[0.7em] mr-0.5 font-normal",
 };
@@ -464,34 +464,37 @@ const modal = {
     headerIcon:               `w-6 h-6 shrink-0 text-[${COLORS['color-text-dim']}]`,
     headerTitle:              LABELS.modal,
     amountWrapper:            `h-[52px] px-4 rounded-[6px] bg-[${COLORS['color-cardback-dim']}] w-full flex items-center`,
-    amountWrapperErrorStyle:  { outline: `2px solid ${COLORS['color-accent-3']}`, outlineOffset: '0px' },
+    amountWrapperErrorStyle:  { outline: `2px solid ${COLORS['color-warn2']}`, outlineOffset: '0px' },
     amountInput:              `bg-transparent w-full focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-[38px] font-normal text-[${COLORS['color-text-prim']}]`,
     descriptionWrapper:       `h-[52px] px-4 rounded-[6px] bg-[${COLORS['color-cardback-dim']}] w-full flex items-center`,
     descriptionInput:         `bg-transparent w-full focus:outline-none text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
 
 recurringPill:            `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
-    recurringPillRingActive:  `ring-1 ring-[${COLORS['color-accent-1']}]`,
+    recurringPillRingActive:  `ring-1 ring-[${COLORS['color-ok']}]`,
     recurringPillRingInactive:`ring-1 ring-[${COLORS['color-text-dim']}]/50`,
     recurringPillText:        `text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
 
     statusPill:               `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 transition-all duration-300 outline-none select-none cursor-pointer bg-transparent`,
-    statusPillRingUnpaid:     `ring-2 ring-[${COLORS['color-accent-3']}]`,
-    statusPillRingPaid:       `ring-2 ring-[${COLORS['color-accent-1']}]`,
+    statusPillRingUnpaid:     `ring-2 ring-[${COLORS['color-warn2']}]`,
+    statusPillRingPaid:       `ring-2 ring-[${COLORS['color-ok']}]`,
     statusPillText:           `text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
     actionRow:                `flex items-center gap-3 w-full`,
     actionBtn:                `h-[52px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
-    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
+    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-ok']}]`,
     cancelBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}]`,
-    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
+    deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-warn2']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
     deleteIcon:               `w-6 h-6 text-[${COLORS['color-text-prim']}]`,
   },
   deletePromptTitle:          `font-normal mb-6 text-xl text-[${COLORS['color-text-prim']}] text-center`,
   actionsFlexRow:             `flex items-center gap-3 w-full`,
   deleteYesBtn:               `flex-1 font-normal transition-transform active:scale-95 h-12 rounded-[9999px] text-[${COLORS['color-text-prim']}]`,
-  deleteYesBtnStyle:          { backgroundColor: COLORS['color-accent-3'] },
+  deleteYesBtnStyle:          { backgroundColor: COLORS['color-warn2'] },
   deleteNoBtn:                `flex-1 font-normal transition-transform active:scale-95 h-12 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
-  amountToDescriptionGap:     '12px',
-  descriptionToActionsGap:    '16px',
+  amountToDescriptionGap: '16px',
+    descriptionToStatusGap: '16px',
+    statusToRecurringGap: '16px',
+    recurringToActionsGap: '16px',
+    descriptionToActionsGap: '16px',
   calendar: {
     containerMaxWidth:        '376px',
     containerPadding:         '16px',
@@ -507,7 +510,7 @@ recurringPill:            `w-full h-[52px] rounded-[9999px] flex items-center ju
     monthButtonFontSize:      '13px',
     monthButtonFontWeight:    'bold',
     monthButtonLetterSpacing: '0.025em',
-    monthButtonActiveRing:    `2px solid ${COLORS['color-accent-1']}`,
+    monthButtonActiveRing:    `2px solid ${COLORS['color-ok']}`,
     footerGap:                '16px',
     footerButtonHeight:       '52px',
     footerButtonRadius:       '9999px',
@@ -515,7 +518,7 @@ recurringPill:            `w-full h-[52px] rounded-[9999px] flex items-center ju
     footerButtonColor:        COLORS['color-text-prim'],
     footerButtonFontSize:     '16px',
     footerButtonFontWeight:   'bold',
-    footerOKRing:             `2px solid ${COLORS['color-accent-1']}`,
+    footerOKRing:             `2px solid ${COLORS['color-ok']}`,
   },
 };
 
@@ -548,16 +551,16 @@ const cardModal = {
   buttonRow:            "flex items-center gap-3 w-full mt-0",
   buttonGap:            '16px',
   baseBtn:              `h-[44px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}]`,
+  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-ok']}]`,
   nextBtn:              `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-background']}]`,
   cancelTextBtn:        `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
-  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-3']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-warn2']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
   trashIconSize:        `w-5 h-5 text-[${COLORS['color-text-prim']}]`,
   deleteConfirmBoxStyle:{ borderRadius: RADIUS_STANDARD, maxWidth: MODAL_MAX_WIDTH, padding: '20px' },
   deleteConfirmTitle:   `font-normal text-xl text-[${COLORS['color-text-prim']}] text-center mb-6 leading-snug`,
   deleteConfirmRow:     "flex items-center gap-4",
-  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-extra']}] ring-2 ring-[${COLORS['color-accent-3']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  deleteConfirmNoBtn:   `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-extra']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  deleteConfirmYesBtn:  `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-button1']}] ring-2 ring-[${COLORS['color-warn2']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
+  deleteConfirmNoBtn:   `flex-1 h-[44px] rounded-[9999px] bg-[${COLORS['color-button1']}] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
 };
 
 // ─── WALLET FLIP BUTTON (3D TOGGLE) ──────────────────────────────────────
@@ -610,9 +613,9 @@ const buildingExpenses = {
   labelRow:             "flex items-center justify-between w-full",
   sectionLabel:         LABELS.primary,
   totalLabel:           LABELS.primary,
-  totalAmount:          `font-normal text-[18px] text-[${COLORS['color-accent-2']}] ml-1`,
-  totalCurrencyMod:     `font-normal text-[${COLORS['color-accent-2']}] text-[0.7em] mr-0.5`,
-  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-accent-1']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
+  totalAmount:          `font-normal text-[18px] text-[${COLORS['color-warn1']}] ml-1`,
+  totalCurrencyMod:     `font-normal text-[${COLORS['color-warn1']}] text-[0.7em] mr-0.5`,
+  addBtn:               `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-ok']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   addBtnWrapper:        "flex",
   addBtnGap:            '30px',
   itemsWrapper:         "flex flex-col",
@@ -626,7 +629,7 @@ const buildingExpenses = {
     paid:   'var(--color-text-dim)',
   },
   itemIconArea:         "shrink-0 h-5 flex items-center pointer-events-none",
-  itemDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-accent-1']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
+  itemDescription:      (isPaid) => `font-normal truncate pr-2 text-base ${isPaid ? `text-[${COLORS['color-text-dim']}] line-through decoration-[${COLORS['color-ok']}] decoration-1` : `text-[${COLORS['color-text-prim']}]`}`,
   itemAmount:           (isPaid) => `font-normal shrink-0 text-lg pointer-events-none ${isPaid ? `text-[${COLORS['color-text-dim']}]` : `text-[${COLORS['color-text-prim']}]`}`,
   itemCurrencyMod:      "text-[0.7em] mr-0.5 font-normal",
   cardContainer:        `bg-[${COLORS['color-cardback-prim']}] rounded-[12px] overflow-hidden px-4`,

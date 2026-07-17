@@ -36,7 +36,7 @@ const LINE  = '#dddddd';
 const REPORT_COLOR_OVERRIDE = {
   '--color-text-prim': BLACK, '--color-text-dim': BLACK, '--color-cardback-dim': BLACK,
   '--color-cardback-prim': BLACK, '--color-background': BLACK,
-  '--color-accent-1': BLACK, '--color-accent-2': BLACK, '--color-accent-3': BLACK
+  '--color-ok': BLACK, '--color-warn1': BLACK, '--color-warn2': BLACK
 };
 
 // ─── PRINT / PAGE STYLESHEET (injected once) ─────────────────────────────
@@ -189,10 +189,21 @@ function ReportEntitySection({
 // ─── FULL PRINTABLE DOCUMENT ───────────────────────────────────────────────
 function ReportDocument({
   t, residents, buildingExpenses,
+  currentFixedExpenses = [],
   currentMonthString, currentMonthKey, isPastExpense,
   activeCurrencySymbol, totalAllDebts,
 }) {
-  const buildingCurrent = buildingExpenses.filter(exp => exp.monthKey === currentMonthKey);
+  // Recurring (fixed) expenses for the current month are merged in
+  // alongside the one-time ones — the report is a plain snapshot, so
+  // they're shown the same way as any other expense, with no recurring
+  // icon or special treatment. Past months need no such merge: once a
+  // month ends, its recurring occurrences are already frozen into plain
+  // buildingExpenses entries (see materializeElapsedMonths in App.jsx), so
+  // they show up here automatically through the normal past-unpaid filter.
+  const buildingCurrent = [
+    ...buildingExpenses.filter(exp => exp.monthKey === currentMonthKey),
+    ...currentFixedExpenses,
+  ];
   const buildingPastUnpaid = buildingExpenses.filter(exp => isPastExpense(exp.monthKey) && !exp.paid);
 
   return (
@@ -270,6 +281,7 @@ function ReportDocument({
 export default function ReportOverlay({
   isOpen, onClose, t,
   residents, buildingExpenses,
+  currentFixedExpenses = [],
   currentMonthString, currentMonthKey, currentYear, currentMonthIdx,
   isPastExpense, activeCurrencySymbol, totalAllDebts,
 }) {
@@ -360,6 +372,7 @@ export default function ReportOverlay({
               t={t}
               residents={residents}
               buildingExpenses={buildingExpenses}
+              currentFixedExpenses={currentFixedExpenses}
               currentMonthString={currentMonthString}
               currentMonthKey={currentMonthKey}
               isPastExpense={isPastExpense}
@@ -381,6 +394,7 @@ export default function ReportOverlay({
           t={t}
           residents={residents}
           buildingExpenses={buildingExpenses}
+          currentFixedExpenses={currentFixedExpenses}
           currentMonthString={currentMonthString}
           currentMonthKey={currentMonthKey}
           isPastExpense={isPastExpense}
