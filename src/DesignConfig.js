@@ -13,13 +13,31 @@
 // is required, and the change can transition smoothly via CSS.
 const THEMES = [
   {
-    name: 'Midnight', // default
+    name: 'Grey', // default
+    tokens: {
+      'color-text-prim': '#DADBDC',
+      'color-text-dim': '#848484',
+      'color-textback': '#363C42',
+      'color-cardback-dim': '#3D4146',
+      'color-cardback-prim': '#2B2F35',
+      'color-button1': '#454D54',
+      'color-button2': '#51616D',
+      'color-background': '#000000',
+      'color-ok': '#74C644',
+      'color-warn1': '#F4A640',
+      'color-warn2': '#BC392B',
+    },
+  },
+  {
+    name: 'Blue',
     tokens: {
       'color-text-prim': '#BDD4E0',
       'color-text-dim': '#78909F',
+      'color-textback': '#000000',
       'color-cardback-dim': '#374F5F',
       'color-cardback-prim': '#2C3E4D',
       'color-button1': '#466A7C',
+      'color-button2': '#000000',
       'color-background': '#18202A',
       'color-ok': '#9CE66B',
       'color-warn1': '#F2C454',
@@ -27,28 +45,16 @@ const THEMES = [
     },
   },
   {
-    name: 'Grey',
+    name: 'Black',
     tokens: {
-      'color-text-prim': '#DADBDC',
-      'color-text-dim': '#848484',
-      'color-cardback-dim': '#3D4146',
-      'color-cardback-prim': '#2B2F35',
-      'color-button1': '#466566',
-      'color-background': '#000000',
-      'color-ok': '#4AA04A',
-      'color-warn1': '#F4A640',
-      'color-warn2': '#BC392B',
-    },
-  },
-  {
-    name: 'Brown',
-    tokens: {
-      'color-text-prim': '#FFF2E9',
-      'color-text-dim': '#CEB7AB',
-      'color-cardback-dim': '#514038',
-      'color-cardback-prim': '#3F322B',
+      'color-text-prim': '#CBD0D3',
+      'color-text-dim': '#6E7D8E',
+      'color-textback': '#000000',
+      'color-cardback-dim': '#171A1E',
+      'color-cardback-prim': '#000000',
       'color-button1': '#695850',
-      'color-background': '#1E1B19',
+      'color-button2': '#000000',
+      'color-background': '#2B2F35',
       'color-ok': '#91DB61',
       'color-warn1': '#FFC543',
       'color-warn2': '#F2662F',
@@ -90,9 +96,11 @@ function applyTheme(index) {
 const COLORS = {
   'color-text-prim': 'var(--color-text-prim)',
   'color-text-dim': 'var(--color-text-dim)',
-  'color-cardback-dim': 'var(--color-cardback-dim)',
+  'color-textback': 'var(--color-textback)',
   'color-button1': 'var(--color-button1)',
+  'color-button2': 'var(--color-button2)',
   'color-cardback-prim': 'var(--color-cardback-prim)',
+  'color-cardback-dim': 'var(--color-cardback-dim)',
   'color-background': 'var(--color-background)',
   'color-ok': 'var(--color-ok)',
   'color-warn1': 'var(--color-warn1)',
@@ -272,16 +280,16 @@ const header = {
 const navigationPill = {
   container: "flex items-center shrink-0",
   containerStyle: (variant = 'default') => ({
-    padding: '0 8px',
-    borderRadius: '9999px',
-    backgroundColor: variant === 'transparent' ? 'transparent' : COLORS['color-cardback-dim'],
-    border: variant === 'transparent' ? `2px solid ${COLORS['color-cardback-dim']}` : 'none',
-    height: '52px',
-    width: 'auto',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0',
+  padding: '0 8px',
+  borderRadius: '9999px',
+  backgroundColor: COLORS['color-cardback-prim'], // always solid
+  border: 'none',                               // no border ever
+  height: '52px',
+  width: 'auto',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0',
   }),
   btn: "flex items-center justify-center shrink-0 outline-none select-none",
   btnStyle: {
@@ -330,7 +338,7 @@ logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
   reportIcon:        "h-6 w-6",
 
   // Shared "pill row" base used by rows 2-9
-  pillRow:           `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+  pillRow: `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-textback']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-button1']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-warn2']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillPaddingX:       '16px',
