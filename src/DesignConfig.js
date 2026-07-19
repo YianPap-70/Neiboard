@@ -196,6 +196,7 @@ const icons = {
   actionIconSize:  `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
   actionIconSizeDisabled: `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
   syncIconSize:    "w-8 h-8",
+  iconPlusColor: `text-[${COLORS['color-ok']}]`,
   iconColorClasses: {
     check:   `text-[${COLORS['color-ok']}]`,
     warning: `text-[${COLORS['color-warn1']}]`,
@@ -425,7 +426,7 @@ const drawer = {
 };
 
 // ─── COMMON ADD BUTTON (used in building and resident views) ──────────────
-const addButton = `h-[52px] rounded-full bg-[${COLORS['color-button2']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95 px-4 gap-1`;
+const addButton = `h-[52px] rounded-full bg-[${COLORS['color-textback']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95 px-4 gap-1`;
 
 // ─── AUTO-TEXTAREA COMPONENT ─────────────────────────────────────────────
 

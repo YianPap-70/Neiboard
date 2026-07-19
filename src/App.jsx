@@ -201,7 +201,7 @@ function BuildingExpenses({ regularExpenses, fixedExpenses, currentMonthString, 
 
         <div className={BE.addBtnWrapper} style={{ paddingBottom: BE.sectionPaddingBottom }}>
           <button className={window.DESIGN.addButton} onClick={() => openBuildingModal('add')}>
-  <SpriteIcon id="icon-plus" className={window.DESIGN.icons.statusIconSize} />
+  <SpriteIcon id="icon-plus" className={`${window.DESIGN.icons.statusIconSize} ${window.DESIGN.icons.iconPlusColor}`} />
   <span>{t('add_expense')}</span>
 </button>
         </div>
@@ -340,7 +340,7 @@ function ResidentListView({
                     <div className={CARD.monthActionRow}>
                       <span className={monthLabelClass}>{monthLabelText}</span>
                       <button onClick={() => onOpenResidentModal('add', resident.id)} className={window.DESIGN.addButton}>
-  <SpriteIcon id="icon-plus" className={window.DESIGN.icons.statusIconSize} />
+  <SpriteIcon id="icon-plus" className={`${window.DESIGN.icons.statusIconSize} ${window.DESIGN.icons.iconPlusColor}`} />
   <span>{t('add_expense')}</span>
 </button>
                     </div>
