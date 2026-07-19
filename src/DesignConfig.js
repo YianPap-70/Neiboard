@@ -409,7 +409,6 @@ const residentCard = {
   monthActionRow:          "flex items-center justify-between py-2.5",
   monthActionLabel:        LABELS.primary,
   monthActionLabelNoDebt:  LABELS.primarySuccess,
-  addExpenseBtn: `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-button2']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   noExpensesFallback:      LABELS.empty,
   itemRowWrapper:          "w-full flex items-center justify-between py-3 first:pt-0 cursor-pointer select-none transition-colors active:bg-white/5",
   itemRowDividerStyle: divider.itemDivider,
@@ -425,7 +424,11 @@ const drawer = {
   containerStyle: { overflow: 'hidden' },
 };
 
+// ─── COMMON ADD BUTTON (used in building and resident views) ──────────────
+const addButton = `h-[52px] rounded-full bg-[${COLORS['color-button2']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95 px-4 gap-1`;
+
 // ─── AUTO-TEXTAREA COMPONENT ─────────────────────────────────────────────
+
 const autoTextarea = {
   minHeight: '50px',
   maxLines:  5,
@@ -624,7 +627,6 @@ const buildingExpenses = {
   totalLabel:           LABELS.primary,
   totalAmount:          `font-normal text-[18px] text-[${COLORS['color-warn1']}] ml-1`,
   totalCurrencyMod:     `font-normal text-[${COLORS['color-warn1']}] text-[0.7em] mr-0.5`,
-  addBtn: `w-[100px] h-[44px] rounded-[22px] bg-[${COLORS['color-button2']}] font-normal text-sm text-[${COLORS['color-text-prim']}] flex items-center justify-center outline-none shrink-0 transition-transform active:scale-95`,
   addBtnWrapper:        "flex",
   addBtnGap:            '30px',
   itemsWrapper:         "flex flex-col",
@@ -677,6 +679,7 @@ const DESIGN = {
   residentCard,
   drawer,
   autoTextarea,
+  addButton,
   divider,
   historyDrawer,
   modalBase,

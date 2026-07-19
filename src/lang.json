@@ -11,7 +11,7 @@
   "no_debt": { "en": "No debt", "gr": "Καμία οφειλή" },
   "no_debts": { "en": "{month} / No Debts", "gr": "{month} / Καμία Οφειλή" },
   "previous_months_total": { "en": "Previous months total", "gr": "Σύνολο προηγούμενων μηνών" },
-  "add_expense": { "en": "+ Add", "gr": "+ Προσθήκη" },
+  "add_expense": { "en": "Add", "gr": "Προσθήκη" },
   "debts_for_month": { "en": "{month} / Debts", "gr": "{month} / Οφειλές" },
   "no_expenses_this_month_building": { "en": "No expenses for this month", "gr": "Δεν υπάρχουν έξοδα αυτόν τον μήνα" },
   "add_card": { "en": "Add Card", "gr": "Προσθήκη Κάρτας" },

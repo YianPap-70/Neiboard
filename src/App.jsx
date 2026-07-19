@@ -200,7 +200,10 @@ function BuildingExpenses({ regularExpenses, fixedExpenses, currentMonthString, 
         )}
 
         <div className={BE.addBtnWrapper} style={{ paddingBottom: BE.sectionPaddingBottom }}>
-          <button className={BE.addBtn} onClick={() => openBuildingModal('add')}>{t('add_expense')}</button>
+          <button className={window.DESIGN.addButton} onClick={() => openBuildingModal('add')}>
+  <SpriteIcon id="icon-plus" className={window.DESIGN.icons.statusIconSize} />
+  <span>{t('add_expense')}</span>
+</button>
         </div>
       </div>
 
@@ -336,9 +339,10 @@ function ResidentListView({
                   <div>
                     <div className={CARD.monthActionRow}>
                       <span className={monthLabelClass}>{monthLabelText}</span>
-                      <button onClick={() => onOpenResidentModal('add', resident.id)} className={CARD.addExpenseBtn}>
-                        {t('add_expense')}
-                      </button>
+                      <button onClick={() => onOpenResidentModal('add', resident.id)} className={window.DESIGN.addButton}>
+  <SpriteIcon id="icon-plus" className={window.DESIGN.icons.statusIconSize} />
+  <span>{t('add_expense')}</span>
+</button>
                     </div>
 
                     <div className="flex flex-col gap-1">
