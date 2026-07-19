@@ -20,12 +20,12 @@ const THEMES = [
       'color-textback': '#363C42',
       'color-cardback-dim': '#292D33',
       'color-cardback-prim': '#202327',
-      'color-button1': '#454D54',
-      'color-button2': '#485660',
+      'color-button1': '#315C66',
+      'color-button2': '#0F6D4B',
       'color-background': '#000000',
       'color-ok': '#74C644',
       'color-warn1': '#F4A640',
-      'color-warn2': '#BC392B',
+      'color-warn2': '#991414',
     },
   },
   {
@@ -63,7 +63,7 @@ const THEMES = [
 ];
 
 // ─── INJECT CSS CUSTOM PROPERTIES FOR EACH THEME ───────────────────────────
-// :root carries the default (Midnight) values so the app renders correctly
+// :root carries the default values so the app renders correctly
 // even before the theme system initializes. Each additional theme is scoped
 // under html[data-theme="N"] and overrides the same variable names.
 (function injectThemeVariables() {
@@ -194,6 +194,7 @@ const icons = {
   rollerArrowSize: "w-[18px] h-[18px]",
   caretIconSize:   `w-4 h-4 text-[${COLORS['color-text-prim']}]`,
   actionIconSize:  `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
+  actionIconSizeDisabled: `w-7 h-7 text-[${COLORS['color-text-prim']}]`,
   syncIconSize:    "w-8 h-8",
   iconColorClasses: {
     check:   `text-[${COLORS['color-ok']}]`,
@@ -205,8 +206,8 @@ const icons = {
 const iconColors = {
   warningFilled: { '--color-ok': COLORS['color-warn1'] },
   check:         { '--color-ok': COLORS['color-ok'] },
-  avatarDebt:    { '--avatar-debt-badge': COLORS['color-warn1'], '--avatar-debt-body': COLORS['color-text-dim'] },
-  avatarNoDebt:  { '--avatar-nodebt-check': COLORS['color-ok'], '--avatar-nodebt-body': COLORS['color-text-dim'] },
+  avatarDebt:    { '--icon-color-1': COLORS['color-warn1'], '--icon-color-2': COLORS['color-text-prim'] },
+  avatarNoDebt:  { '--icon-color-1': COLORS['color-text-prim'], '--icon-color-2': COLORS['color-ok'] },
   synced:        { '--color-ok': COLORS['color-ok'] },
 };
 
@@ -260,7 +261,7 @@ const header = {
   // safe-area inset at all (e.g. a regular desktop browser).
   stickyContainerStyle:     { backgroundColor: COLORS['color-background'], paddingTop: 'max(12px, env(safe-area-inset-top))' },
   touchTargetBtn:           "w-[52px] h-[52px] flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity cursor-pointer",
-  touchTargetBtnDisabled:   "w-[52px] h-[52px] flex items-center justify-center shrink-0 cursor-default opacity-40 pointer-events-none",
+  touchTargetBtnDisabled:   "w-[52px] h-[52px] flex items-center justify-center shrink-0 cursor-default opacity-50 pointer-events-none",
   topRow:                   "flex items-center pl-[2px] pr-[2px] w-full",
   leftActionGroup:          "flex items-center gap-2",
   debtSection:              "flex items-baseline gap-2 ml-auto",
@@ -358,7 +359,7 @@ logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
     transform: `translateY(-${activeIdx * 24}px)`,
     transition: A.rollerTransition,
   }),
-  rollerItem:        `h-6 leading-6 font-normal text-base text-[${COLORS['color-ok']}] whitespace-nowrap text-left`,
+  rollerItem:        `h-6 leading-6 font-normal text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap text-left`,
 };
 
 // ─── DELETE DATA RANGE SUB-MODAL ─────────────────────────────────────────

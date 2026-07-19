@@ -593,11 +593,43 @@ export default function App() {
     };
   });
 
+  // Remembers which month the header was showing, and which month was
+  // "today" the last time we checked. Kept in refs (rather than read from
+  // state directly) so the interval below — registered once — always sees
+  // the latest values instead of whatever they were at mount time.
+  const viewedMonthKeyRef         = useRef(currentMonthKey);
+  const lastKnownTodayMonthKeyRef = useRef(todayMonthKey);
+  useEffect(() => {
+    viewedMonthKeyRef.current = currentMonthKey;
+  });
+
   useEffect(() => {
     const checkAndMaterialize = () => {
       if (!initializedRef.current || !materializationInputsRef.current) return;
       const today = getSystemDate();
       const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
+
+      // If the real-world month has moved on since we last checked, and the
+      // header was showing that old "today" (i.e. the person hadn't
+      // manually navigated to a different month), bring the header forward
+      // with it. Without this, the header can keep silently pointing at a
+      // month that has already finished — including a recurring expense
+      // that then gets frozen into a plain, one-off entry by the
+      // materialization below. That frozen entry would then look and
+      // behave like an ordinary one-time expense in the "current month"
+      // section (no recurring badge, no link back to its template), so
+      // deleting it there would only remove that single entry rather than
+      // stopping the recurring series — letting the series reappear once
+      // the header eventually catches up to today. Auto-advancing here
+      // closes that gap.
+      if (todayMonthKey !== lastKnownTodayMonthKeyRef.current) {
+        if (viewedMonthKeyRef.current === lastKnownTodayMonthKeyRef.current) {
+          setCurrentMonthIdx(today.getMonth());
+          setCurrentYear(today.getFullYear());
+        }
+        lastKnownTodayMonthKeyRef.current = todayMonthKey;
+      }
+
       const { fixedTemplates, fixedAmountOverrides, fixedPaidStatuses, lastMaterializedMonthKey, monthNames } =
         materializationInputsRef.current;
 
@@ -1335,15 +1367,14 @@ const totalBuildingDebt = useMemo(() => {
   </button>
   <WalletFlipButton onToggle={handleToggleView} t={t} />
   <button
-    className={isBuildingView ? HDR.touchTargetBtnDisabled : HDR.touchTargetBtn}
-    onClick={isBuildingView ? undefined : handleOpenAddCard}
-  >
-    <SpriteIcon
-      id="icon-button-add-user"
-      className={ICN.actionIconSize}
-      style={isBuildingView ? { color: COLORS['color-cardback-dim'] } : {}}
-    />
-  </button>
+  className={isBuildingView ? HDR.touchTargetBtnDisabled : HDR.touchTargetBtn}
+  onClick={isBuildingView ? undefined : handleOpenAddCard}
+>
+  <SpriteIcon
+    id="icon-button-add-user"
+    className={isBuildingView ? ICN.actionIconSizeDisabled : ICN.actionIconSize}
+  />
+</button>
 </div>
 
 <div className={HDR.debtSection} style={{ marginLeft: 'auto' }}>
