@@ -15,17 +15,17 @@ const THEMES = [
   {
     name: 'Grey', // default
     tokens: {
-      'color-text-prim': '#DADBDC',
-      'color-text-dim': '#848484',
-      'color-textback': '#363C42',
-      'color-cardback-dim': '#292D33',
-      'color-cardback-prim': '#202327',
-      'color-button1': '#315C66',
+      'color-text-prim': '#dadbdc',
+      'color-text-dim': '#9ca3af',
+      'color-textback': '#4b5563',
+      'color-cardback-dim': '#374151',
+      'color-cardback-prim': '#1f2937',
+      'color-button1': '#164e63',
       'color-button2': '#0F6D4B',
-      'color-background': '#000000',
-      'color-ok': '#74C644',
-      'color-warn1': '#F4A640',
-      'color-warn2': '#991414',
+      'color-background': '#030712',
+      'color-ok': '#22c55e',
+      'color-warn1': '#fbbf24',
+      'color-warn2': '#991b1b',
     },
   },
   {
@@ -336,13 +336,13 @@ const settingsModal = {
   headerRowGap:      '20px',
   logoIcon:          `text-[${COLORS['color-text-prim']}]`,
 logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
-  reportBtn: `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-[${COLORS['color-button2']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
+  reportBtn: `h-[52px] px-4 rounded-[9999px] flex items-center justify-center gap-2 bg-[${COLORS['color-button1']}] text-[${COLORS['color-text-prim']}] font-normal text-base outline-none select-none transition-transform active:scale-95 shrink-0`,
   reportIcon:        "h-6 w-6",
 
   // Shared "pill row" base used by rows 2-9
   pillRow: `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-textback']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillRowFilled:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-button1']}] outline-none select-none transition-all duration-300 cursor-pointer`,
-  pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-transparent ring-2 ring-[${COLORS['color-warn2']}] outline-none select-none transition-all duration-300 cursor-pointer`,
+    pillRowDanger:      `w-full h-[52px] rounded-[9999px] flex items-center bg-[${COLORS['color-warn2']}] outline-none select-none transition-all duration-300 cursor-pointer`,
   pillPaddingX:       '16px',
   pillLabel:          `font-normal text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap`,
   pillIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}] shrink-0`,
