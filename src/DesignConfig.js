@@ -284,7 +284,7 @@ const navigationPill = {
   containerStyle: (variant = 'default') => ({
   padding: '0 8px',
   borderRadius: '9999px',
-  backgroundColor: COLORS['color-cardback-prim'], // always solid
+  backgroundColor: COLORS['color-textback'], // always solid
   border: 'none',                               // no border ever
   height: '52px',
   width: 'auto',
@@ -347,6 +347,7 @@ logoIconStyle:     { height: '42px', width: 'auto', aspectRatio: '91 / 24' },
   pillLabel:          `font-normal text-base text-[${COLORS['color-text-prim']}] whitespace-nowrap`,
   pillIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}] shrink-0`,
   pillCenterText:     `flex-1 text-center font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  exitBtn: `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-button2']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
 
   // Roller value (rows 2-5): sliding/rolling dynamic value display.
   // Shrink-wraps to its content and sits left-aligned immediately after the
@@ -380,7 +381,7 @@ const deleteRangeModal = {
   deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-warn2']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
   deleteIcon:          `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
-  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-transparent ring-2 ring-[${COLORS['color-cardback-dim']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-button2']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
 };
 
 // ─── RESIDENT CARD COMPONENT ─────────────────────────────────────────────
@@ -493,8 +494,8 @@ recurringPill: `w-full h-[52px] rounded-[9999px] flex items-center justify-cente
     statusPillText:           `text-[16px] font-normal text-[${COLORS['color-text-prim']}]`,
     actionRow:                `flex items-center gap-3 w-full`,
     actionBtn:                `h-[52px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
-    okBtn:                    `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-ok']}]`,
-    cancelBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}]`,
+    okBtn:                    `flex-1 bg-[${COLORS['color-button1']}]`,
+    cancelBtn:                `flex-1 bg-[${COLORS['color-button2']}]`,
     deleteBtn:                `w-[52px] h-[52px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-warn2']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none cursor-pointer`,
     deleteIcon:               `w-6 h-6 text-[${COLORS['color-text-prim']}]`,
   },
@@ -519,19 +520,20 @@ recurringPill: `w-full h-[52px] rounded-[9999px] flex items-center justify-cente
     monthButtonMinWidth:      '52px',
     monthButtonRadius:        '9999px',
     monthButtonBg:            COLORS['color-cardback-dim'],
+    monthButtonSelectedBg:    COLORS['color-button1'],
     monthButtonColor:         COLORS['color-text-prim'],
     monthButtonFontSize:      '13px',
     monthButtonFontWeight:    'bold',
     monthButtonLetterSpacing: '0.025em',
-    monthButtonActiveRing:    `2px solid ${COLORS['color-ok']}`,
     footerGap:                '16px',
     footerButtonHeight:       '52px',
     footerButtonRadius:       '9999px',
-    footerButtonBg:           COLORS['color-cardback-dim'],
+    footerButtonBg:            COLORS['color-button1'],
+    footerCancelButtonBg:     COLORS['color-button2'],
     footerButtonColor:        COLORS['color-text-prim'],
     footerButtonFontSize:     '16px',
     footerButtonFontWeight:   'bold',
-    footerOKRing:             `2px solid ${COLORS['color-ok']}`,
+    footerOKRing:              'none',
   },
 };
 
@@ -564,9 +566,9 @@ const cardModal = {
   buttonRow:            "flex items-center gap-3 w-full mt-0",
   buttonGap:            '16px',
   baseBtn:              `h-[44px] rounded-[9999px] font-normal text-[${COLORS['color-text-prim']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
-  okBtn:                `flex-1 bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-ok']}]`,
+  okBtn:                `flex-1 bg-[${COLORS['color-button1']}]`,
   nextBtn:              `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-background']}]`,
-  cancelTextBtn:        `flex-1 bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-prim']}]`,
+  cancelTextBtn:        `flex-1 bg-[${COLORS['color-button2']}] text-[${COLORS['color-text-prim']}]`,
   trashBtn:             `w-[44px] h-[44px] shrink-0 rounded-[9999px] bg-[${COLORS['color-cardback-dim']}] ring-2 ring-[${COLORS['color-warn2']}] flex items-center justify-center transition-transform active:scale-95 outline-none select-none`,
   trashIconSize:        `w-5 h-5 text-[${COLORS['color-text-prim']}]`,
   deleteConfirmBoxStyle:{ borderRadius: RADIUS_STANDARD, maxWidth: MODAL_MAX_WIDTH, padding: '20px' },

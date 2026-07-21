@@ -361,18 +361,18 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
                 key={monthName}
                 onClick={() => setTempMonthIdx(idx)}
                 style={{
-                  height: CAL.monthButtonHeight,
-                  borderRadius: CAL.monthButtonRadius,
-                  backgroundColor: CAL.monthButtonBg,
-                  border: tempMonthIdx === idx ? CAL.monthButtonActiveRing : 'none',
-                  color: CAL.monthButtonColor,
-                  transition: 'all 0.3s',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  padding: '0 4px',
-                  minWidth: 0,
-                  width: '100%',
-                }}
+  height: CAL.monthButtonHeight,
+  borderRadius: CAL.monthButtonRadius,
+  backgroundColor: tempMonthIdx === idx ? CAL.monthButtonSelectedBg : CAL.monthButtonBg,
+  border: 'none',
+  color: CAL.monthButtonColor,
+  transition: 'all 0.3s',
+  outline: 'none',
+  cursor: 'pointer',
+  padding: '0 4px',
+  minWidth: 0,
+  width: '100%',
+}}
                 className="text-[13px] font-normal tracking-wide flex items-center justify-center"
                 aria-label={monthName}
                 aria-pressed={tempMonthIdx === idx}
@@ -405,7 +405,7 @@ function MonthYearPickerModal({ isOpen, initialMonthIdx, initialYear, onConfirm,
             onClick={onClose}
             style={{
               flex: '1', height: CAL.footerButtonHeight, borderRadius: CAL.footerButtonRadius,
-              backgroundColor: CAL.footerButtonBg, border: 'none',
+              backgroundColor: CAL.footerCancelButtonBg,
               color: CAL.footerButtonColor,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform 0.2s', outline: 'none', cursor: 'pointer',
@@ -639,9 +639,9 @@ function SettingsModal({
         </button>
 
         {/* Row 9 — Exit */}
-        <button className={SM.pillRow} style={{ ...rowPadStyle, justifyContent: 'center' }} onClick={onExitAll}>
-          <span className={SM.pillCenterText}>{t('exit')}</span>
-        </button>
+        <button className={SM.exitBtn} style={rowPadStyle} onClick={onExitAll}>
+  <span className={SM.pillCenterText}>{t('exit')}</span>
+</button>
 
       </div>
     </div>
