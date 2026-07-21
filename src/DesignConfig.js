@@ -20,8 +20,8 @@ const THEMES = [
       'color-textback': '#4b5563',
       'color-cardback-dim': '#374151',
       'color-cardback-prim': '#1f2937',
-      'color-button1': '#164e63',
-      'color-button2': '#0F6D4B',
+      'color-button1': '#0F6D4B',
+      'color-button2': '#164e63',
       'color-background': '#030712',
       'color-ok': '#22c55e',
       'color-warn1': '#fbbf24',
@@ -370,18 +370,18 @@ const deleteRangeModal = {
   boxContainerStyle: { borderRadius: RADIUS_STANDARD, maxWidth: '376px', padding: '16px' },
   rowGap:            '16px',
 
-  boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
-  boundaryBtnSetRing: `ring-2 ring-[${COLORS['color-warn1']}]`,
+    boundaryBtn:        `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-cardback-dim']}] outline-none select-none transition-all duration-300 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  boundaryBtnSelected: `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-button2']}] outline-none select-none transition-all duration-300 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
 
-  resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent ring-2 ring-[${COLORS['color-ok']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+    resetBtn:           `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-[${COLORS['color-button1']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
   resetIcon:           `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
-  deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 bg-transparent outline-none select-none transition-all duration-300 font-normal text-base`,
-  deleteBtnDisabled:   `ring-2 ring-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
-  deleteBtnEnabled:    `ring-2 ring-[${COLORS['color-warn2']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
+  deleteBtnBase:       `w-full h-[52px] rounded-[9999px] flex items-center justify-center gap-2 outline-none select-none transition-all duration-300 font-normal text-base`,
+  deleteBtnDisabled:   `bg-[${COLORS['color-cardback-dim']}] text-[${COLORS['color-text-dim']}] cursor-not-allowed opacity-60`,
+  deleteBtnEnabled:    `bg-[${COLORS['color-warn2']}] text-[${COLORS['color-text-prim']}] cursor-pointer transition-transform active:scale-95`,
   deleteIcon:          `h-6 w-6 text-[${COLORS['color-text-prim']}]`,
 
-  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-button2']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
+  exitBtn:             `w-full h-[52px] rounded-[9999px] flex items-center justify-center bg-[${COLORS['color-textback']}] outline-none select-none transition-transform active:scale-95 cursor-pointer font-normal text-base text-[${COLORS['color-text-prim']}]`,
 };
 
 // ─── RESIDENT CARD COMPONENT ─────────────────────────────────────────────

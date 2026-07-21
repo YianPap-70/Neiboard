@@ -462,18 +462,18 @@ function DeleteRangeModal({
       >
         <div className="flex flex-col" style={{ gap: DM.rowGap }}>
           <button
-            className={`${DM.boundaryBtn} ${fromDate ? DM.boundaryBtnSetRing : ''}`}
-            onClick={() => setPickerTarget('from')}
-          >
-            {formatBoundary(fromDate) || t('from')}
-          </button>
+  className={fromDate ? DM.boundaryBtnSelected : DM.boundaryBtn}
+  onClick={() => setPickerTarget('from')}
+>
+  {formatBoundary(fromDate) || t('from')}
+</button>
 
-          <button
-            className={`${DM.boundaryBtn} ${toDate ? DM.boundaryBtnSetRing : ''}`}
-            onClick={() => setPickerTarget('to')}
-          >
-            {formatBoundary(toDate) || t('to')}
-          </button>
+<button
+  className={toDate ? DM.boundaryBtnSelected : DM.boundaryBtn}
+  onClick={() => setPickerTarget('to')}
+>
+  {formatBoundary(toDate) || t('to')}
+</button>
 
           <button className={DM.resetBtn} onClick={handleReset}>
             <SpriteIcon id="reset-icn" className={DM.resetIcon} />
