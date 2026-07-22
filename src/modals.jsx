@@ -213,9 +213,19 @@ function ExpenseModal({ initialData, context, onConfirm, onClose, onDelete, canT
 
           <div style={{ height: D.modal.descriptionToStatusGap }} />
 
-          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass}`}>
-            <span className={EM.statusPillText}>{isPaid ? t('paid') : t('unpaid')}</span>
-          </button>
+          <button onClick={() => setIsPaid(p => !p)} className={`${EM.statusPill} ${ringClass} ${EM.statusPillGap}`}>
+  {isPaid ? (
+    <>
+      <SpriteIcon id="icon-check" className={EM.paidIconClass} />
+      <span className={EM.statusPillText}>{t('paid')}</span>
+    </>
+  ) : (
+    <>
+      <SpriteIcon id="warnOutline-icn" className={EM.unpaidIconClass} />
+      <span className={EM.statusPillText}>{t('unpaid')}</span>
+    </>
+  )}
+</button>
 
           {context === 'building' && canToggleRecurring && (
             <>
